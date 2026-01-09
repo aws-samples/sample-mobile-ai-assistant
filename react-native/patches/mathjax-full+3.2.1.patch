@@ -1,0 +1,19 @@
+diff --git a/node_modules/mathjax-full/js/components/version.js b/node_modules/mathjax-full/js/components/version.js
+index 39d9b29..d169e16 100644
+--- a/node_modules/mathjax-full/js/components/version.js
++++ b/node_modules/mathjax-full/js/components/version.js
+@@ -1,12 +1,6 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.VERSION = void 0;
+-exports.VERSION = (typeof PACKAGE_VERSION === 'undefined' ?
+-    (function () {
+-        var load = eval('require');
+-        var dirname = eval('__dirname');
+-        var path = load('path');
+-        return load(path.resolve(dirname, '..', '..', 'package.json')).version;
+-    })() :
+-    PACKAGE_VERSION);
++// Hardcoded version to avoid eval() which is not supported in React Native New Architecture
++exports.VERSION = '3.2.1';
+ //# sourceMappingURL=version.js.map

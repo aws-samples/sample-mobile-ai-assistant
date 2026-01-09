@@ -1,4 +1,5 @@
 import UIKit
+import React
 
 @available(iOS 13.0, *)
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
@@ -7,48 +8,46 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
-        
-        // Get the shared AppDelegate instance to access React Native components
+
+        // Get the shared AppDelegate instance
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("AppDelegate not found")
         }
-        
+
         // Create the window for this scene
         window = UIWindow(windowScene: windowScene)
-        
-        // Get the root view controller from AppDelegate
-        let rootViewController = appDelegate.createRootViewController()
-        
+
+        // Use RCTAppDelegate's rootViewFactory to create the root view with New Architecture
+      let rootView = appDelegate.rootViewFactory().view(
+            withModuleName: appDelegate.moduleName ?? "SwiftChat",
+            initialProperties: appDelegate.initialProps as? [String: Any],
+            launchOptions: nil
+        )
+
+        // Configure root view appearance
+        rootView.backgroundColor = UIColor.systemBackground
+
+        // Create and configure view controller
+        let rootViewController = UIViewController()
+        rootViewController.view = rootView
+
         // Set the root view controller and make the window visible
         window?.rootViewController = rootViewController
         window?.makeKeyAndVisible()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
-        // Called as the scene is being released by the system.
-        // This occurs shortly after the scene enters the background, or when its session is discarded.
-        // Release any resources associated with this scene that can be re-created the next time the scene connects.
-        // The scene may re-connect later, as its session was not necessarily discarded (see `application:didDiscardSceneSessions` instead).
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
-        // Called when the scene has moved from an inactive state to an active state.
-        // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
-        // Called when the scene will move from an active state to an inactive state.
-        // This may occur due to temporary interruptions (ex. an incoming phone call).
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
-        // Called as the scene transitions from the background to the foreground.
-        // Use this method to undo the changes made on entering the background.
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
-        // Called as the scene transitions from the foreground to the background.
-        // Use this method to save data, release shared resources, and store enough scene-specific state information
-        // to restore the scene back to its current state.
     }
 }

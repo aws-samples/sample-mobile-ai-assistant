@@ -1,5 +1,4 @@
-import { IMessage } from 'react-native-gifted-chat';
-import { User } from 'react-native-gifted-chat/lib/Models';
+import { IMessage, User } from 'react-native-gifted-chat';
 
 export interface Citation {
   number: number; // 引用编号 [1], [2], [3]...
@@ -145,7 +144,9 @@ export interface SwiftChatMessage extends IMessage {
   isLastHtml?: boolean;
 }
 
-interface SwiftChatUser extends User {
+export interface SwiftChatUser extends User {
+  _id: string | number;
+  name?: string;
   modelTag?: string;
 }
 

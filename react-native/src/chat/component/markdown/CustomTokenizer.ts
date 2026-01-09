@@ -1,8 +1,18 @@
-import { CustomToken, MarkedLexer, MarkedTokenizer } from 'react-native-marked';
+import { Tokenizer, lexer } from 'marked';
+import type { Tokens } from 'marked';
 import { Platform } from 'react-native';
 
-export class CustomTokenizer extends MarkedTokenizer<CustomToken> {
-  list(this: MarkedTokenizer<CustomToken>, src: string) {
+// Custom token type for LaTeX
+interface CustomLatexToken {
+  type: 'custom';
+  raw: string;
+  identifier: string;
+  tokens?: Tokens.Generic[];
+  args?: Record<string, unknown>;
+}
+
+export class CustomTokenizer extends Tokenizer {
+  list(src: string): Tokens.List | undefined {
     const len = src.length;
     if (len < 4) {
       return super.list(src);
@@ -20,7 +30,9 @@ export class CustomTokenizer extends MarkedTokenizer<CustomToken> {
     return super.list(src);
   }
 
-  processLatex(src: string): { token: CustomToken | null; raw: string } | null {
+  processLatex(
+    src: string
+  ): { token: CustomLatexToken | null; raw: string } | null {
     // match \(...\) and \[...\]
     const inlineMatch = src.match(/^\\\(([\s\S]+?)\\\)/);
     const displayMatch = src.match(/^\\\[([\s\S]+?)\\]/);
@@ -34,7 +46,7 @@ export class CustomTokenizer extends MarkedTokenizer<CustomToken> {
             isDisplayMode = false;
           }
         }
-        const token: CustomToken = {
+        const token: CustomLatexToken = {
           type: 'custom',
           raw: match[0],
           identifier: 'latex',
@@ -49,13 +61,13 @@ export class CustomTokenizer extends MarkedTokenizer<CustomToken> {
     return null;
   }
 
-  paragraph(
-    src: string
-  ): ReturnType<MarkedTokenizer<CustomToken>['paragraph']> {
+  paragraph(src: string): Tokens.Paragraph | undefined {
     return super.paragraph(src);
   }
 
-  private processDollarLatex(src: string): CustomToken | null {
+  private processDollarLatex(
+    src: string
+  ): CustomLatexToken | Tokens.Text | null {
     // Check for $$...$$ format (display mode)
     const displayDollarRegex = /\$\$([\s\S]+?)\$\$/;
     const displayDollarMatch = src.match(displayDollarRegex);
@@ -75,7 +87,7 @@ export class CustomTokenizer extends MarkedTokenizer<CustomToken> {
             afterFormula: displaySrc.substring(endIndex),
           };
         }
-      ) as CustomToken;
+      );
     }
 
     // Check for $...$ format (inline mode)
@@ -100,7 +112,7 @@ export class CustomTokenizer extends MarkedTokenizer<CustomToken> {
             afterFormula: inlineSrc.substring(startPos + lastDollarPos + 1),
           };
         }
-      ) as CustomToken;
+      );
     }
     return null;
   }
@@ -118,17 +130,17 @@ export class CustomTokenizer extends MarkedTokenizer<CustomToken> {
       formulaContent: string;
       afterFormula: string;
     }
-  ): ReturnType<MarkedTokenizer<CustomToken>['text']> {
+  ): CustomLatexToken | Tokens.Text {
     const { beforeFormula, formula, formulaContent, afterFormula } =
       extractParts(src, match);
 
     // Parse before and after text into tokens
-    const beforeTokens = beforeFormula ? MarkedLexer(beforeFormula) : [];
+    const beforeTokens = beforeFormula ? lexer(beforeFormula) : [];
     let afterTokens;
     if (afterFormula.includes('$')) {
       afterTokens = afterFormula ? this.text(afterFormula) : [];
     } else {
-      afterTokens = afterFormula ? MarkedLexer(afterFormula) : [];
+      afterTokens = afterFormula ? lexer(afterFormula) : [];
     }
     if (isDisplayMode) {
       if (!(beforeFormula.endsWith('\n') || afterFormula.startsWith('\n'))) {
@@ -137,7 +149,7 @@ export class CustomTokenizer extends MarkedTokenizer<CustomToken> {
     }
 
     // Create LaTeX token
-    const latexToken: CustomToken = {
+    const latexToken: CustomLatexToken = {
       type: 'custom',
       raw: formula,
       identifier: 'latex',
@@ -149,7 +161,7 @@ export class CustomTokenizer extends MarkedTokenizer<CustomToken> {
 
     // If no surrounding text, return just the LaTeX token
     if (!beforeFormula && !afterFormula) {
-      return latexToken;
+      return latexToken as unknown as Tokens.Text;
     }
 
     // Create a text token containing all parts
@@ -186,21 +198,21 @@ export class CustomTokenizer extends MarkedTokenizer<CustomToken> {
           }
         ),
       ],
-    } as ReturnType<MarkedTokenizer<CustomToken>['text']>;
+    } as Tokens.Text;
   }
 
-  text(src: string): ReturnType<MarkedTokenizer<CustomToken>['text']> {
+  text(src: string): Tokens.Text | undefined {
     const res = this.processDollarLatex(src);
     if (res) {
-      return res;
+      return res as Tokens.Text;
     }
     return super.text(src);
   }
 
-  escape(src: string): ReturnType<MarkedTokenizer<CustomToken>['escape']> {
+  escape(src: string): Tokens.Escape | undefined {
     const latex = this.processLatex(src);
     if (latex && latex.token) {
-      return latex.token;
+      return latex.token as unknown as Tokens.Escape;
     }
     return super.escape(src);
   }

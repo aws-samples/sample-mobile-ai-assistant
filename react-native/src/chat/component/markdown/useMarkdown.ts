@@ -1,5 +1,5 @@
 import { type ReactNode, useMemo, useRef } from 'react';
-import { marked, type Tokenizer } from 'marked';
+import { lexer, type Tokenizer, type Token } from 'marked';
 import type {
   MarkedStyles,
   UserTheme,
@@ -7,10 +7,7 @@ import type {
 import Renderer from 'react-native-marked/src/lib/Renderer';
 import getStyles from 'react-native-marked/src/theme/styles';
 import type { ColorSchemeName } from 'react-native';
-import type {
-  CustomToken,
-  RendererInterface,
-} from 'react-native-marked/src/lib/types';
+import type { RendererInterface } from 'react-native-marked/src/lib/types';
 import { ChatStatus } from '../../../types/Chat.ts';
 import Parser from './Parser.tsx';
 
@@ -20,7 +17,7 @@ export interface useMarkdownHookOptions {
   theme?: UserTheme;
   styles?: MarkedStyles;
   baseUrl?: string;
-  tokenizer?: Tokenizer<CustomToken>;
+  tokenizer?: Tokenizer;
   chatStatus?: ChatStatus;
 }
 
@@ -47,12 +44,12 @@ const useMarkdown = (
   const cacheRef = useRef<{
     lastValue: string;
     lastNewContent: string;
-    cachedTokens: ReturnType<typeof marked.lexer>;
+    cachedTokens: Token[];
     cachedElements: ReactNode[];
   }>({
     lastValue: '',
     lastNewContent: '',
-    cachedTokens: marked.lexer(''),
+    cachedTokens: [],
     cachedElements: [],
   });
 
@@ -73,9 +70,9 @@ const useMarkdown = (
       value.length < cacheRef.current.lastValue.length ||
       options?.chatStatus === ChatStatus.Init
     ) {
-      const tokens = marked.lexer(value, {
+      const tokens = lexer(value, {
         gfm: true,
-        tokenizer: options?.tokenizer as Tokenizer<never>,
+        tokenizer: options?.tokenizer,
       });
       const elements = parser.parse(tokens);
 
@@ -119,9 +116,9 @@ const useMarkdown = (
     }
 
     // Get new tokens
-    const newTokens = marked.lexer(combinedText, {
+    const newTokens = lexer(combinedText, {
       gfm: true,
-      tokenizer: options?.tokenizer as Tokenizer<never>,
+      tokenizer: options?.tokenizer,
     });
 
     // Parse new tokens into new Elements

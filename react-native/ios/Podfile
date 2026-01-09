@@ -33,18 +33,53 @@ target 'SwiftChat' do
     react_native_post_install(
       installer,
       config[:reactNativePath],
-      :mac_catalyst_enabled => false,
+      :mac_catalyst_enabled => true,
       # :ccache_enabled => true
     )
     # Fix Swift version mismatch - use Swift 5.0 for pods that don't support Swift 6.0
+    swift5_pods = ['react-native-compressor', 'react-native-keyboard-controller', 'KeyboardController']
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-        if target.name == 'react-native-compressor'
+        if swift5_pods.include?(target.name)
           config.build_settings['SWIFT_VERSION'] = '5.0'
+          # Disable strict concurrency checking for Swift 5 pods (fixes Mac Catalyst build)
+          config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
         else
           config.build_settings['SWIFT_VERSION'] = '6.0'
         end
       end
     end
+
+    # Fix Mac Catalyst hermesvm.framework "bundle format is ambiguous" error
+    # The maccatalyst hermesvm.framework has incorrect structure: root binary should be symlink, not actual file
+    # See: https://github.com/facebook/react-native/issues/46213
+    fix_hermesvm_catalyst_framework(installer)
+  end
+end
+
+# Fix hermesvm.framework structure for Mac Catalyst
+# The framework incorrectly has a real binary at root instead of a symlink to Versions/Current/hermesvm
+def fix_hermesvm_catalyst_framework(installer)
+  framework_path = "#{installer.sandbox.root}/hermes-engine/destroot/Library/Frameworks/universal/hermesvm.xcframework/ios-arm64_x86_64-maccatalyst/hermesvm.framework"
+
+  return unless File.exist?(framework_path)
+
+  binary_path = "#{framework_path}/hermesvm"
+  versions_binary = "#{framework_path}/Versions/Current/hermesvm"
+
+  # Check if root binary is a real file (not symlink) and Versions structure exists
+  if File.exist?(binary_path) && !File.symlink?(binary_path) && File.exist?("#{framework_path}/Versions")
+    Pod::UI.puts "Fixing hermesvm.framework Mac Catalyst structure...".yellow
+
+    # Copy the fat binary to Versions/Current/ (replacing the arm64-only one)
+    if File.exist?(versions_binary)
+      FileUtils.cp(binary_path, versions_binary)
+    end
+
+    # Remove the root binary and create symlink
+    FileUtils.rm(binary_path)
+    FileUtils.ln_s("Versions/Current/hermesvm", binary_path)
+
+    Pod::UI.puts "hermesvm.framework Mac Catalyst structure fixed.".green
   end
 end

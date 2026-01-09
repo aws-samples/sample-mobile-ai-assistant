@@ -7,7 +7,7 @@ import {
 } from '../storage/StorageUtils.ts';
 import { useTheme, ColorScheme } from '../theme';
 import OpenAICompatConfigComponent from './OpenAICompatConfigComponent.tsx';
-import uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import Dialog from 'react-native-dialog';
 import { showInfo } from '../chat/util/ToastUtils.ts';
 
@@ -40,7 +40,7 @@ export default function OpenAICompatConfigsSection({
       // Ensure at least one config exists
       if (initialConfigs.length === 0) {
         const defaultConfig: OpenAICompatConfig = {
-          id: uuid.v4(),
+          id: uuidv4(),
           baseUrl: '',
           apiKey: '',
           modelIds: '',
@@ -60,7 +60,7 @@ export default function OpenAICompatConfigsSection({
   const addOpenAICompatConfig = () => {
     if (configs.length < 10) {
       const newConfig: OpenAICompatConfig = {
-        id: uuid.v4(),
+        id: uuidv4(),
         baseUrl: '',
         apiKey: '',
         modelIds: '',

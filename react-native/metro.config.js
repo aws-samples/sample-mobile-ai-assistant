@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 
 /**

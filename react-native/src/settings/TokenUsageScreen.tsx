@@ -3,12 +3,12 @@ import { useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   Animated,
   Linking,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { getModelUsage } from '../storage/StorageUtils';
 import { Usage } from '../types/Chat.ts';
 import { useNavigation } from '@react-navigation/native';
@@ -61,7 +61,7 @@ function TokenUsageScreen(): React.JSX.Element {
   }, [navigation, slideAnim]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.container}>
         {modelUsage
           .sort((a, b) => {

@@ -1,18 +1,25 @@
 import type { ReactNode } from 'react';
 import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
-import type { marked } from 'marked';
+import type { Token, Tokens } from 'marked';
 import { decode } from 'html-entities';
 import type { MarkedStyles } from 'react-native-marked/src/theme/types';
 import type {
   ParserOptions,
   RendererInterface,
-  Token,
 } from 'react-native-marked/src/lib/types';
 import { getValidURL } from 'react-native-marked/src/utils/url';
 import { getTableColAlignmentStyle } from 'react-native-marked/src/utils/table';
-import { CustomToken } from 'react-native-marked/src/lib/types.ts';
 
-// Extended renderer interface with isCompleted parameter for code blocks
+// Custom token type for LaTeX support
+interface CustomToken {
+  type: 'custom';
+  raw: string;
+  identifier: string;
+  tokens?: Token[];
+  args?: Record<string, unknown>;
+}
+
+// Extended renderer interface with isCompleted parameter for code blocks and custom tokens
 interface ExtendedRendererInterface extends RendererInterface {
   code(
     text: string,
@@ -20,6 +27,12 @@ interface ExtendedRendererInterface extends RendererInterface {
     containerStyle?: ViewStyle,
     textStyle?: TextStyle,
     isCompleted?: boolean
+  ): ReactNode;
+  custom(
+    identifier: string,
+    raw: string,
+    children?: ReactNode[],
+    args?: Record<string, unknown>
   ): ReactNode;
 }
 
@@ -32,7 +45,7 @@ class Parser {
   constructor(options: ParserOptions) {
     this.styles = { ...options.styles };
     this.baseUrl = options.baseUrl ?? '';
-    this.renderer = options.renderer;
+    this.renderer = options.renderer as ExtendedRendererInterface;
     this.headingStylesMap = {
       1: this.styles.h1,
       2: this.styles.h2,
@@ -43,14 +56,22 @@ class Parser {
     };
   }
 
-  parse(tokens: Token[]) {
+  parse(tokens?: Token[]) {
     return this._parse(tokens);
   }
 
-  private _parse(tokens: Token[], styles?: ViewStyle | TextStyle | ImageStyle) {
+  private _parse(
+    tokens?: Token[],
+    styles?: ViewStyle | TextStyle | ImageStyle
+  ): ReactNode[] {
+    if (!tokens) {
+      return [];
+    }
+
     const elements: ReactNode[] = [];
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
+      // Handle custom LaTeX tokens
       if (
         i + 1 < tokens.length &&
         tokens[i + 1].type === 'custom' &&
@@ -58,7 +79,7 @@ class Parser {
       ) {
         if (
           /^ +$/.test(token.raw) &&
-          (tokens[i + 1] as CustomToken)?.args?.displayMode === true
+          (tokens[i + 1] as unknown as CustomToken)?.args?.displayMode === true
         ) {
           // for empty string continue
           continue;
@@ -68,7 +89,7 @@ class Parser {
         if (
           tokens[i - 1].raw.trim() !== '' &&
           !tokens[i - 1].raw.endsWith('\n') &&
-          (token as CustomToken)?.args?.displayMode === true
+          (token as unknown as CustomToken)?.args?.displayMode === true
         ) {
           elements.push(this._parseToken({ type: 'br', raw: '  \n' }, styles));
           elements.push(this._parseToken(token, styles));
@@ -86,50 +107,64 @@ class Parser {
   }
 
   private _parseToken(
-    token: Token,
+    token: Token | { type: string; raw: string },
     styles?: ViewStyle | TextStyle | ImageStyle
   ): ReactNode {
     switch (token.type) {
       case 'paragraph': {
-        if (token.raw.startsWith('$') && token.raw.endsWith('$')) {
-          const sliceCount = token.raw.startsWith('$$') ? 2 : 1;
-          const children = this._parse(token.tokens ?? []);
-          return this.renderer.custom('latex', token.raw, children, {
-            text: token.raw.slice(sliceCount, token.raw.length - sliceCount),
+        const paragraphToken = token as Tokens.Paragraph;
+        if (
+          paragraphToken.raw.startsWith('$') &&
+          paragraphToken.raw.endsWith('$')
+        ) {
+          const sliceCount = paragraphToken.raw.startsWith('$$') ? 2 : 1;
+          const children = this._parse(paragraphToken.tokens ?? []);
+          return this.renderer.custom('latex', paragraphToken.raw, children, {
+            text: paragraphToken.raw.slice(
+              sliceCount,
+              paragraphToken.raw.length - sliceCount
+            ),
             displayMode: true,
           });
         }
         const children = this.getNormalizedSiblingNodesForBlockAndInlineTokens(
-          token.tokens,
+          paragraphToken.tokens ?? [],
           this.styles.text
         );
 
         return this.renderer.paragraph(children, this.styles.paragraph);
       }
       case 'blockquote': {
-        const children = this.parse(token.tokens);
+        const blockquoteToken = token as Tokens.Blockquote;
+        const children = this.parse(blockquoteToken.tokens);
         return this.renderer.blockquote(children, this.styles.blockquote);
       }
       case 'heading': {
+        const headingToken = token as Tokens.Heading;
         // eslint-disable-next-line @typescript-eslint/no-shadow
-        const styles = this.headingStylesMap[token.depth];
+        const styles = this.headingStylesMap[headingToken.depth];
 
-        if (this.hasDuplicateTextChildToken(token)) {
-          return this.renderer.heading(token.text, styles, token.depth);
+        if (this.hasDuplicateTextChildToken(headingToken)) {
+          return this.renderer.heading(
+            headingToken.text,
+            styles,
+            headingToken.depth
+          );
         }
 
-        const children = this._parse(token.tokens, styles);
-        return this.renderer.heading(children, styles, token.depth);
+        const children = this._parse(headingToken.tokens, styles);
+        return this.renderer.heading(children, styles, headingToken.depth);
       }
       case 'code': {
+        const codeToken = token as Tokens.Code;
         // Check if code block is complete (has closing fence)
         // A complete fenced code block ends with ``` or ~~~
-        const raw = token.raw;
+        const raw = codeToken.raw;
         const isCompleted =
           raw.trimEnd().endsWith('```') || raw.trimEnd().endsWith('~~~');
         return this.renderer.code(
-          token.text,
-          token.lang,
+          codeToken.text,
+          codeToken.lang,
           this.styles.code,
           this.styles.em,
           isCompleted
@@ -139,15 +174,16 @@ class Parser {
         return this.renderer.hr(this.styles.hr);
       }
       case 'list': {
-        let startIndex = Number.parseInt(token.start.toString(), 10);
+        const listToken = token as Tokens.List;
+        let startIndex = Number.parseInt(listToken.start.toString(), 10);
         if (Number.isNaN(startIndex)) {
           startIndex = 1;
         }
-        const li = token.items.map(item => {
+        const li = listToken.items.map(item => {
           const children = item.tokens.flatMap(cItem => {
             if (cItem.type === 'text') {
               /* getViewNode since tokens could contain a block like elements (i.e. img) */
-              const childTokens = (cItem as marked.Tokens.Text).tokens || [];
+              const childTokens = (cItem as Tokens.Text).tokens || [];
               // return this.renderer.listItem(listChildren, this.styles.li);
               return this.getNormalizedSiblingNodesForBlockAndInlineTokens(
                 childTokens,
@@ -163,7 +199,7 @@ class Parser {
         });
 
         return this.renderer.list(
-          token.ordered,
+          listToken.ordered,
           li,
           this.styles.list,
           this.styles.li,
@@ -171,14 +207,16 @@ class Parser {
         );
       }
       case 'escape': {
-        return this.renderer.escape(token.text, {
+        const escapeToken = token as Tokens.Escape;
+        return this.renderer.escape(escapeToken.text, {
           ...this.styles.text,
           ...styles,
         });
       }
       case 'link': {
+        const linkToken = token as Tokens.Link;
         // Don't render anchors without text and children
-        if (token.text.trim.length < 1 && token.tokens.length < 1) {
+        if (linkToken.text.trim().length < 1 || !linkToken.tokens) {
           return null;
         }
 
@@ -191,48 +229,52 @@ class Parser {
           color: this.styles.link?.color,
           fontStyle: this.styles.link?.fontStyle,
         };
-        const href = getValidURL(this.baseUrl, token.href);
+        const href = getValidURL(this.baseUrl, linkToken.href);
 
-        if (this.hasDuplicateTextChildToken(token)) {
-          return this.renderer.link(token.text, href, linkStyle);
+        if (this.hasDuplicateTextChildToken(linkToken)) {
+          return this.renderer.link(linkToken.text, href, linkStyle);
         }
 
-        const children = this._parse(token.tokens, linkStyle);
+        const children = this._parse(linkToken.tokens, linkStyle);
         return this.renderer.link(children, href, linkStyle);
       }
       case 'image': {
+        const imageToken = token as Tokens.Image;
         return this.renderer.image(
-          token.href,
-          token.text || token.title,
+          imageToken.href,
+          imageToken.text || imageToken.title || undefined,
           this.styles.image
         );
       }
       case 'strong': {
+        const strongToken = token as Tokens.Strong;
         const boldStyle = {
           ...this.styles.strong,
           ...styles,
         };
-        if (this.hasDuplicateTextChildToken(token)) {
-          return this.renderer.strong(token.text, boldStyle);
+        if (this.hasDuplicateTextChildToken(strongToken)) {
+          return this.renderer.strong(strongToken.text, boldStyle);
         }
 
-        const children = this._parse(token.tokens, boldStyle);
+        const children = this._parse(strongToken.tokens, boldStyle);
         return this.renderer.strong(children, boldStyle);
       }
       case 'em': {
+        const emToken = token as Tokens.Em;
         const italicStyle = {
           ...this.styles.em,
           ...styles,
         };
-        if (this.hasDuplicateTextChildToken(token)) {
-          return this.renderer.em(token.text, italicStyle);
+        if (this.hasDuplicateTextChildToken(emToken)) {
+          return this.renderer.em(emToken.text, italicStyle);
         }
 
-        const children = this._parse(token.tokens, italicStyle);
+        const children = this._parse(emToken.tokens, italicStyle);
         return this.renderer.em(children, italicStyle);
       }
       case 'codespan': {
-        return this.renderer.codespan(decode(token.text), {
+        const codespanToken = token as Tokens.Codespan;
+        return this.renderer.codespan(decode(codespanToken.text), {
           ...this.styles.codespan,
           ...styles,
         });
@@ -241,15 +283,16 @@ class Parser {
         return this.renderer.br();
       }
       case 'del': {
+        const delToken = token as Tokens.Del;
         const strikethroughStyle = {
           ...this.styles.strikethrough,
           ...styles,
         };
-        if (this.hasDuplicateTextChildToken(token)) {
-          return this.renderer.del(token.text, strikethroughStyle);
+        if (this.hasDuplicateTextChildToken(delToken)) {
+          return this.renderer.del(delToken.text, strikethroughStyle);
         }
 
-        const children = this._parse(token.tokens, strikethroughStyle);
+        const children = this._parse(delToken.tokens, strikethroughStyle);
         return this.renderer.del(children, strikethroughStyle);
       }
       case 'text':
@@ -264,16 +307,17 @@ class Parser {
         });
       }
       case 'table': {
-        const header = token.header.map((row, i) =>
+        const tableToken = token as Tokens.Table;
+        const header = tableToken.header.map((row, i) =>
           this._parse(row.tokens, {
-            ...getTableColAlignmentStyle(token.align[i]),
+            ...getTableColAlignmentStyle(tableToken.align[i]),
           })
         );
 
-        const rows = token.rows.map(cols =>
+        const rows = tableToken.rows.map(cols =>
           cols.map((col, i) =>
             this._parse(col.tokens, {
-              ...getTableColAlignmentStyle(token.align[i]),
+              ...getTableColAlignmentStyle(tableToken.align[i]),
             })
           )
         );
@@ -287,12 +331,13 @@ class Parser {
         );
       }
       case 'custom': {
-        const children = this._parse(token.tokens ?? []);
+        const customToken = token as unknown as CustomToken;
+        const children = this._parse(customToken.tokens ?? []);
         return this.renderer.custom(
-          token.identifier,
-          token.raw,
+          customToken.identifier,
+          customToken.raw,
           children,
-          token.args
+          customToken.args
         );
       }
       default: {
@@ -329,15 +374,16 @@ class Parser {
         // Render the current block token
         if (t.type === 'image') {
           siblingNodes.push(this._parseToken(t));
-        } else if (t.type === 'link') {
-          const imageToken = t.tokens[0] as marked.Tokens.Image;
-          const href = getValidURL(this.baseUrl, t.href);
+        } else if (t.type === 'link' && t.tokens && t.tokens[0]) {
+          const imageToken = t.tokens[0] as Tokens.Image;
+          const href = getValidURL(this.baseUrl, (t as Tokens.Link).href);
           siblingNodes.push(
             this.renderer.linkImage(
               href,
               imageToken.href,
-              imageToken.text || imageToken.title,
-              this.styles.image
+              imageToken.text ?? imageToken.title ?? '',
+              this.styles.image,
+              imageToken.title
             )
           );
         }

@@ -1,6 +1,5 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react';
 import {
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -17,6 +16,7 @@ import {
   Easing,
   ImageSourcePropType,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RouteParamList } from '../types/RouteTypes';
@@ -38,7 +38,7 @@ import Share from 'react-native-share';
 
 type NavigationProp = DrawerNavigationProp<RouteParamList>;
 
-const getNumColumns = (width: number) => (width > 434 ? 4 : 2);
+const getNumColumns = (width: number) => (width > 450 ? 4 : 2);
 const MENU_HEIGHT = 336; // 6 items * 56px each
 
 // Context menu item
@@ -517,7 +517,7 @@ function AppGalleryScreen(): React.JSX.Element {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <FlatList
         key={`flatlist-${numColumns}`}
         data={apps}

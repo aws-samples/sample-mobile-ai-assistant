@@ -9,10 +9,10 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   Platform,
-  SafeAreaView,
   StyleSheet,
   TextInput,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   activateKeepAwake,
   deactivateKeepAwake,
@@ -27,7 +27,7 @@ import CustomMessageComponent from './component/CustomMessageComponent.tsx';
 import { CustomScrollToBottomComponent } from './component/CustomScrollToBottomComponent.tsx';
 import { EmptyChatComponent } from './component/EmptyChatComponent.tsx';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import { RouteParamList } from '../types/RouteTypes.ts';
 import {
   getCurrentSystemPrompt,
@@ -112,7 +112,7 @@ const hasAnyDiffCode = (messages: SwiftChatMessage[]): boolean => {
 
 const createBotMessage = (mode: string, isAppMode: boolean = false) => {
   return {
-    _id: uuid.v4(),
+    _id: uuidv4(),
     text: mode === ChatMode.Text ? textPlaceholder : imagePlaceholder,
     createdAt: new Date(),
     user: {
@@ -991,7 +991,7 @@ function ChatScreen(): React.JSX.Element {
       });
     } else {
       const newMessage: SwiftChatMessage = {
-        _id: uuid.v4(),
+        _id: uuidv4(),
         text: text,
         createdAt: new Date(),
         user: {
@@ -1008,7 +1008,7 @@ function ChatScreen(): React.JSX.Element {
   const styles = createStyles(colors, isNovaSonic);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
       <GiftedChat
         messageContainerRef={flatListRef}
         textInputRef={textInputViewRef}
@@ -1158,9 +1158,13 @@ function ChatScreen(): React.JSX.Element {
             props.currentMessage?._id === messages[0]?._id &&
             props.currentMessage?.user._id !== 1;
 
+          // Extract key from props to pass directly (React requires key to not be spread)
+          const {key, ...restProps} = props;
+
           return (
             <CustomMessageComponent
-              {...props}
+              key={key}
+              {...restProps}
               chatStatus={chatStatus}
               isLastAIMessage={isLastAIMessage}
               searchPhase={isLastAIMessage ? searchPhase : ''}
@@ -1222,7 +1226,7 @@ function ChatScreen(): React.JSX.Element {
                   text: inputTextRef.current,
                   user: { _id: 1 },
                   createdAt: new Date(),
-                  _id: uuid.v4(),
+                  _id: uuidv4(),
                 };
                 onSend([msg]);
                 inputTextRef.current = '';

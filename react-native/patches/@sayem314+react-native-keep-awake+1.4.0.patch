@@ -1,0 +1,13 @@
+diff --git a/node_modules/@sayem314/react-native-keep-awake/react-native-keep-awake.podspec b/node_modules/@sayem314/react-native-keep-awake/react-native-keep-awake.podspec
+index 18f77a1..b528ce4 100644
+--- a/node_modules/@sayem314/react-native-keep-awake/react-native-keep-awake.podspec
++++ b/node_modules/@sayem314/react-native-keep-awake/react-native-keep-awake.podspec
+@@ -27,7 +27,7 @@ Pod::Spec.new do |s|
+     s.pod_target_xcconfig    = {
+       "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\"",
+       "OTHER_CPLUSPLUSFLAGS" => "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1",
+-      "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
++      "CLANG_CXX_LANGUAGE_STANDARD" => "c++20"
+     }
+ 
+     s.dependency "React-Codegen"

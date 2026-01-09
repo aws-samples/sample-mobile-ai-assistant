@@ -18,7 +18,7 @@ const HeaderTitle: React.FC<HeaderTitleProps> = ({
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const [showUsage, setShowUsage] = useState(false);
-  const doubleTapRef = useRef();
+  const doubleTapRef = useRef(null);
 
   const handleSingleTap = () => {
     setShowUsage(!showUsage);

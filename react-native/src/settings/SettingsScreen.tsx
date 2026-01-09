@@ -4,7 +4,6 @@ import {
   Image,
   Linking,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Switch,
@@ -12,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Dialog from 'react-native-dialog';
 import RNFS from 'react-native-fs';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
@@ -637,7 +637,7 @@ function SettingsScreen(): React.JSX.Element {
   const styles = createStyles(colors);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <ScrollView style={styles.container}>
         <View style={styles.providerSettingsWrapper}>
           <View style={styles.tabContainer}>

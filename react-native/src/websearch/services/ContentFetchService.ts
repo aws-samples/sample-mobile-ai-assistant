@@ -96,7 +96,6 @@ async function fetchSingleUrl(
         },
         signal: controller.signal,
         redirect: 'follow',
-        // @ts-expect-error - reactNative.textStreaming is a React Native specific option
         reactNative: { textStreaming: true },
       });
 
