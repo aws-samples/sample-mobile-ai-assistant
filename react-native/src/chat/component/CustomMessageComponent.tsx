@@ -38,7 +38,7 @@ import Markdown from './markdown/Markdown.tsx';
 import ImageSpinner from './ImageSpinner.tsx';
 import { State, TapGestureHandler } from 'react-native-gesture-handler';
 import { getModelIcon, getModelTagByUserName } from '../../utils/ModelUtils.ts';
-import { isAndroid } from '../../utils/PlatformUtils.ts';
+import { isAndroid, isMacCatalyst } from '../../utils/PlatformUtils.ts';
 import { useAppContext } from '../../history/AppProvider.tsx';
 import { useTheme, ColorScheme } from '../../theme';
 import {
@@ -893,6 +893,7 @@ const createStyles = (colors: ColorScheme) =>
 
 const customMarkedStyles: MarkedStyles = {
   table: { marginVertical: 4 },
+  list: { marginTop: isMacCatalyst ? 0 : 6 },
   li: { paddingVertical: 4 },
   h1: { fontSize: 28 },
   h2: { fontSize: 24 },

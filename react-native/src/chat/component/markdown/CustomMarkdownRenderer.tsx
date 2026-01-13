@@ -33,9 +33,11 @@ import MermaidCodeRenderer from './MermaidCodeRenderer';
 import HtmlCodeRenderer from './HtmlCodeRenderer';
 import CitationBadge from '../CitationBadge';
 import CopyButton from './CopyButton';
+import { isMac } from '../../../App.tsx';
 
 const CustomCodeHighlighter = lazy(() => import('./CustomCodeHighlighter'));
 let mathViewIndex = 0;
+
 
 function getMathKey() {
   mathViewIndex++;
@@ -483,10 +485,21 @@ export class CustomMarkdownRenderer
     textStyle?: TextStyle,
     startIndex?: number
   ): ReactNode {
+    // Exclude box model properties from marker text style
+    const {
+      paddingVertical: _pv,
+      paddingTop: _pt,
+      paddingBottom: _pb,
+      ...markerStyle
+    } = (textStyle as TextStyle & { paddingVertical?: number }) || {};
+    // Use different lineHeight for ordered (numbers) vs unordered (disc) lists
+    const markerLineHeight = ordered
+      ? (isMac ? 44 : 32)
+      : (isMac ? 28 : 18);
     return (
       <MarkedList
         counterRenderer={ordered ? Decimal : Disc}
-        markerTextStyle={textStyle}
+        markerTextStyle={{ ...markerStyle, lineHeight: markerLineHeight }}
         markerBoxStyle={listStyle}
         enableMarkerClipping={true}
         key={this.getKey()}

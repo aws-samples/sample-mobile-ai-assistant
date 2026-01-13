@@ -9,6 +9,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
+        #if targetEnvironment(macCatalyst)
+        // Hide the title text in the title bar for Mac Catalyst
+        windowScene.titlebar?.titleVisibility = .hidden
+        #endif
+
         // Get the shared AppDelegate instance
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
             fatalError("AppDelegate not found")

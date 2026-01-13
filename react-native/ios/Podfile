@@ -57,11 +57,26 @@ target 'SwiftChat' do
   end
 end
 
-# Fix hermesvm.framework structure for Mac Catalyst
+# Fix hermesvm.framework structure for Mac Catalyst in both tarballs and current framework
 # The framework incorrectly has a real binary at root instead of a symlink to Versions/Current/hermesvm
+# This needs to fix: 1) the current extracted framework, 2) debug tarball, 3) release tarball
+# Because Hermes script phase re-extracts tarball when switching between Debug/Release builds
 def fix_hermesvm_catalyst_framework(installer)
-  framework_path = "#{installer.sandbox.root}/hermes-engine/destroot/Library/Frameworks/universal/hermesvm.xcframework/ios-arm64_x86_64-maccatalyst/hermesvm.framework"
+  pods_root = installer.sandbox.root
 
+  # Fix current extracted framework
+  fix_catalyst_framework_at_path("#{pods_root}/hermes-engine/destroot/Library/Frameworks/universal/hermesvm.xcframework/ios-arm64_x86_64-maccatalyst/hermesvm.framework")
+
+  # Fix both debug and release tarballs so future builds won't have the issue
+  artifacts_path = "#{pods_root}/hermes-engine-artifacts"
+  if File.exist?(artifacts_path)
+    Dir.glob("#{artifacts_path}/hermes-ios-*.tar.gz").each do |tarball|
+      fix_hermesvm_in_tarball(tarball)
+    end
+  end
+end
+
+def fix_catalyst_framework_at_path(framework_path)
   return unless File.exist?(framework_path)
 
   binary_path = "#{framework_path}/hermesvm"
@@ -81,5 +96,42 @@ def fix_hermesvm_catalyst_framework(installer)
     FileUtils.ln_s("Versions/Current/hermesvm", binary_path)
 
     Pod::UI.puts "hermesvm.framework Mac Catalyst structure fixed.".green
+  end
+end
+
+def fix_hermesvm_in_tarball(tarball_path)
+  return unless File.exist?(tarball_path)
+
+  require 'tmpdir'
+  require 'fileutils'
+
+  tarball_name = File.basename(tarball_path)
+
+  Dir.mktmpdir do |tmpdir|
+    # Extract tarball
+    system("tar", "-xzf", tarball_path, "-C", tmpdir)
+
+    framework_path = "#{tmpdir}/destroot/Library/Frameworks/universal/hermesvm.xcframework/ios-arm64_x86_64-maccatalyst/hermesvm.framework"
+    binary_path = "#{framework_path}/hermesvm"
+    versions_binary = "#{framework_path}/Versions/Current/hermesvm"
+
+    # Check if fix is needed
+    if File.exist?(binary_path) && !File.symlink?(binary_path) && File.exist?("#{framework_path}/Versions")
+      Pod::UI.puts "Fixing #{tarball_name} Mac Catalyst framework...".yellow
+
+      # Copy fat binary to Versions/Current/
+      FileUtils.cp(binary_path, versions_binary) if File.exist?(versions_binary)
+
+      # Replace with symlink
+      FileUtils.rm(binary_path)
+      FileUtils.ln_s("Versions/Current/hermesvm", binary_path)
+
+      # Repack tarball
+      Dir.chdir(tmpdir) do
+        system("tar", "-czf", tarball_path, "destroot")
+      end
+
+      Pod::UI.puts "#{tarball_name} fixed.".green
+    end
   end
 end
