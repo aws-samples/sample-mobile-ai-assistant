@@ -451,7 +451,8 @@ the [release notes](https://github.com/aws-samples/swift-chat/releases) to see i
    ```
 
 2. Click and open [Lambda Services](https://console.aws.amazon.com/lambda/home#/functions), find and open
-   your Lambda which starts with `SwiftChatAPILambda-xxx`, click the **Deploy new image** button and click Save.
+   your Lambda which starts with your stack name and `APIHandlerxxxxxxxx`, e.g. `SwiftChatAPI-APIHandler38F11976-ktGBZmQtp0D8`, click the **Deploy new image** button and click Save.
+
 
 ## Security
 
