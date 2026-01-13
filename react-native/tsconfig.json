@@ -1,6 +1,7 @@
 {
-  "extends": "@react-native/typescript-config/tsconfig.json",
+  "extends": "@react-native/typescript-config",
   "compilerOptions": {
     "module": "es2020"
-  }
+  },
+  "exclude": ["**/node_modules/**"]
 }

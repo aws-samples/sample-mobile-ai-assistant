@@ -1,0 +1,14 @@
+diff --git a/node_modules/react-native-marked/src/theme/styles.ts b/node_modules/react-native-marked/src/theme/styles.ts
+index 1234567..abcdefg 100644
+--- a/node_modules/react-native-marked/src/theme/styles.ts
++++ b/node_modules/react-native-marked/src/theme/styles.ts
+@@ -22,7 +22,8 @@ const getStyles = (
+ 	colorScheme?: ColorSchemeName,
+ 	userTheme?: UserTheme,
+ ): MarkedStyles => {
+-	const mdColors = { ...colors[colorScheme || "light"], ...userTheme?.colors };
++	const scheme = colorScheme === "dark" ? "dark" : "light";
++	const mdColors = { ...colors[scheme], ...userTheme?.colors };
+ 	const mdSpacing = { ...spacing, ...userTheme?.spacing };
+
+ 	const fontStyle = getFontStyles(mdColors);

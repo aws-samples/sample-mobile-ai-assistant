@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import {
   Dimensions,
+  FlatList,
   Image,
   NativeSyntheticEvent,
   Platform,
@@ -19,8 +20,7 @@ import {
   View,
 } from 'react-native';
 import Share from 'react-native-share';
-import { MessageProps } from 'react-native-gifted-chat';
-import type { AnimatedList } from 'react-native-gifted-chat/lib/MessageContainer/types';
+import { IMessage, MessageProps } from 'react-native-gifted-chat';
 import { CustomMarkdownRenderer } from './markdown/CustomMarkdownRenderer.tsx';
 import { MarkedStyles } from 'react-native-marked/src/theme/types.ts';
 import { ChatStatus, PressMode, SwiftChatMessage } from '../../types/Chat.ts';
@@ -61,7 +61,7 @@ interface CustomMessageProps extends MessageProps<SwiftChatMessage> {
     userMessageIndex: number,
     newText?: string
   ) => void;
-  flatListRef?: RefObject<AnimatedList<SwiftChatMessage> | null>;
+  flatListRef?: RefObject<FlatList<IMessage> | null>;
   isAppMode?: boolean;
 }
 

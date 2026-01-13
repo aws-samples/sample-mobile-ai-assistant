@@ -180,7 +180,7 @@ export const checkFileNumberLimit = (
 
 const isNova = (): boolean => {
   const textModelId = getTextModel().modelId;
-  return textModelId.includes('nova-pro') || textModelId.includes('nova-lite');
+  return textModelId.includes('nova-');
 };
 
 const isNovaCanvas = (): boolean => {

@@ -1,5 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Composer, GiftedChat, InputToolbar } from 'react-native-gifted-chat';
+import {
+  Composer,
+  GiftedChat,
+  IMessage,
+  InputToolbar,
+} from 'react-native-gifted-chat';
 import {
   AppState,
   Dimensions,
@@ -160,8 +165,8 @@ function ChatScreen(): React.JSX.Element {
   const chatStatusRef = useRef(chatStatus);
   const messagesRef = useRef(messages);
   const bedrockMessages = useRef<BedrockMessage[]>([]);
-  const flatListRef = useRef<FlatList<SwiftChatMessage>>(null);
-  const textInputViewRef = useRef<TextInput>(null);
+  const flatListRef = useRef<FlatList<IMessage>>(null);
+  const textInputViewRef = useRef<TextInput | null>(null);
   const sessionIdRef = useRef(initialSessionId || getSessionId() + 1);
   const isCanceled = useRef(false);
   const { sendEvent, event, drawerType } = useAppContext();
@@ -1010,8 +1015,10 @@ function ChatScreen(): React.JSX.Element {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <GiftedChat
-        messageContainerRef={flatListRef}
-        textInputRef={textInputViewRef}
+        messageContainerRef={
+          flatListRef as React.RefObject<FlatList<IMessage>>
+        }
+        textInputRef={textInputViewRef as React.RefObject<TextInput>}
         keyboardShouldPersistTaps="never"
         bottomOffset={
           Platform.OS === 'android'

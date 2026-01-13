@@ -22,7 +22,7 @@ module.exports = {
     // Allow unused expressions for short-circuit evaluation (e.g., condition && action())
     '@typescript-eslint/no-unused-expressions': [
       'error',
-      {allowShortCircuit: true, allowTernary: true},
+      { allowShortCircuit: true, allowTernary: true },
     ],
   },
 };

@@ -1,0 +1,17 @@
+diff --git a/node_modules/react-native-image-viewing/dist/components/ImageDefaultHeader.js b/node_modules/react-native-image-viewing/dist/components/ImageDefaultHeader.js
+index 33c9def..ffd3d9c 100644
+--- a/node_modules/react-native-image-viewing/dist/components/ImageDefaultHeader.js
++++ b/node_modules/react-native-image-viewing/dist/components/ImageDefaultHeader.js
+@@ -6,9 +6,10 @@
+  *
+  */
+ import React from "react";
+-import { SafeAreaView, Text, TouchableOpacity, StyleSheet } from "react-native";
++import { Text, TouchableOpacity, StyleSheet } from "react-native";
++import { SafeAreaView } from "react-native-safe-area-context";
+ const HIT_SLOP = { top: 16, left: 16, bottom: 16, right: 16 };
+-const ImageDefaultHeader = ({ onRequestClose }) => (<SafeAreaView style={styles.root}>
++const ImageDefaultHeader = ({ onRequestClose }) => (<SafeAreaView style={styles.root} edges={['top']}>
+     <TouchableOpacity style={styles.closeButton} onPress={onRequestClose} hitSlop={HIT_SLOP}>
+       <Text style={styles.closeText}>✕</Text>
+     </TouchableOpacity>
