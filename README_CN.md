@@ -432,8 +432,7 @@ npm run ios
    bash ./push-to-ecr.sh
    ```
 
-2. 点击打开 [Lambda 服务](https://console.aws.amazon.com/lambda/home#/functions) 页面，找到并打开以
-   `SwiftChatAPILambda-xxx` 开头的 Lambda，点击 **部署新镜像** 按钮并点击保存。
+2. 点击打开 [Lambda 服务](https://console.aws.amazon.com/lambda/home#/functions) 页面，找到并打开以stack名和`APIHandlerxxxxxxxx`开头的 Lambda 函数，例如`SwiftChatAPI-APIHandler38F11976-ktGBZmQtp0D8`，点击 **部署新镜像** 按钮并点击保存。
 
 ## 安全
 
