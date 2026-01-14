@@ -485,22 +485,12 @@ export class CustomMarkdownRenderer
     textStyle?: TextStyle,
     startIndex?: number
   ): ReactNode {
-    // Exclude box model properties from marker text style
-    const {
-      paddingVertical: _pv,
-      paddingTop: _pt,
-      paddingBottom: _pb,
-      ...markerStyle
-    } = (textStyle as TextStyle & { paddingVertical?: number }) || {};
-    // Use different lineHeight for ordered (numbers) vs unordered (disc) lists
-    const markerLineHeight = ordered
-      ? (isMac ? 44 : 32)
-      : (isMac ? 28 : 18);
     return (
       <MarkedList
         counterRenderer={ordered ? Decimal : Disc}
-        markerTextStyle={{ ...markerStyle, lineHeight: markerLineHeight }}
+        markerTextStyle={textStyle}
         markerBoxStyle={listStyle}
+        lineStyle={{ alignItems: 'baseline' }}
         enableMarkerClipping={true}
         key={this.getKey()}
         startIndex={startIndex}>

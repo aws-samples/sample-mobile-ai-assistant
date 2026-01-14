@@ -893,8 +893,7 @@ const createStyles = (colors: ColorScheme) =>
 
 const customMarkedStyles: MarkedStyles = {
   table: { marginVertical: 4 },
-  list: { marginTop: isMacCatalyst ? 0 : 6 },
-  li: { paddingVertical: 4 },
+  list: { marginVertical: 4 },
   h1: { fontSize: 28 },
   h2: { fontSize: 24 },
   h3: { fontSize: 20 },
