@@ -263,13 +263,17 @@ export const CustomCodeHighlighter: FunctionComponent<CodeHighlighterProps> = ({
         </ScrollView>
       );
     },
-    [stylesheet, scrollViewProps, containerStyle, renderNode, renderAndroidNode]
+    [
+      stylesheet,
+      scrollViewProps,
+      containerStyle,
+      renderNode,
+      renderAndroidNode,
+    ],
   );
 
   // Determine if we should show highlighting
-  // HTML never gets highlighted; for others, use isCompleted prop
-  const isHtml = rest.language === 'html';
-  const shouldHighlight = isHtml ? false : isCompleted;
+  const shouldHighlight = isCompleted;
 
   // During streaming, render chunked plain text for performance
   if (!shouldHighlight) {

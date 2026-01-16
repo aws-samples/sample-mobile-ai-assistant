@@ -92,6 +92,8 @@ const HtmlCodeRenderer = forwardRef<HtmlCodeRendererRef, HtmlCodeRendererProps>(
     const previewContainerRef = useRef<View>(null);
     const codeHeightRef = useRef<number>(0);
     const previewHeightRef = useRef<number>(0);
+    const pendingCodeSwitchRef = useRef(false);
+    const codeReadyRef = useRef(false);
     const styles = createStyles(colors);
     const hljsStyle = isDark ? vs2015 : github;
     const previewHtmlCode = appliedHtmlCode || messageHtmlCode || currentText;
@@ -159,49 +161,69 @@ const HtmlCodeRenderer = forwardRef<HtmlCodeRendererRef, HtmlCodeRendererProps>(
       prevMessageHtmlCodeRef.current = messageHtmlCode;
     }, [messageHtmlCode]);
 
+    const onCodeContentSizeChange = useCallback(
+      (_contentWidth: number, contentHeight: number) => {
+        codeHeightRef.current = contentHeight;
+        codeReadyRef.current = true;
+
+        if (!pendingCodeSwitchRef.current) {
+          return;
+        }
+        pendingCodeSwitchRef.current = false;
+        if (!showPreview) {
+          return;
+        }
+
+        const applyHeightDiff = (previewHeight: number) => {
+          setShowPreview(false);
+          const heightDiff = contentHeight - previewHeight;
+          if (heightDiff !== 0) {
+            onPreviewToggle?.(heightDiff > 0, Math.abs(heightDiff), true);
+          }
+        };
+
+        if (previewHeightRef.current === 0) {
+          previewContainerRef.current?.measure(
+            (_x, _y, _width, previewHeight) => {
+              previewHeightRef.current = previewHeight;
+              applyHeightDiff(previewHeight);
+            },
+          );
+        } else {
+          applyHeightDiff(previewHeightRef.current);
+        }
+      },
+      [onPreviewToggle, showPreview],
+    );
+
     const setCodeMode = useCallback(() => {
       if (!showPreview) {
         return;
       }
-      if (!hasLoadedCode) {
-        setHasLoadedCode(true);
+      if (!hasLoadedCode || !codeReadyRef.current) {
+        pendingCodeSwitchRef.current = true;
+        if (!hasLoadedCode) {
+          codeReadyRef.current = false;
+          setHasLoadedCode(true);
+        }
+        return;
       }
+
+      const applyHeightDiff = (previewHeight: number, animated: boolean) => {
+        setShowPreview(false);
+        const heightDiff = codeHeightRef.current - previewHeight;
+        if (heightDiff !== 0) {
+          onPreviewToggle?.(heightDiff > 0, Math.abs(heightDiff), animated);
+        }
+      };
+
       if (previewHeightRef.current === 0) {
         previewContainerRef.current?.measure((_x, _y, _width, height) => {
           previewHeightRef.current = height;
-          setShowPreview(false);
-          setTimeout(() => {
-            codeContainerRef.current?.measure(
-              (_x2, _y2, _width2, codeHeight) => {
-                codeHeightRef.current = codeHeight;
-                const heightDiff = codeHeight - previewHeightRef.current;
-                if (heightDiff !== 0) {
-                  onPreviewToggle?.(heightDiff > 0, Math.abs(heightDiff), true);
-                }
-              }
-            );
-          }, 150);
+          applyHeightDiff(height, true);
         });
       } else {
-        setShowPreview(false);
-        if (codeHeightRef.current === 0) {
-          setTimeout(() => {
-            codeContainerRef.current?.measure((_x, _y, _width, codeHeight) => {
-              codeHeightRef.current = codeHeight;
-              const heightDiff = codeHeight - previewHeightRef.current;
-              if (heightDiff !== 0) {
-                onPreviewToggle?.(heightDiff > 0, Math.abs(heightDiff), true);
-              }
-            });
-          }, 150);
-        } else {
-          const heightDiff = codeHeightRef.current - previewHeightRef.current;
-          if (heightDiff !== 0) {
-            setTimeout(() => {
-              onPreviewToggle?.(heightDiff > 0, Math.abs(heightDiff), false);
-            }, 0);
-          }
-        }
+        applyHeightDiff(previewHeightRef.current, false);
       }
     }, [showPreview, hasLoadedCode, onPreviewToggle]);
 
@@ -303,6 +325,7 @@ const HtmlCodeRenderer = forwardRef<HtmlCodeRendererRef, HtmlCodeRendererProps>(
                   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                   // @ts-expect-error
                   backgroundColor: colors.codeBackground,
+                  onContentSizeChange: onCodeContentSizeChange,
                 }}
                 textStyle={styles.codeText}
                 language={isDiffModeRef.current ? 'diff' : 'html'}
@@ -408,6 +431,8 @@ const createStyles = (colors: ColorScheme) =>
       position: 'absolute',
       opacity: 0,
       pointerEvents: 'none',
+      left: 0,
+      right: 0,
     },
     loadPreviewContainer: {
       height: 480,
