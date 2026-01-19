@@ -33,7 +33,6 @@ import MermaidCodeRenderer from './MermaidCodeRenderer';
 import HtmlCodeRenderer from './HtmlCodeRenderer';
 import CitationBadge from '../CitationBadge';
 import CopyButton from './CopyButton';
-import { isMac } from '../../../App.tsx';
 
 const CustomCodeHighlighter = lazy(() => import('./CustomCodeHighlighter'));
 let mathViewIndex = 0;
@@ -490,7 +489,7 @@ export class CustomMarkdownRenderer
         counterRenderer={ordered ? Decimal : Disc}
         markerTextStyle={textStyle}
         markerBoxStyle={listStyle}
-        lineStyle={{ alignItems: 'baseline' }}
+        lineStyle={this.styles.listLine}
         enableMarkerClipping={true}
         key={this.getKey()}
         startIndex={startIndex}>
@@ -638,5 +637,8 @@ const createCustomStyles = (colors: ColorScheme) =>
     },
     inlineMathView: {
       color: colors.text,
+    },
+    listLine: {
+      alignItems: 'baseline',
     },
   });

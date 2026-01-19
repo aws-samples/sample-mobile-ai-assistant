@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native-gifted-chat/lib/Composer.js b/node_modules/react-native-gifted-chat/lib/Composer.js
-index 1234567..abcdefg 100644
+index 7bbf561..1070c46 100644
 --- a/node_modules/react-native-gifted-chat/lib/Composer.js
 +++ b/node_modules/react-native-gifted-chat/lib/Composer.js
 @@ -50,7 +50,7 @@ export function Composer({ composerHeight = MIN_COMPOSER_HEIGHT, disableComposer
@@ -7,12 +7,12 @@ index 1234567..abcdefg 100644
              textInputStyle,
              {
 -                height: composerHeight,
-+                minHeight: composerHeight,
++                minHeight: MIN_COMPOSER_HEIGHT,
                  ...Platform.select({
                      web: {
                          outlineWidth: 0,
 diff --git a/node_modules/react-native-gifted-chat/lib/MessageContainer.js b/node_modules/react-native-gifted-chat/lib/MessageContainer.js
-index 6bdf6da..22c5d01 100644
+index 6bdf6da..85c7fc7 100644
 --- a/node_modules/react-native-gifted-chat/lib/MessageContainer.js
 +++ b/node_modules/react-native-gifted-chat/lib/MessageContainer.js
 @@ -88,6 +88,9 @@ export default class MessageContainer extends React.PureComponent {

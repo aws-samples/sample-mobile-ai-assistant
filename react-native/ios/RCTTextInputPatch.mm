@@ -2,14 +2,15 @@
 #import <objc/runtime.h>
 #import <objc/message.h>
 #import <UIKit/UIKit.h>
-#import <React/RCTBaseTextInputView.h>
 #import <React/RCTBackedTextInputViewProtocol.h>
 #import <React/RCTTextAttributes.h>
-#import <React/RCTEventDispatcher.h>
-#import <React/RCTTextSelection.h>
-#import <React/RCTBridge.h>
 #import <React/UIView+React.h>
 #import "Modules/FilePaste/FilePasteModule.h"
+
+// Forward declarations for React Native classes
+@class RCTTextInputComponentView;
+@class RCTUITextField;
+@class RCTUITextView;
 
 @implementation RCTTextInputPatch
 
@@ -17,90 +18,151 @@ static BOOL altKeyPressed = NO;
 static BOOL commandPressed = NO;
 static BOOL shiftPressed = NO;
 static IMP originalTextInputShouldChangeTextIMP = NULL;
-static IMP originalPressesBegan = NULL;
-static IMP originalPressesEnded = NULL;
+static IMP originalTextFieldPressesBegan = NULL;
+static IMP originalTextFieldPressesEnded = NULL;
+static IMP originalTextViewPressesBegan = NULL;
+static IMP originalTextViewPressesEnded = NULL;
+static IMP originalTextInputShouldSubmitOnReturn = NULL;
 
 + (void)setupTextInputPatch {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        Class targetClass = [RCTBaseTextInputView class];
+        // For RN 0.83+ with new architecture, we need to patch:
+        // 1. RCTTextInputComponentView - for textInputShouldSubmitOnReturn and textInputShouldChangeText:inRange:
+        // 2. RCTUITextField and RCTUITextView - for pressesBegan/pressesEnded (they inherit from UITextField/UITextView)
 
-        // Swizzle textInputShouldSubmitOnReturn method
-        Method originalSubmitMethod = class_getInstanceMethod(targetClass, @selector(textInputShouldSubmitOnReturn));
-        Method swizzledSubmitMethod = class_getInstanceMethod([RCTTextInputPatch class], @selector(swizzled_textInputShouldSubmitOnReturn));
-
-        IMP originalSubmitIMP = method_getImplementation(originalSubmitMethod);
-        IMP swizzledSubmitIMP = method_getImplementation(swizzledSubmitMethod);
-
-        // Add the swizzled method to RCTBaseTextInputView
-        BOOL didAddSubmitMethod = class_addMethod(targetClass, @selector(textInputShouldSubmitOnReturn), swizzledSubmitIMP, method_getTypeEncoding(swizzledSubmitMethod));
-
-        if (didAddSubmitMethod) {
-            class_replaceMethod(targetClass, @selector(swizzled_textInputShouldSubmitOnReturn), originalSubmitIMP, method_getTypeEncoding(originalSubmitMethod));
-        } else {
-            method_exchangeImplementations(originalSubmitMethod, swizzledSubmitMethod);
+        // Try new architecture first (RCTTextInputComponentView)
+        Class componentViewClass = NSClassFromString(@"RCTTextInputComponentView");
+        if (componentViewClass) {
+            [self setupComponentViewPatches:componentViewClass];
+            NSLog(@"🚀 RCTTextInputPatch: Patched RCTTextInputComponentView (new architecture)");
         }
 
-        // Swizzle textInputShouldChangeText:inRange: method to intercept file paste
-        Method originalChangeTextMethod = class_getInstanceMethod(targetClass, @selector(textInputShouldChangeText:inRange:));
-        Method swizzledChangeTextMethod = class_getInstanceMethod([RCTTextInputPatch class], @selector(swizzled_textInputShouldChangeText:inRange:));
-
-        if (originalChangeTextMethod && swizzledChangeTextMethod) {
-            // Save the original implementation
-            originalTextInputShouldChangeTextIMP = method_getImplementation(originalChangeTextMethod);
-            IMP swizzledChangeTextIMP = method_getImplementation(swizzledChangeTextMethod);
-
-            // Replace the original method with our swizzled implementation
-            method_setImplementation(originalChangeTextMethod, swizzledChangeTextIMP);
+        // Also try legacy architecture (RCTBaseTextInputView) for backwards compatibility
+        Class baseTextInputClass = NSClassFromString(@"RCTBaseTextInputView");
+        if (baseTextInputClass) {
+            [self setupBaseTextInputPatches:baseTextInputClass];
+            NSLog(@"🚀 RCTTextInputPatch: Patched RCTBaseTextInputView (legacy architecture)");
         }
 
-        // Add pressesBegan and pressesEnded methods for Alt+Enter functionality
-        Method originalPressBeganMethod = class_getInstanceMethod(targetClass, @selector(pressesBegan:withEvent:));
-        Method originalPressEndedMethod = class_getInstanceMethod(targetClass, @selector(pressesEnded:withEvent:));
-
-        // Save original implementations if they exist
-        if (originalPressBeganMethod) {
-            originalPressesBegan = method_getImplementation(originalPressBeganMethod);
-        }
-        if (originalPressEndedMethod) {
-            originalPressesEnded = method_getImplementation(originalPressEndedMethod);
+        // Patch the underlying text input views for pressesBegan/pressesEnded
+        // These classes handle the actual keyboard events
+        Class textFieldClass = NSClassFromString(@"RCTUITextField");
+        if (textFieldClass) {
+            [self setupPressEventPatches:textFieldClass isTextField:YES];
+            NSLog(@"🚀 RCTTextInputPatch: Patched RCTUITextField for press events");
         }
 
-        Method pressBegan = class_getInstanceMethod([RCTTextInputPatch class], @selector(pressesBegan:withEvent:));
-        IMP pressBeganIMP = method_getImplementation(pressBegan);
-        class_addMethod(targetClass, @selector(pressesBegan:withEvent:), pressBeganIMP, method_getTypeEncoding(pressBegan));
-
-        Method pressEnded = class_getInstanceMethod([RCTTextInputPatch class], @selector(pressesEnded:withEvent:));
-        IMP pressEndedIMP = method_getImplementation(pressEnded);
-        class_addMethod(targetClass, @selector(pressesEnded:withEvent:), pressEndedIMP, method_getTypeEncoding(pressEnded));
+        Class textViewClass = NSClassFromString(@"RCTUITextView");
+        if (textViewClass) {
+            [self setupPressEventPatches:textViewClass isTextField:NO];
+            NSLog(@"🚀 RCTTextInputPatch: Patched RCTUITextView for press events");
+        }
 
         NSLog(@"🚀 RCTTextInputPatch: Method swizzling completed");
     });
 }
 
-- (void)pressesBegan:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event
-{
-    BOOL didHandleEvent = NO;
++ (void)setupComponentViewPatches:(Class)targetClass {
+    // Swizzle textInputShouldSubmitOnReturn
+    Method originalSubmitMethod = class_getInstanceMethod(targetClass, @selector(textInputShouldSubmitOnReturn));
+    if (originalSubmitMethod) {
+        originalTextInputShouldSubmitOnReturn = method_getImplementation(originalSubmitMethod);
+        Method swizzledSubmitMethod = class_getInstanceMethod([RCTTextInputPatch class], @selector(swizzled_textInputShouldSubmitOnReturn));
+        method_setImplementation(originalSubmitMethod, method_getImplementation(swizzledSubmitMethod));
+    }
 
+    // Swizzle textInputShouldChangeText:inRange:
+    Method originalChangeTextMethod = class_getInstanceMethod(targetClass, @selector(textInputShouldChangeText:inRange:));
+    if (originalChangeTextMethod) {
+        originalTextInputShouldChangeTextIMP = method_getImplementation(originalChangeTextMethod);
+        Method swizzledChangeTextMethod = class_getInstanceMethod([RCTTextInputPatch class], @selector(swizzled_textInputShouldChangeText:inRange:));
+        method_setImplementation(originalChangeTextMethod, method_getImplementation(swizzledChangeTextMethod));
+    }
+}
+
++ (void)setupBaseTextInputPatches:(Class)targetClass {
+    // Same patches for legacy architecture
+    Method originalSubmitMethod = class_getInstanceMethod(targetClass, @selector(textInputShouldSubmitOnReturn));
+    if (originalSubmitMethod && !originalTextInputShouldSubmitOnReturn) {
+        originalTextInputShouldSubmitOnReturn = method_getImplementation(originalSubmitMethod);
+        Method swizzledSubmitMethod = class_getInstanceMethod([RCTTextInputPatch class], @selector(swizzled_textInputShouldSubmitOnReturn));
+        method_setImplementation(originalSubmitMethod, method_getImplementation(swizzledSubmitMethod));
+    }
+
+    Method originalChangeTextMethod = class_getInstanceMethod(targetClass, @selector(textInputShouldChangeText:inRange:));
+    if (originalChangeTextMethod && !originalTextInputShouldChangeTextIMP) {
+        originalTextInputShouldChangeTextIMP = method_getImplementation(originalChangeTextMethod);
+        Method swizzledChangeTextMethod = class_getInstanceMethod([RCTTextInputPatch class], @selector(swizzled_textInputShouldChangeText:inRange:));
+        method_setImplementation(originalChangeTextMethod, method_getImplementation(swizzledChangeTextMethod));
+    }
+}
+
++ (void)setupPressEventPatches:(Class)targetClass isTextField:(BOOL)isTextField {
+    // Store reference to which IMP to use
+    IMP *pressesBeganIMP = isTextField ? &originalTextFieldPressesBegan : &originalTextViewPressesBegan;
+    IMP *pressesEndedIMP = isTextField ? &originalTextFieldPressesEnded : &originalTextViewPressesEnded;
+
+    // Get existing implementations if they exist
+    Method existingPressesBegan = class_getInstanceMethod(targetClass, @selector(pressesBegan:withEvent:));
+    Method existingPressesEnded = class_getInstanceMethod(targetClass, @selector(pressesEnded:withEvent:));
+
+    if (existingPressesBegan) {
+        *pressesBeganIMP = method_getImplementation(existingPressesBegan);
+    }
+    if (existingPressesEnded) {
+        *pressesEndedIMP = method_getImplementation(existingPressesEnded);
+    }
+
+    // Get our swizzled methods
+    Method swizzledPressesBegan = class_getInstanceMethod([RCTTextInputPatch class], @selector(swizzled_pressesBegan:withEvent:));
+    Method swizzledPressesEnded = class_getInstanceMethod([RCTTextInputPatch class], @selector(swizzled_pressesEnded:withEvent:));
+
+    // Add or replace the methods
+    if (existingPressesBegan) {
+        method_setImplementation(existingPressesBegan, method_getImplementation(swizzledPressesBegan));
+    } else {
+        class_addMethod(targetClass, @selector(pressesBegan:withEvent:),
+                       method_getImplementation(swizzledPressesBegan),
+                       method_getTypeEncoding(swizzledPressesBegan));
+    }
+
+    if (existingPressesEnded) {
+        method_setImplementation(existingPressesEnded, method_getImplementation(swizzledPressesEnded));
+    } else {
+        class_addMethod(targetClass, @selector(pressesEnded:withEvent:),
+                       method_getImplementation(swizzledPressesEnded),
+                       method_getTypeEncoding(swizzledPressesEnded));
+    }
+}
+
+#pragma mark - Press Events (for RCTUITextField and RCTUITextView)
+
+- (void)swizzled_pressesBegan:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event
+{
     for (UIPress *press in presses) {
         if (press.key.keyCode == UIKeyboardHIDUsageKeyboardLeftAlt ||
             press.key.keyCode == UIKeyboardHIDUsageKeyboardRightAlt) {
             altKeyPressed = YES;
-            didHandleEvent = YES;
         }
         if (press.key.keyCode == UIKeyboardHIDUsageKeyboardLeftGUI ||
             press.key.keyCode == UIKeyboardHIDUsageKeyboardRightGUI) {
             commandPressed = YES;
-            didHandleEvent = YES;
         }
         if (press.key.keyCode == UIKeyboardHIDUsageKeyboardLeftShift ||
             press.key.keyCode == UIKeyboardHIDUsageKeyboardRightShift) {
             shiftPressed = YES;
-            didHandleEvent = YES;
         }
-        if (press.key.keyCode == UIKeyboardHIDUsageKeyboardV) {
+
+        // Handle Command+Enter directly here since it doesn't trigger textInputShouldSubmitOnReturn
+        if (press.key.keyCode == UIKeyboardHIDUsageKeyboardReturnOrEnter && commandPressed) {
+            [RCTTextInputPatch insertNewlineInTextView:(UIView *)self];
+            commandPressed = NO;
+            return;
+        }
+
+        if (press.key.keyCode == UIKeyboardHIDUsageKeyboardV && commandPressed) {
             [RCTTextInputPatch copyPasteboardFilesToClipboardDirectoryWithCompletion:^{
-                // Send event using the FilePasteModule event emitter
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [FilePasteModule sendFilePasteEvent];
                 });
@@ -108,127 +170,126 @@ static IMP originalPressesEnded = NULL;
         }
     }
 
-    if (!didHandleEvent) {
-        // If we didn't handle any keys, pass to the original implementation
-        if (originalPressesBegan) {
-            void (*originalFunc)(id, SEL, NSSet<UIPress *> *, UIPressesEvent *) = (void (*)(id, SEL, NSSet<UIPress *> *, UIPressesEvent *))originalPressesBegan;
-            originalFunc(self, @selector(pressesBegan:withEvent:), presses, event);
-        }
+    // Call original implementation or super
+    IMP originalIMP = NULL;
+    if ([self isKindOfClass:NSClassFromString(@"RCTUITextField")]) {
+        originalIMP = originalTextFieldPressesBegan;
+    } else if ([self isKindOfClass:NSClassFromString(@"RCTUITextView")]) {
+        originalIMP = originalTextViewPressesBegan;
+    }
+
+    if (originalIMP) {
+        void (*originalFunc)(id, SEL, NSSet<UIPress *> *, UIPressesEvent *) =
+            (void (*)(id, SEL, NSSet<UIPress *> *, UIPressesEvent *))originalIMP;
+        originalFunc(self, @selector(pressesBegan:withEvent:), presses, event);
+    } else {
+        // Call super if no original implementation
+        struct objc_super superInfo = {
+            .receiver = self,
+            .super_class = class_getSuperclass(object_getClass(self))
+        };
+        void (*superPressesBegan)(struct objc_super *, SEL, NSSet<UIPress *> *, UIPressesEvent *) =
+            (void (*)(struct objc_super *, SEL, NSSet<UIPress *> *, UIPressesEvent *))objc_msgSendSuper;
+        superPressesBegan(&superInfo, @selector(pressesBegan:withEvent:), presses, event);
     }
 }
 
-- (void)pressesEnded:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event
+- (void)swizzled_pressesEnded:(NSSet<UIPress *> *)presses withEvent:(UIPressesEvent *)event
 {
-    BOOL didHandleEvent = NO;
-
     for (UIPress *press in presses) {
         if (press.key.keyCode == UIKeyboardHIDUsageKeyboardLeftAlt ||
             press.key.keyCode == UIKeyboardHIDUsageKeyboardRightAlt) {
             altKeyPressed = NO;
-            didHandleEvent = YES;
         }
         if (press.key.keyCode == UIKeyboardHIDUsageKeyboardLeftGUI ||
             press.key.keyCode == UIKeyboardHIDUsageKeyboardRightGUI) {
             commandPressed = NO;
-            didHandleEvent = YES;
         }
         if (press.key.keyCode == UIKeyboardHIDUsageKeyboardLeftShift ||
             press.key.keyCode == UIKeyboardHIDUsageKeyboardRightShift) {
             shiftPressed = NO;
-            didHandleEvent = YES;
         }
     }
 
-    if (!didHandleEvent) {
-        // If we didn't handle any keys, pass to the original implementation
-        if (originalPressesEnded) {
-            void (*originalFunc)(id, SEL, NSSet<UIPress *> *, UIPressesEvent *) = (void (*)(id, SEL, NSSet<UIPress *> *, UIPressesEvent *))originalPressesEnded;
-            originalFunc(self, @selector(pressesEnded:withEvent:), presses, event);
-        }
+    // Call original implementation or super
+    IMP originalIMP = NULL;
+    if ([self isKindOfClass:NSClassFromString(@"RCTUITextField")]) {
+        originalIMP = originalTextFieldPressesEnded;
+    } else if ([self isKindOfClass:NSClassFromString(@"RCTUITextView")]) {
+        originalIMP = originalTextViewPressesEnded;
+    }
+
+    if (originalIMP) {
+        void (*originalFunc)(id, SEL, NSSet<UIPress *> *, UIPressesEvent *) =
+            (void (*)(id, SEL, NSSet<UIPress *> *, UIPressesEvent *))originalIMP;
+        originalFunc(self, @selector(pressesEnded:withEvent:), presses, event);
+    } else {
+        // Call super if no original implementation
+        struct objc_super superInfo = {
+            .receiver = self,
+            .super_class = class_getSuperclass(object_getClass(self))
+        };
+        void (*superPressesEnded)(struct objc_super *, SEL, NSSet<UIPress *> *, UIPressesEvent *) =
+            (void (*)(struct objc_super *, SEL, NSSet<UIPress *> *, UIPressesEvent *))objc_msgSendSuper;
+        superPressesEnded(&superInfo, @selector(pressesEnded:withEvent:), presses, event);
     }
 }
 
+#pragma mark - Text Input Delegate Methods
+
 - (BOOL)swizzled_textInputShouldSubmitOnReturn
 {
-    // Get reference to self as RCTBaseTextInputView
-    RCTBaseTextInputView *textInputView = (RCTBaseTextInputView *)self;
-
     if (altKeyPressed || shiftPressed) {
         // Alt+Enter or Shift+Enter logic - insert newline
+        id<RCTBackedTextInputViewProtocol> backedTextInputView = nil;
 
-        id<RCTBackedTextInputViewProtocol> backedTextInputView = textInputView.backedTextInputView;
+        // For RCTTextInputComponentView, access _backedTextInputView via KVC
+        @try {
+            backedTextInputView = [self valueForKey:@"_backedTextInputView"];
+        } @catch (NSException *exception) {
+            // Ignore exception
+        }
 
-        // Get current selection range
-        UITextRange *selectedRange = backedTextInputView.selectedTextRange;
-        NSInteger startPosition = [backedTextInputView offsetFromPosition:backedTextInputView.beginningOfDocument
-                                                              toPosition:selectedRange.start];
-        NSInteger endPosition = [backedTextInputView offsetFromPosition:backedTextInputView.beginningOfDocument
-                                                            toPosition:selectedRange.end];
+        // Fallback: try backedTextInputView property
+        if (!backedTextInputView && [self respondsToSelector:@selector(backedTextInputView)]) {
+            backedTextInputView = [self performSelector:@selector(backedTextInputView)];
+        }
 
-        // Create new text content with newline
-        NSMutableAttributedString *currentText = [backedTextInputView.attributedText mutableCopy];
+        if (backedTextInputView) {
+            UITextRange *selectedRange = backedTextInputView.selectedTextRange;
+            if (selectedRange) {
+                // Use replaceRange:withText: to insert newline
+                [backedTextInputView replaceRange:selectedRange withText:@"\n"];
 
-        // Get text attributes from the text input view
-        RCTTextAttributes *textAttributes = [textInputView valueForKey:@"_textAttributes"];
-        NSDictionary *attributes = textAttributes ? textAttributes.effectiveTextAttributes : @{};
-
-        NSAttributedString *newlineString = [[NSAttributedString alloc]
-                                            initWithString:@"\n"
-                                            attributes:attributes];
-
-        // Insert newline at current position
-        [currentText replaceCharactersInRange:NSMakeRange(startPosition, endPosition - startPosition)
-                         withAttributedString:newlineString];
-
-        // Update text
-        backedTextInputView.attributedText = currentText;
-
-        // Set cursor position after newline
-        UITextPosition *newPosition = [backedTextInputView positionFromPosition:backedTextInputView.beginningOfDocument
-                                                                         offset:startPosition + 1];
-        [backedTextInputView setSelectedTextRange:[backedTextInputView textRangeFromPosition:newPosition
-                                                                                 toPosition:newPosition]
-                                   notifyDelegate:YES];
-
-        // Trigger text change event
-        [textInputView textInputDidChange];
+                // Trigger text change event on the component view
+                if ([self respondsToSelector:@selector(textInputDidChange)]) {
+                    [self performSelector:@selector(textInputDidChange)];
+                }
+            }
+        }
 
         // Reset modifier key states after processing
         altKeyPressed = NO;
         shiftPressed = NO;
         commandPressed = NO;
 
-        // Return NO to prevent submission when Alt is pressed
+        // Return NO to prevent submission
         return NO;
     } else {
-        // Implement the original logic from RCTBaseTextInputView
-        NSString *submitBehavior = textInputView.submitBehavior;
-        const BOOL shouldSubmit = [submitBehavior isEqualToString:@"blurAndSubmit"] || [submitBehavior isEqualToString:@"submit"];
-
-        if (shouldSubmit) {
-            // Get bridge and event dispatcher
-            RCTBridge *bridge = [textInputView valueForKey:@"_bridge"];
-            NSNumber *reactTag = textInputView.reactTag;  // This is available through UIView+React category
-            NSInteger nativeEventCount = textInputView.nativeEventCount;  // This is a public property in RCTBaseTextInputView.h
-
-            if (bridge && bridge.eventDispatcher && reactTag) {
-                [bridge.eventDispatcher sendTextEventWithType:RCTTextEventTypeSubmit
-                                                      reactTag:reactTag
-                                                          text:[textInputView.backedTextInputView.attributedText.string copy]
-                                                           key:nil
-                                                    eventCount:nativeEventCount];
-            }
-        }
-
-        // Reset modifier key states after processing to prevent state leakage
+        // Reset modifier key states
         altKeyPressed = NO;
         shiftPressed = NO;
         commandPressed = NO;
 
-        return shouldSubmit;
+        // Call original implementation
+        if (originalTextInputShouldSubmitOnReturn) {
+            BOOL (*originalFunc)(id, SEL) = (BOOL (*)(id, SEL))originalTextInputShouldSubmitOnReturn;
+            return originalFunc(self, @selector(textInputShouldSubmitOnReturn));
+        }
+
+        return YES;
     }
 }
-
 
 - (NSString *)swizzled_textInputShouldChangeText:(NSString *)text inRange:(NSRange)range
 {
@@ -236,7 +297,6 @@ static IMP originalPressesEnded = NULL;
     if (text && [RCTTextInputPatch isFilePasteText:text]) {
         // Copy files from pasteboard to clipboard directory, then send event
         [RCTTextInputPatch copyPasteboardFilesToClipboardDirectoryWithCompletion:^{
-            // Send event using the FilePasteModule event emitter
             dispatch_async(dispatch_get_main_queue(), ^{
                 [FilePasteModule sendFilePasteEvent];
             });
@@ -246,16 +306,53 @@ static IMP originalPressesEnded = NULL;
         return nil;
     }
 
-    // Call the original method for normal text input using the saved IMP
+    // Call the original method
     if (originalTextInputShouldChangeTextIMP) {
-        // Cast the IMP to the correct function pointer type
-        NSString* (*originalFunc)(id, SEL, NSString*, NSRange) = (NSString* (*)(id, SEL, NSString*, NSRange))originalTextInputShouldChangeTextIMP;
+        NSString* (*originalFunc)(id, SEL, NSString*, NSRange) =
+            (NSString* (*)(id, SEL, NSString*, NSRange))originalTextInputShouldChangeTextIMP;
         return originalFunc(self, @selector(textInputShouldChangeText:inRange:), text, range);
     }
 
-    // Fallback: return the text as-is if we couldn't call the original method
     return text;
 }
+
+#pragma mark - Newline Insertion Helper
+
++ (void)insertNewlineInTextView:(UIView *)textInputView
+{
+    // The textInputView is RCTUITextView or RCTUITextField
+    id<RCTBackedTextInputViewProtocol> backedTextInputView = nil;
+
+    if ([textInputView conformsToProtocol:@protocol(RCTBackedTextInputViewProtocol)]) {
+        backedTextInputView = (id<RCTBackedTextInputViewProtocol>)textInputView;
+    }
+
+    if (!backedTextInputView) {
+        return;
+    }
+
+    UITextRange *selectedRange = backedTextInputView.selectedTextRange;
+    if (!selectedRange) {
+        return;
+    }
+
+    // Use replaceRange:withText: to insert newline
+    [backedTextInputView replaceRange:selectedRange withText:@"\n"];
+
+    // Find the parent RCTTextInputComponentView to trigger state update
+    UIView *parent = textInputView.superview;
+    while (parent) {
+        if ([NSStringFromClass([parent class]) isEqualToString:@"RCTTextInputComponentView"]) {
+            if ([parent respondsToSelector:@selector(textInputDidChange)]) {
+                [parent performSelector:@selector(textInputDidChange)];
+            }
+            break;
+        }
+        parent = parent.superview;
+    }
+}
+
+#pragma mark - File Handling Utilities
 
 + (void)copyPasteboardFilesToClipboardDirectoryWithCompletion:(void(^)(void))completion handleScreenshots:(BOOL)handleScreenshots
 {

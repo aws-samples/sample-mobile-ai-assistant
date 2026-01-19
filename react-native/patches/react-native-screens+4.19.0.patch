@@ -1,9 +1,8 @@
 diff --git a/node_modules/react-native-screens/ios/bottom-tabs/host/RNSBottomTabsHostEventEmitter.mm b/node_modules/react-native-screens/ios/bottom-tabs/host/RNSBottomTabsHostEventEmitter.mm
-index 1234567..abcdefg 100644
+index 269895c..8214611 100644
 --- a/node_modules/react-native-screens/ios/bottom-tabs/host/RNSBottomTabsHostEventEmitter.mm
 +++ b/node_modules/react-native-screens/ios/bottom-tabs/host/RNSBottomTabsHostEventEmitter.mm
-@@ -38,7 +38,7 @@
- #if RCT_NEW_ARCH_ENABLED
+@@ -39,7 +39,7 @@ - (BOOL)emitOnNativeFocusChange:(OnNativeFocusChangePayload)payload
    if (_reactEventEmitter != nullptr) {
      _reactEventEmitter->onNativeFocusChange(
          {.tabKey = RCTStringFromNSString(payload.tabKey),

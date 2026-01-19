@@ -25,7 +25,7 @@ export const saveFile = async (sourceUrl: string, fileName: string) => {
     if (!filesDirExists) {
       await RNFS.mkdir(filesDir);
     }
-    const uniqueFileName = await getUniqueFileName(filesDir, fileName);
+    const uniqueFileName = getUniqueFileName(fileName);
     const destinationPath = `${filesDir}/${uniqueFileName}`;
     await RNFS.copyFile(sourceUrl, destinationPath);
     return Platform.OS === 'android'
@@ -57,24 +57,12 @@ export const getFileTextContent = async (fileUrl: string): Promise<string> => {
   }
 };
 
-const getUniqueFileName = async (
-  basePath: string,
-  originalFileName: string
-): Promise<string> => {
+const getUniqueFileName = (originalFileName: string): string => {
   const lastDotIndex = originalFileName.lastIndexOf('.');
   const nameWithoutExt = originalFileName.substring(0, lastDotIndex);
   const extension = originalFileName.substring(lastDotIndex);
-
-  let counter = 0;
-  let finalFileName = originalFileName;
-  let finalPath = `${basePath}/${finalFileName}`;
-
-  while (await RNFS.exists(finalPath)) {
-    counter++;
-    finalFileName = `${nameWithoutExt}(${counter})${extension}`;
-    finalPath = `${basePath}/${finalFileName}`;
-  }
-  return finalFileName;
+  const timestamp = Date.now();
+  return `${nameWithoutExt}_${timestamp}${extension}`;
 };
 
 export const getFullFileUrl = (url: string) => {

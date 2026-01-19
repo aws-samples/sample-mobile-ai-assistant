@@ -1223,6 +1223,11 @@ function ChatScreen(): React.JSX.Element {
             color: colors.text,
             smartInsertDelete: false,
             spellCheck: false,
+            autoComplete: "off",
+            autoCorrect: false,
+            keyboardType: 'default',
+            textContentType: "username",
+            dataDetectorTypes: 'none',
             blurOnSubmit: isMac,
             onSubmitEditing: () => {
               if (
@@ -1295,6 +1300,9 @@ const createStyles = (colors: ColorScheme, isNovaSonic: boolean) =>
     composerTextInput: {
       backgroundColor: 'transparent',
       color: colors.text,
+      maxHeight: isMac ? 360 : 200,
+      paddingBottom: 6,
+      paddingTop: 4,
     },
     inputToolbarContainer: {
       backgroundColor: colors.background,

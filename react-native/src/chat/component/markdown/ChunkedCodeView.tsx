@@ -6,13 +6,11 @@ import React, {
   type FunctionComponent,
 } from 'react';
 import {
-  Platform,
   ScrollView,
   type ScrollViewProps,
   type StyleProp,
   StyleSheet,
   Text,
-  TextInput,
   type TextStyle,
   View,
   type ViewStyle,
@@ -38,17 +36,6 @@ interface ChunkTextProps {
 // Memoized chunk - complete chunks never re-render
 const ChunkText: FunctionComponent<ChunkTextProps> = memo(
   ({ content, textStyle }) => {
-    if (Platform.OS === 'ios') {
-      return (
-        <TextInput
-          style={[styles.chunkText, textStyle]}
-          editable={false}
-          multiline
-          scrollEnabled={false}>
-          {content}
-        </TextInput>
-      );
-    }
     return <Text style={textStyle}>{content}</Text>;
   },
   (prevProps, nextProps) => {
@@ -59,103 +46,52 @@ const ChunkText: FunctionComponent<ChunkTextProps> = memo(
   }
 );
 
-// Incremental line tracking - O(delta) instead of O(n)
+// Simple chunked code hook - splits code into 100-line chunks
 const useChunkedCode = (code: string, isCompleted?: boolean): string[] => {
-  const linesRef = useRef<string[]>([]);
-  const processedLengthRef = useRef<number>(0);
-  const incompleteLineRef = useRef<string>('');
-  const completedChunksRef = useRef<string[]>([]);
+  // Frozen complete chunks (each contains exactly 100 lines)
+  const frozenChunksRef = useRef<string[]>([]);
+  // Throttle counter
   const updateCountRef = useRef(0);
-
-  const [, setUpdateTrigger] = useState(0);
-  const lastChunkRef = useRef<string>('');
+  // Trigger re-render
+  const [, forceUpdate] = useState(0);
 
   useEffect(() => {
-    const prevLength = processedLengthRef.current;
-    const isReset =
-      code.length < prevLength || !code.startsWith(code.slice(0, prevLength));
+    const lines = code ? code.split('\n') : [];
+    const totalLines = lines.length;
 
-    if (isReset) {
-      linesRef.current = [];
-      processedLengthRef.current = 0;
-      incompleteLineRef.current = '';
-      completedChunksRef.current = [];
-      updateCountRef.current = 0;
-      lastChunkRef.current = '';
-      setUpdateTrigger(prev => prev + 1);
-    }
+    // How many complete 100-line chunks should exist
+    // Use (totalLines - 1) to ensure the last line is complete before freezing
+    const completeChunkCount =
+      totalLines > 0 ? Math.floor((totalLines - 1) / CHUNK_SIZE) : 0;
+    const frozenCount = frozenChunksRef.current.length;
 
-    const newContent = code.slice(processedLengthRef.current);
-    if (!newContent) {
-      return;
-    }
-
-    // Always update refs to keep line tracking accurate
-    const newParts = newContent.split('\n');
-
-    if (newParts.length > 0) {
-      if (incompleteLineRef.current) {
-        const lastLineIndex = linesRef.current.length - 1;
-        if (lastLineIndex >= 0) {
-          linesRef.current[lastLineIndex] += newParts[0];
-        } else {
-          linesRef.current.push(newParts[0]);
-        }
-      } else {
-        linesRef.current.push(newParts[0]);
-      }
-
-      for (let i = 1; i < newParts.length; i++) {
-        linesRef.current.push(newParts[i]);
-      }
-
-      incompleteLineRef.current = code.endsWith('\n')
-        ? ''
-        : newParts[newParts.length - 1];
-    }
-
-    processedLengthRef.current = code.length;
-
-    const totalLines = linesRef.current.length;
-    const completeChunkCount = Math.floor(totalLines / CHUNK_SIZE);
-
-    // Always update completed chunks ref to avoid data loss
-    for (
-      let i = completedChunksRef.current.length;
-      i < completeChunkCount;
-      i++
-    ) {
-      const start = i * CHUNK_SIZE;
+    // Freeze new complete chunk when we cross 100-line boundary
+    if (completeChunkCount > frozenCount) {
+      const start = frozenCount * CHUNK_SIZE;
       const end = start + CHUNK_SIZE;
-      const chunk = linesRef.current.slice(start, end).join('\n');
-      completedChunksRef.current.push(chunk);
+      const chunkContent = lines.slice(start, end).join('\n');
+      frozenChunksRef.current.push(chunkContent);
     }
 
-    const remainingStart = completeChunkCount * CHUNK_SIZE;
-    const remainingLines = totalLines - remainingStart;
-    const rawLastChunk =
-      remainingLines > 0
-        ? linesRef.current.slice(remainingStart).join('\n')
-        : '';
-
-    // Throttle: skip odd state updates during streaming (but refs are already updated)
+    // Throttle: skip odd updates during streaming
     updateCountRef.current++;
-    if (!isReset && !isCompleted && updateCountRef.current % 2 !== 0) {
+    if (!isCompleted && updateCountRef.current % 2 !== 0) {
       return;
     }
 
-    lastChunkRef.current = rawLastChunk;
-    setUpdateTrigger(prev => prev + 1);
+    forceUpdate(prev => prev + 1);
   }, [code, isCompleted]);
 
-  if (lastChunkRef.current) {
-    return [...completedChunksRef.current, lastChunkRef.current];
+  // Build return array: frozen chunks + remaining lines
+  const lines = code ? code.split('\n') : [];
+  const frozenCount = frozenChunksRef.current.length;
+  const remainingStart = frozenCount * CHUNK_SIZE;
+  const lastChunk = lines.slice(remainingStart).join('\n');
+
+  if (lastChunk) {
+    return [...frozenChunksRef.current, lastChunk];
   }
-  return completedChunksRef.current.length > 0
-    ? [...completedChunksRef.current]
-    : code
-    ? [code]
-    : [];
+  return [...frozenChunksRef.current];
 };
 
 /**
@@ -185,7 +121,7 @@ const ChunkedCodeView: FunctionComponent<ChunkedCodeViewProps> = ({
       <View style={styles.chunksContainer}>
         {chunks.map((chunk, index) => (
           <ChunkText
-            key={index}
+            key={isCompleted ? `chunk-${index}-${chunk.length}` : index}
             content={chunk}
             textStyle={textStyle}
             isComplete={index < chunks.length - 1}

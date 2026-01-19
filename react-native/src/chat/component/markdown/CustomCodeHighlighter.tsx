@@ -23,7 +23,6 @@ import SyntaxHighlighter, {
   type SyntaxHighlighterProps,
 } from 'react-syntax-highlighter';
 import transform, { StyleTuple } from 'css-to-react-native';
-import { isMac } from '../../../App.tsx';
 import { trimNewlines } from 'trim-newlines';
 import ChunkedCodeView from './ChunkedCodeView';
 
@@ -164,19 +163,6 @@ export const CustomCodeHighlighter: FunctionComponent<CodeHighlighterProps> = ({
 
   const renderNode = useCallback(
     (nodes: rendererNode[]): ReactNode => {
-      // Calculate margin bottom value once
-      const scale =
-        rest.language === 'mermaid'
-          ? 1.75
-          : rest.language === 'html' || rest.language === 'diff'
-          ? isMac
-            ? 2
-            : 1.85
-          : isMac
-          ? 3
-          : 2.82;
-      const marginBottomValue = -nodes.length * scale;
-
       // Optimization for streaming content - only process new nodes
       if (nodes.length >= prevNodesLength.current) {
         // When initial render or nodes are added (streaming case)
@@ -204,12 +190,6 @@ export const CustomCodeHighlighter: FunctionComponent<CodeHighlighterProps> = ({
 
       return (
         <TextInput
-          style={[
-            styles.inputText,
-            {
-              marginBottom: marginBottomValue,
-            },
-          ]}
           editable={false}
           multiline>
           {processedNodesCache.current}
@@ -297,12 +277,5 @@ export const CustomCodeHighlighter: FunctionComponent<CodeHighlighterProps> = ({
     </SyntaxHighlighter>
   );
 };
-
-const styles = StyleSheet.create({
-  inputText: {
-    lineHeight: 20,
-    marginTop: -5,
-  },
-});
 
 export default CustomCodeHighlighter;
