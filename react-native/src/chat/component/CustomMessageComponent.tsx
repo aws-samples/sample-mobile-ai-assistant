@@ -20,7 +20,6 @@ import {
   View,
 } from 'react-native';
 import Share from 'react-native-share';
-import { IMessage, MessageProps } from 'react-native-gifted-chat';
 import { CustomMarkdownRenderer } from './markdown/CustomMarkdownRenderer.tsx';
 import { MarkedStyles } from 'react-native-marked/src/theme/types.ts';
 import { ChatStatus, PressMode, SwiftChatMessage } from '../../types/Chat.ts';
@@ -47,7 +46,9 @@ import {
 } from '../../storage/StorageUtils.ts';
 import CitationList from './CitationList';
 
-interface CustomMessageProps extends MessageProps<SwiftChatMessage> {
+export interface CustomMessageProps {
+  currentMessage: SwiftChatMessage;
+  position?: 'left' | 'right';
   chatStatus: ChatStatus;
   isLastAIMessage?: boolean;
   searchPhase?: string;
@@ -61,7 +62,7 @@ interface CustomMessageProps extends MessageProps<SwiftChatMessage> {
     userMessageIndex: number,
     newText?: string
   ) => void;
-  flatListRef?: RefObject<FlatList<IMessage> | null>;
+  flatListRef?: RefObject<FlatList<SwiftChatMessage> | null>;
   isAppMode?: boolean;
 }
 
@@ -165,7 +166,8 @@ const CustomMessageComponent: React.FC<CustomMessageProps> = ({
   }, [currentMessage?.text]);
 
   const handleRegenerate = useCallback(() => {
-    // For AI message: userMessageIndex = messageIndex + 1
+    // For inverted list [newest...oldest]: AI message (index 0) is before user message (index 1)
+    // So userMessageIndex = messageIndex + 1
     if (messageIndex !== undefined) {
       const userMessageIndex = messageIndex + 1;
       regenerateFromUserMessage?.(userMessageIndex);

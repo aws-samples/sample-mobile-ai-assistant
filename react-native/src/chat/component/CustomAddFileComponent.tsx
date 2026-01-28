@@ -1,11 +1,12 @@
-import { Actions } from 'react-native-gifted-chat';
 import {
+  ActionSheetIOS,
   Image,
   Platform,
   StyleSheet,
   Text,
   NativeEventEmitter,
   NativeModules,
+  TouchableOpacity,
 } from 'react-native';
 import React, { useRef, useEffect, useCallback } from 'react';
 import {
@@ -31,7 +32,6 @@ import { isMac } from '../../App.tsx';
 import { getTextModel } from '../../storage/StorageUtils.ts';
 import { showInfo } from '../util/ToastUtils.ts';
 import { useTheme } from '../../theme';
-import { isAndroid } from '../../utils/PlatformUtils.ts';
 
 const { FilePasteModule } = NativeModules;
 const eventEmitter = FilePasteModule
@@ -224,7 +224,7 @@ export const CustomAddFileComponent: React.FC<CustomRenderActionsProps> = ({
     }
   }, []);
 
-  const handleChooseFiles = async () => {
+  const handleChooseFiles = useCallback(async () => {
     let chooseType = [];
     const isImageMode = chatModeRef.current === ChatMode.Image;
     try {
@@ -244,77 +244,90 @@ export const CustomAddFileComponent: React.FC<CustomRenderActionsProps> = ({
     } catch (err: unknown) {
       console.info(err);
     }
-  };
+  }, [processFiles, onFileSelected]);
+
+  const handleTakeCamera = useCallback(async () => {
+    const res = await launchCamera({
+      saveToPhotos: false,
+      mediaType:
+        chatModeRef.current === ChatMode.Text && isVideoSupported()
+          ? 'mixed'
+          : 'photo',
+      videoQuality: 'high',
+      durationLimit: 30,
+      includeBase64: false,
+      includeExtra: true,
+      presentationStyle: 'fullScreen',
+    });
+    const files = await getFiles(res);
+    if (files.length > 0) {
+      onFileSelected(files);
+    }
+  }, [onFileSelected]);
+
+  const handleChooseFromPhotos = useCallback(async () => {
+    const res = await launchImageLibrary({
+      selectionLimit: chatModeRef.current === ChatMode.Text ? 0 : 2,
+      mediaType:
+        chatModeRef.current === ChatMode.Text && isVideoSupported()
+          ? 'mixed'
+          : 'photo',
+      includeBase64: false,
+      includeExtra: true,
+      assetRepresentationMode: 'current',
+    });
+    const files = await getFiles(res);
+    if (files.length > 0) {
+      onFileSelected(files);
+    }
+  }, [onFileSelected]);
+
+  const showActionSheet = useCallback(() => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', 'Take Camera', 'Choose From Photos', 'Choose From Files'],
+          cancelButtonIndex: 0,
+        },
+        buttonIndex => {
+          if (buttonIndex === 1) {
+            handleTakeCamera();
+          } else if (buttonIndex === 2) {
+            handleChooseFromPhotos();
+          } else if (buttonIndex === 3) {
+            handleChooseFiles();
+          }
+        }
+      );
+    } else {
+      // For Android, use a simple alert or show options directly
+      // You may want to implement a custom modal for Android
+      handleChooseFiles();
+    }
+  }, [handleTakeCamera, handleChooseFromPhotos, handleChooseFiles]);
+
+  const containerStyle = mode === 'list'
+    ? { ...styles.containerStyle, width: '100%' as const, height: '100%' as const, marginRight: 10 }
+    : styles.containerStyle;
 
   if (isMac) {
     return (
-      <Actions
-        containerStyle={{
-          ...styles.containerStyle,
-          ...(mode === 'list' && {
-            width: '100%',
-            height: '100%',
-            marginRight: 10,
-          }),
-        }}
-        icon={mode === 'default' ? DefaultIcon : ThemedListIcon}
-        onPressActionButton={handleChooseFiles}
-      />
+      <TouchableOpacity
+        style={containerStyle}
+        onPress={handleChooseFiles}
+        activeOpacity={0.7}>
+        {mode === 'default' ? <DefaultIcon /> : <ThemedListIcon />}
+      </TouchableOpacity>
     );
   }
+
   return (
-    <Actions
-      containerStyle={{
-        ...styles.containerStyle,
-        ...(mode === 'list' && {
-          width: '100%',
-          height: '100%',
-          marginRight: 10,
-        }),
-      }}
-      icon={mode === 'default' ? DefaultIcon : ThemedListIcon}
-      options={{
-        'Take Camera': () => {
-          launchCamera({
-            saveToPhotos: false,
-            mediaType:
-              chatModeRef.current === ChatMode.Text && isVideoSupported()
-                ? 'mixed'
-                : 'photo',
-            videoQuality: 'high',
-            durationLimit: 30,
-            includeBase64: false,
-            includeExtra: true,
-            presentationStyle: 'fullScreen',
-          }).then(async res => {
-            const files = await getFiles(res);
-            if (files.length > 0) {
-              onFileSelected(files);
-            }
-          });
-        },
-        'Choose From Photos': () => {
-          launchImageLibrary({
-            selectionLimit: chatModeRef.current === ChatMode.Text ? 0 : 2,
-            mediaType:
-              chatModeRef.current === ChatMode.Text && isVideoSupported()
-                ? 'mixed'
-                : 'photo',
-            includeBase64: false,
-            includeExtra: true,
-            assetRepresentationMode: 'current',
-          }).then(async res => {
-            const files = await getFiles(res);
-            if (files.length > 0) {
-              onFileSelected(files);
-            }
-          });
-        },
-        'Choose From Files': handleChooseFiles,
-        Cancel: () => {},
-      }}
-      optionTintColor={isAndroid ? colors.background : colors.text}
-    />
+    <TouchableOpacity
+      style={containerStyle}
+      onPress={showActionSheet}
+      activeOpacity={0.7}>
+      {mode === 'default' ? <DefaultIcon /> : <ThemedListIcon />}
+    </TouchableOpacity>
   );
 };
 

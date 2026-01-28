@@ -1,4 +1,3 @@
-import { Send, SendProps } from 'react-native-gifted-chat';
 import React, { useMemo, useCallback } from 'react';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import ImageSpinner from './ImageSpinner';
@@ -13,7 +12,9 @@ import { CustomAddFileComponent } from './CustomAddFileComponent.tsx';
 import { getImageModel, getTextModel } from '../../storage/StorageUtils.ts';
 import { useTheme, ColorScheme } from '../../theme';
 
-interface CustomSendComponentProps extends SendProps<SwiftChatMessage> {
+interface CustomSendComponentProps {
+  text?: string;
+  onSend?: (message: Partial<SwiftChatMessage>, shouldResetInput: boolean) => void;
   chatStatus: ChatStatus;
   chatMode: ChatMode;
   selectedFiles: FileInfo[];
@@ -25,6 +26,8 @@ interface CustomSendComponentProps extends SendProps<SwiftChatMessage> {
 }
 
 const CustomSendComponent: React.FC<CustomSendComponentProps> = ({
+  text,
+  onSend,
   chatStatus,
   chatMode,
   selectedFiles,
@@ -33,19 +36,14 @@ const CustomSendComponent: React.FC<CustomSendComponentProps> = ({
   onFileSelected,
   onVoiceChatToggle,
   systemPrompt,
-  ...props
 }) => {
-  const { text, onSend } = props;
   const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const isNovaSonic = getTextModel().modelId.includes('sonic');
 
   const handleSend = useCallback(() => {
     if (onSend) {
-      onSend(
-        { text: text ? text.trim() : '' } as Partial<SwiftChatMessage>,
-        true
-      );
+      onSend({ text: text ? text.trim() : '' } as Partial<SwiftChatMessage>, true);
     }
   }, [onSend, text]);
 
@@ -74,12 +72,11 @@ const CustomSendComponent: React.FC<CustomSendComponentProps> = ({
   }
   if (isShowSending) {
     return (
-      <Send
-        {...props}
-        containerStyle={styles.sendContainer}
-        sendButtonProps={{
-          onPress: handleSend,
-        }}>
+      <TouchableOpacity
+        style={styles.sendContainer}
+        onPress={chatStatus !== ChatStatus.Running ? handleSend : undefined}
+        disabled={chatStatus === ChatStatus.Running}
+        activeOpacity={0.7}>
         <>
           {chatStatus === ChatStatus.Running && (
             <TouchableOpacity
@@ -100,7 +97,7 @@ const CustomSendComponent: React.FC<CustomSendComponentProps> = ({
             />
           )}
         </>
-      </Send>
+      </TouchableOpacity>
     );
   } else {
     if ((isNovaSonic || isShowLoading) && chatMode === ChatMode.Text) {
@@ -146,7 +143,6 @@ const CustomSendComponent: React.FC<CustomSendComponentProps> = ({
     } else {
       return (
         <CustomAddFileComponent
-          {...props}
           onFileSelected={handleFileSelected}
           chatMode={chatMode}
         />
@@ -191,6 +187,7 @@ const createStyles = (colors: ColorScheme) =>
       justifyContent: 'center',
       alignItems: 'center',
       alignSelf: 'flex-end',
+      height: 44,
     },
     micContainer: {
       justifyContent: 'center',

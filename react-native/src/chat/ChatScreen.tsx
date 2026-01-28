@@ -1,21 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Composer,
-  GiftedChat,
-  IMessage,
-  InputToolbar,
-} from 'react-native-gifted-chat';
-import {
   AppState,
   Dimensions,
-  FlatList,
   Keyboard,
-  LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Platform,
   StyleSheet,
-  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -29,7 +20,6 @@ import AudioWaveformComponent, {
 import { ColorScheme, useTheme } from '../theme';
 import { invokeBedrockWithCallBack, requestToken } from '../api/bedrock-api';
 import CustomMessageComponent from './component/CustomMessageComponent.tsx';
-import { CustomScrollToBottomComponent } from './component/CustomScrollToBottomComponent.tsx';
 import { EmptyChatComponent } from './component/EmptyChatComponent.tsx';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { v4 as uuidv4 } from 'uuid';
@@ -89,18 +79,28 @@ import {
   replaceHtmlWithPlaceholder,
   replaceDiffWithPlaceholder,
 } from './util/DiffUtils.ts';
+import {
+  CustomChatComponent,
+  CustomChatComponentRef,
+} from './component/CustomChatComponent.tsx';
+import { MessageRenderProps } from './component/MessageList.tsx';
+import {
+  appendMessages,
+  getLatestMessage,
+  updateLatestMessage,
+} from './utils/messageUtils.ts';
 
 const BOT_ID = 2;
 const APP_PROMPT_NAME = 'App';
 
 /**
  * Find the latest htmlCode from AI messages
- * Traverse all AI messages to find the first one with htmlCode
+ * For inverted order [newest...oldest], traverse from start to find latest
  */
 const findLatestHtmlCode = (messages: SwiftChatMessage[]): string => {
-  const aiMessages = messages.filter(m => m.user._id === BOT_ID);
-  for (const msg of aiMessages) {
-    if (msg.htmlCode) {
+  // For inverted: newest is at index 0, traverse from start
+  for (const msg of messages) {
+    if (msg.user._id === BOT_ID && msg.htmlCode) {
       return msg.htmlCode;
     }
   }
@@ -165,8 +165,7 @@ function ChatScreen(): React.JSX.Element {
   const chatStatusRef = useRef(chatStatus);
   const messagesRef = useRef(messages);
   const bedrockMessages = useRef<BedrockMessage[]>([]);
-  const flatListRef = useRef<FlatList<IMessage>>(null);
-  const textInputViewRef = useRef<TextInput | null>(null);
+  const chatComponentRef = useRef<CustomChatComponentRef>(null);
   const sessionIdRef = useRef(initialSessionId || getSessionId() + 1);
   const isCanceled = useRef(false);
   const { sendEvent, event, drawerType } = useAppContext();
@@ -180,8 +179,6 @@ function ChatScreen(): React.JSX.Element {
   const systemPromptRef = useRef(systemPrompt);
   const drawerTypeRef = useRef(drawerType);
   const isVoiceLoading = useRef(false);
-  const contentHeightRef = useRef(0);
-  const containerHeightRef = useRef(0);
   const [isShowVoiceLoading, setIsShowVoiceLoading] = useState(false);
   const audioWaveformRef = useRef<AudioWaveformRef>(null);
   const [searchPhase, setSearchPhase] = useState<string>('');
@@ -189,7 +186,6 @@ function ChatScreen(): React.JSX.Element {
   // App mode state
   const isAppModeRef = useRef(false);
   const endVoiceConversationRef = useRef<(() => Promise<boolean>) | null>(null);
-  const currentScrollOffsetRef = useRef(0);
   const isNewChatRef = useRef(!initialSessionId);
 
   const endVoiceConversation = useCallback(async () => {
@@ -304,7 +300,7 @@ function ChatScreen(): React.JSX.Element {
         <CustomHeaderRightButton
           onPress={() => {
             //clear input content and selected files
-            textInputViewRef?.current?.clear();
+            chatComponentRef.current?.clearInput();
             setUsage(undefined);
             setSelectedFiles([]);
             if (
@@ -336,8 +332,15 @@ function ChatScreen(): React.JSX.Element {
         controllerRef.current?.abort();
         chatStatusRef.current = ChatStatus.Init;
         if (modeRef.current === ChatMode.Image) {
-          if (messagesRef.current[0].text === imagePlaceholder) {
-            messagesRef.current[0].text = 'Request interrupted';
+          // Update the latest message (first element in inverted array)
+          const lastMsg = getLatestMessage(messagesRef.current);
+          if (lastMsg && lastMsg.text === imagePlaceholder) {
+            setMessages(
+              updateLatestMessage(messagesRef.current, msg => ({
+                ...msg,
+                text: 'Request interrupted',
+              }))
+            );
           }
         }
         saveCurrentMessages();
@@ -364,7 +367,9 @@ function ChatScreen(): React.JSX.Element {
       setIsLoadingMessages(true);
       const msg = getMessagesBySessionId(initialSessionId);
       sessionIdRef.current = initialSessionId;
-      setUsage((msg[0] as SwiftChatMessage).usage);
+      // Get usage from the latest message (first element in inverted array)
+      const latestMsg = getLatestMessage(msg);
+      setUsage(latestMsg?.usage);
       // restore htmlCode from history
       const restoredHtmlCode = findLatestHtmlCode(msg as SwiftChatMessage[]);
       setLatestHtmlCode(restoredHtmlCode);
@@ -408,9 +413,9 @@ function ChatScreen(): React.JSX.Element {
       setTimeout(() => {
         sendEventRef.current?.('selectAppPrompt');
         // Pre-fill the input with app name hint
-        if (editAppName && textInputViewRef.current) {
+        if (editAppName) {
           const hintText = `Edit [${editAppName}]: `;
-          textInputViewRef.current.setNativeProps({ text: hintText });
+          chatComponentRef.current?.setInputText(hintText);
           inputTextRef.current = hintText;
           setHasInputText(true);
         }
@@ -440,6 +445,7 @@ function ChatScreen(): React.JSX.Element {
       const { htmlCode } = event.params;
       setMessages(prevMessages => {
         // update isLastHtml for all messages
+        // For inverted: first element (index 0) is the latest message
         const newMessages = prevMessages.map((msg, index) => {
           if (index === 0) {
             return { ...msg, htmlCode: htmlCode, isLastHtml: true };
@@ -460,6 +466,7 @@ function ChatScreen(): React.JSX.Element {
       const { htmlCode, diffCode } = event.params;
       setMessages(prevMessages => {
         // update isLastHtml for all messages
+        // For inverted: first element (index 0) is the latest message
         const newMessages = prevMessages.map((msg, index) => {
           if (index === 0) {
             return {
@@ -482,7 +489,7 @@ function ChatScreen(): React.JSX.Element {
   useEffect(() => {
     const handleKeyboardShow = () => {
       // Only scroll to bottom if the chat input is focused
-      if (textInputViewRef.current?.isFocused()) {
+      if (chatComponentRef.current?.isInputFocused()) {
         scrollToBottom();
       }
     };
@@ -504,7 +511,7 @@ function ChatScreen(): React.JSX.Element {
 
   const showKeyboard = () => {
     setTimeout(() => {
-      textInputViewRef.current?.focus();
+      chatComponentRef.current?.focusInput();
     }, 100);
   };
 
@@ -531,17 +538,21 @@ function ChatScreen(): React.JSX.Element {
         return;
       }
       // In App mode, replace HTML/diff with placeholder to save context tokens
-      const msg = messagesRef.current[0];
-      if (isAppModeRef.current && msg.htmlCode) {
+      // For inverted: latest message is at index 0
+      const msg = getLatestMessage(messagesRef.current);
+      if (msg && isAppModeRef.current && msg.htmlCode) {
         msg.text = replaceHtmlWithPlaceholder(msg.text, msg.htmlCode);
       }
-      if (isAppModeRef.current && msg.diffCode && msg.htmlCode) {
+      if (msg && isAppModeRef.current && msg.diffCode && msg.htmlCode) {
         msg.text = replaceDiffWithPlaceholder(msg.text, msg.diffCode);
       }
       saveCurrentMessages();
-      getBedrockMessage(messagesRef.current[0]).then(currentMsg => {
-        bedrockMessages.current.push(currentMsg);
-      });
+      const latestMsg = getLatestMessage(messagesRef.current);
+      if (latestMsg) {
+        getBedrockMessage(latestMsg).then(currentMsg => {
+          bedrockMessages.current.push(currentMsg);
+        });
+      }
       if (drawerTypeRef.current === 'permanent') {
         sendEventRef.current('updateHistory');
         setTimeout(() => {
@@ -600,6 +611,7 @@ function ChatScreen(): React.JSX.Element {
     }
     saveMessages(sessionIdRef.current, messagesRef.current, usageRef.current!);
     if (isNewChatRef.current) {
+      // For inverted: first user message is at the end (oldest)
       saveMessageList(
         sessionIdRef.current,
         messagesRef.current[messagesRef.current.length - 1],
@@ -628,42 +640,26 @@ function ChatScreen(): React.JSX.Element {
     },
   });
 
+  // For inverted list: scroll to top means scroll to the oldest message (end of array)
   const scrollToTop = () => {
     setUserScrolled(true);
-    if (flatListRef.current) {
-      if (messagesRef.current.length > 0) {
-        flatListRef.current.scrollToIndex({
-          index: messagesRef.current.length - 1,
-          animated: true,
-        });
-      }
-    }
-  };
-  const scrollToBottom = () => {
-    if (flatListRef.current) {
-      flatListRef.current.scrollToOffset({ offset: 0, animated: true });
-    }
-  };
-
-  const scrollUpByHeight = (
-    expanded: boolean,
-    height: number,
-    animated: boolean
-  ) => {
-    if (flatListRef.current) {
-      const newOffset =
-        currentScrollOffsetRef.current + (expanded ? height : -height);
-      flatListRef.current.scrollToOffset({
-        offset: newOffset,
-        animated: animated,
+    if (messagesRef.current.length > 0) {
+      chatComponentRef.current?.scrollToIndex({
+        index: messagesRef.current.length - 1,
+        animated: true,
       });
     }
   };
 
+  // For inverted list: scrollToEnd scrolls to bottom (newest messages)
+  const scrollToBottom = (animated = true) => {
+    chatComponentRef.current?.scrollToEnd({ animated });
+  };
+
   const handleScroll = (
-    scrollEvent: NativeSyntheticEvent<NativeScrollEvent>
+    _scrollEvent: NativeSyntheticEvent<NativeScrollEvent>
   ) => {
-    currentScrollOffsetRef.current = scrollEvent.nativeEvent.contentOffset.y;
+    // No longer need to track scroll offset for scroll compensation
   };
 
   const handleUserScroll = (_: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -677,23 +673,33 @@ function ChatScreen(): React.JSX.Element {
   ) => {
     if (chatStatusRef.current === ChatStatus.Running && userScrolled) {
       const { contentOffset } = endEvent.nativeEvent;
+      // For inverted list: offset 0 means at bottom, check if near bottom
+      // When user scrolls near bottom during streaming, snap to bottom and resume auto-scroll
       if (contentOffset.y > 0 && contentOffset.y < 100) {
         scrollToBottom();
       }
     }
   };
 
-  // Stable callback for reasoning toggle - avoids re-render of CustomMessageComponent
+  // Reasoning toggle callback for inverted list
+  // Need scroll compensation when content expands upward
   const handleReasoningToggle = useCallback(
     (expanded: boolean, height: number, animated: boolean) => {
-      scrollUpByHeight(expanded, height, animated);
+      // For inverted list, when content expands we need to compensate scroll position
+      if (expanded && height > 0) {
+        chatComponentRef.current?.scrollToOffset({
+          offset: height,
+          animated,
+        });
+      }
     },
     []
   );
 
   // invoke bedrock api
   useEffect(() => {
-    const lastMessage = messages[0];
+    // For inverted: latest message is at index 0
+    const lastMessage = getLatestMessage(messages);
     if (
       lastMessage &&
       lastMessage.user &&
@@ -714,7 +720,7 @@ function ChatScreen(): React.JSX.Element {
         controllerRef.current = new AbortController();
         isCanceled.current = false;
 
-        // Get the last user message (the one after bot message)
+        // Get the last user message (for inverted: index 1, after bot message at 0)
         const userMessage = messages.length > 1 ? messages[1]?.text : null;
 
         let webSearchSystemPrompt;
@@ -809,16 +815,17 @@ function ChatScreen(): React.JSX.Element {
                   };
                 }
               }
-              const previousMessage = messagesRef.current[0];
+              // For inverted: latest message is at index 0
+              const previousMessage = getLatestMessage(messagesRef.current);
               if (
-                previousMessage.text !== msg ||
-                previousMessage.reasoning !== reasoning ||
-                (!previousMessage.metrics && metrics)
+                previousMessage &&
+                (previousMessage.text !== msg ||
+                  previousMessage.reasoning !== reasoning ||
+                  (!previousMessage.metrics && metrics))
               ) {
-                setMessages(prevMessages => {
-                  const newMessages = [...prevMessages];
-                  newMessages[0] = {
-                    ...prevMessages[0],
+                setMessages(prevMessages =>
+                  updateLatestMessage(prevMessages, prevMsg => ({
+                    ...prevMsg,
                     text:
                       isCanceled.current &&
                       (previousMessage.text === textPlaceholder ||
@@ -828,9 +835,8 @@ function ChatScreen(): React.JSX.Element {
                     reasoning: reasoning,
                     metrics: metrics,
                     citations: webSearchCitations,
-                  };
-                  return newMessages;
-                });
+                  }))
+                );
               }
             };
             const setComplete = () => {
@@ -953,9 +959,10 @@ function ChatScreen(): React.JSX.Element {
       getBedrockMessage(message[0]).then(currentMsg => {
         bedrockMessages.current.push(currentMsg);
         setChatStatus(ChatStatus.Running);
+        // For inverted: [botMessage, userMessage, ...previousMessages]
         setMessages(previousMessages => [
           createBotMessage(modeRef.current),
-          ...GiftedChat.append(previousMessages, message),
+          ...appendMessages(previousMessages, message),
         ]);
       });
     }
@@ -977,23 +984,24 @@ function ChatScreen(): React.JSX.Element {
 
   const handleVoiceChatTranscript = (role: string, text: string) => {
     const userId = role === 'USER' ? 1 : BOT_ID;
+    // For inverted: latest message is at index 0
+    const latestMsg = getLatestMessage(messagesRef.current);
     if (
       messagesRef.current.length > 0 &&
-      messagesRef.current[0].user._id === userId
+      latestMsg &&
+      latestMsg.user._id === userId
     ) {
       if (userId === 1) {
         text = ' ' + text;
       }
-      setMessages(previousMessages => {
-        const newMessages = [...previousMessages];
-        if (!newMessages[0].text.includes(text)) {
-          newMessages[0] = {
-            ...newMessages[0],
-            text: newMessages[0].text + text,
-          };
-        }
-        return newMessages;
-      });
+      setMessages(previousMessages =>
+        updateLatestMessage(previousMessages, msg => {
+          if (!msg.text.includes(text)) {
+            return { ...msg, text: msg.text + text };
+          }
+          return msg;
+        })
+      );
     } else {
       const newMessage: SwiftChatMessage = {
         _id: uuidv4(),
@@ -1006,96 +1014,63 @@ function ChatScreen(): React.JSX.Element {
         },
       };
 
+      // For inverted: prepend new message at the beginning
       setMessages(previousMessages => [newMessage, ...previousMessages]);
     }
   };
 
   const styles = createStyles(colors, isNovaSonic);
 
+  // Render message function for CustomChatComponent
+  const renderMessage = useCallback(
+    (props: MessageRenderProps) => {
+      const { currentMessage, key } = props;
+      const messageIndex = messages.findIndex(
+        msg => msg._id === currentMessage?._id
+      );
+
+      // For inverted: latest message is at index 0
+      const latestMsg = getLatestMessage(messages);
+      const isLastAIMessage =
+        currentMessage?._id === latestMsg?._id &&
+        currentMessage?.user._id !== 1;
+
+      return (
+        <CustomMessageComponent
+          key={key}
+          currentMessage={currentMessage}
+          position={currentMessage.user._id === 1 ? 'right' : 'left'}
+          chatStatus={chatStatus}
+          isLastAIMessage={isLastAIMessage}
+          searchPhase={isLastAIMessage ? searchPhase : ''}
+          onReasoningToggle={handleReasoningToggle}
+          messageIndex={messageIndex}
+          regenerateFromUserMessage={regenerateFromUserMessage}
+          isAppMode={isAppModeRef.current}
+        />
+      );
+    },
+    [
+      messages,
+      chatStatus,
+      searchPhase,
+      handleReasoningToggle,
+      regenerateFromUserMessage,
+    ]
+  );
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <GiftedChat
-        messageContainerRef={
-          flatListRef as React.RefObject<FlatList<IMessage>>
-        }
-        textInputRef={textInputViewRef as React.RefObject<TextInput>}
-        keyboardShouldPersistTaps="never"
-        bottomOffset={
-          Platform.OS === 'android'
-            ? 0
-            : screenHeight > screenWidth && screenWidth < 500
-            ? 24 // iphone in portrait
-            : 12
-        }
+      <CustomChatComponent
+        ref={chatComponentRef}
         messages={messages}
         onSend={onSend}
-        user={{
-          _id: 1,
-        }}
-        alignTop={false}
-        inverted={true}
+        user={{ _id: 1 }}
+        renderMessage={renderMessage}
         renderChatEmpty={() => (
           <EmptyChatComponent
             chatMode={modeRef.current}
             isLoadingMessages={isLoadingMessages}
-          />
-        )}
-        alwaysShowSend={
-          chatStatus !== ChatStatus.Init || selectedFiles.length > 0
-        }
-        renderComposer={props => {
-          if (isNovaSonic && mode === ChatMode.Text) {
-            return <AudioWaveformComponent ref={audioWaveformRef} />;
-          }
-
-          // Default input box
-          return (
-            <Composer {...props} textInputStyle={styles.composerTextInput} />
-          );
-        }}
-        renderSend={props => (
-          <CustomSendComponent
-            {...props}
-            chatStatus={chatStatus}
-            chatMode={mode}
-            selectedFiles={selectedFiles}
-            isShowLoading={isShowVoiceLoading}
-            onStopPress={() => {
-              trigger(HapticFeedbackTypes.notificationWarning);
-              if (isNovaSonic) {
-                // End voice chat conversation
-                endVoiceConversation().then(success => {
-                  if (success) {
-                    trigger(HapticFeedbackTypes.impactMedium);
-                  }
-                });
-                saveCurrentMessages();
-              } else {
-                isCanceled.current = true;
-                controllerRef.current?.abort();
-              }
-            }}
-            onFileSelected={files => {
-              handleNewFileSelected(files);
-            }}
-            onVoiceChatToggle={() => {
-              if (isVoiceLoading.current) {
-                return;
-              }
-              isVoiceLoading.current = true;
-              setIsShowVoiceLoading(true);
-              voiceChatService.startConversation().then(success => {
-                if (!success) {
-                  setChatStatus(ChatStatus.Init);
-                } else {
-                  setChatStatus(ChatStatus.Running);
-                }
-                isVoiceLoading.current = false;
-                setIsShowVoiceLoading(false);
-                trigger(HapticFeedbackTypes.impactMedium);
-              });
-            }}
-            systemPrompt={systemPrompt}
           />
         )}
         renderChatFooter={() => (
@@ -1155,127 +1130,83 @@ function ChatScreen(): React.JSX.Element {
             systemPrompt={systemPrompt}
           />
         )}
-        renderMessage={props => {
-          // Find the index of the current message in the messages array
-          const messageIndex = messages.findIndex(
-            msg => msg._id === props.currentMessage?._id
-          );
-
-          const isLastAIMessage =
-            props.currentMessage?._id === messages[0]?._id &&
-            props.currentMessage?.user._id !== 1;
-
-          // Extract key from props to pass directly (React requires key to not be spread)
-          const {key, ...restProps} = props;
-
-          return (
-            <CustomMessageComponent
-              key={key}
-              {...restProps}
-              chatStatus={chatStatus}
-              isLastAIMessage={isLastAIMessage}
-              searchPhase={isLastAIMessage ? searchPhase : ''}
-              onReasoningToggle={handleReasoningToggle}
-              messageIndex={messageIndex}
-              regenerateFromUserMessage={regenerateFromUserMessage}
-              flatListRef={flatListRef}
-              isAppMode={isAppModeRef.current}
-            />
-          );
-        }}
-        listViewProps={{
-          contentContainerStyle: styles.contentContainer,
-          contentInset: { top: 2 },
-          onLayout: (layoutEvent: LayoutChangeEvent) => {
-            containerHeightRef.current = layoutEvent.nativeEvent.layout.height;
-          },
-          onScrollEvent: handleScroll,
-          onContentSizeChange: (_width: number, height: number) => {
-            contentHeightRef.current = height;
-          },
-          onScrollBeginDrag: handleUserScroll,
-          onMomentumScrollEnd: handleMomentumScrollEnd,
-          ...(userScrolled &&
-          chatStatus === ChatStatus.Running &&
-          contentHeightRef.current > containerHeightRef.current
-            ? {
-                maintainVisibleContentPosition: {
-                  minIndexForVisible: 0,
-                  autoscrollToTopThreshold: 0,
-                },
+        renderComposer={
+          isNovaSonic && mode === ChatMode.Text
+            ? () => <AudioWaveformComponent ref={audioWaveformRef} />
+            : undefined
+        }
+        renderSend={({ hasText, onPress }) => (
+          <CustomSendComponent
+            text={hasText ? 'has-text' : ''}
+            onSend={(_msg, shouldReset) => {
+              onPress();
+              if (shouldReset) {
+                chatComponentRef.current?.clearInput();
               }
-            : {}),
-        }}
-        scrollToBottom={true}
-        scrollToBottomComponent={CustomScrollToBottomComponent}
-        scrollToBottomStyle={scrollStyle.scrollToBottomContainerStyle}
-        renderInputToolbar={props => (
-          <InputToolbar
-            {...props}
-            containerStyle={styles.inputToolbarContainer}
-            primaryStyle={styles.inputToolbarPrimary}
+            }}
+            chatStatus={chatStatus}
+            chatMode={mode}
+            selectedFiles={selectedFiles}
+            isShowLoading={isShowVoiceLoading}
+            onStopPress={() => {
+              trigger(HapticFeedbackTypes.notificationWarning);
+              if (isNovaSonic) {
+                // End voice chat conversation
+                endVoiceConversation().then(success => {
+                  if (success) {
+                    trigger(HapticFeedbackTypes.impactMedium);
+                  }
+                });
+                saveCurrentMessages();
+              } else {
+                isCanceled.current = true;
+                controllerRef.current?.abort();
+              }
+            }}
+            onFileSelected={files => {
+              handleNewFileSelected(files);
+            }}
+            onVoiceChatToggle={() => {
+              if (isVoiceLoading.current) {
+                return;
+              }
+              isVoiceLoading.current = true;
+              setIsShowVoiceLoading(true);
+              voiceChatService.startConversation().then(success => {
+                if (!success) {
+                  setChatStatus(ChatStatus.Init);
+                } else {
+                  setChatStatus(ChatStatus.Running);
+                }
+                isVoiceLoading.current = false;
+                setIsShowVoiceLoading(false);
+                trigger(HapticFeedbackTypes.impactMedium);
+              });
+            }}
+            systemPrompt={systemPrompt}
           />
         )}
-        textInputProps={{
-          ...styles.textInputStyle,
-          ...{
-            fontWeight: isMac ? '300' : 'normal',
-            color: colors.text,
-            smartInsertDelete: false,
-            spellCheck: false,
-            autoComplete: "off",
-            autoCorrect: false,
-            keyboardType: 'default',
-            textContentType: "username",
-            dataDetectorTypes: 'none',
-            blurOnSubmit: isMac,
-            onSubmitEditing: () => {
-              if (
-                inputTextRef.current.length > 0 &&
-                chatStatusRef.current !== ChatStatus.Running
-              ) {
-                const msg: SwiftChatMessage = {
-                  text: inputTextRef.current,
-                  user: { _id: 1 },
-                  createdAt: new Date(),
-                  _id: uuidv4(),
-                };
-                onSend([msg]);
-                inputTextRef.current = '';
-                setHasInputText(false);
-                textInputViewRef.current?.clear();
-                setTimeout(() => {
-                  textInputViewRef.current?.clear();
-                  textInputViewRef.current?.focus();
-                }, 50);
-              } else {
-                setTimeout(() => {
-                  textInputViewRef.current?.focus();
-                }, 50);
-              }
-            },
-          },
-        }}
         maxComposerHeight={isMac ? 360 : 200}
-        onInputTextChanged={text => {
-          if (
-            isMac &&
-            text.length > 0 &&
-            (text[text.length - 1] === '\n' ||
-              text.length - 1 === inputTextRef.current.length)
-          ) {
-            setTimeout(() => {
-              textInputViewRef.current?.focus();
-            }, 50);
-          }
+        inputToolbarContainerStyle={styles.inputToolbarContainer}
+        inputToolbarPrimaryStyle={styles.inputToolbarPrimary}
+        textInputStyle={styles.textInputStyle}
+        onHasTextChange={setHasInputText}
+        onTextChange={text => {
           inputTextRef.current = text;
-          if (!hasInputText && text.length > 0) {
-            setHasInputText(true);
-          }
-          if (hasInputText && text.length === 0) {
-            setHasInputText(false);
-          }
         }}
+        scrollToBottomOffset={50}
+        scrollToBottomStyle={scrollStyle.scrollToBottomContainerStyle}
+        contentContainerStyle={styles.contentContainer}
+        onScrollEvent={handleScroll}
+        onScrollBeginDrag={handleUserScroll}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+        bottomOffset={
+          Platform.OS === 'android'
+            ? 0
+            : screenHeight > screenWidth && screenWidth < 500
+            ? 24 // iphone in portrait
+            : 12
+        }
       />
     </SafeAreaView>
   );
@@ -1291,18 +1222,12 @@ const createStyles = (colors: ColorScheme, isNovaSonic: boolean) =>
       paddingTop: 15,
       paddingBottom: 15,
       flexGrow: 1,
-      justifyContent: 'flex-end',
     },
     textInputStyle: {
       marginLeft: 10,
       lineHeight: 22,
-    },
-    composerTextInput: {
-      backgroundColor: 'transparent',
+      fontWeight: isMac ? '300' : 'normal',
       color: colors.text,
-      maxHeight: isMac ? 360 : 200,
-      paddingBottom: 6,
-      paddingTop: 4,
     },
     inputToolbarContainer: {
       backgroundColor: colors.background,

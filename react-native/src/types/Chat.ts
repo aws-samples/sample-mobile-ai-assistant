@@ -1,4 +1,4 @@
-import { IMessage, User } from 'react-native-gifted-chat';
+import React from 'react';
 
 export interface Citation {
   number: number; // 引用编号 [1], [2], [3]...
@@ -133,21 +133,42 @@ export type UsagePrice = {
   largeImagePrice: number;
 };
 
-export interface SwiftChatMessage extends IMessage {
+export interface SwiftChatUser {
+  _id: string | number;
+  name?: string;
+  avatar?: string | number | (() => React.ReactNode);
+  modelTag?: string;
+}
+
+export interface SwiftChatMessage {
+  _id: string | number;
+  text: string;
+  createdAt: Date | number;
+  user: SwiftChatUser;
+  image?: string;
+  video?: string;
+  audio?: string;
+  system?: boolean;
+  sent?: boolean;
+  received?: boolean;
+  pending?: boolean;
+  quickReplies?: {
+    type: 'radio' | 'checkbox';
+    values: Array<{
+      title: string;
+      value: string;
+      messageId?: string | number;
+    }>;
+    keepIt?: boolean;
+  };
+  // Swift Chat custom fields
   usage?: Usage;
   reasoning?: string;
-  user: SwiftChatUser;
   metrics?: Metrics;
   citations?: Citation[];
   htmlCode?: string;
   diffCode?: string;
   isLastHtml?: boolean;
-}
-
-export interface SwiftChatUser extends User {
-  _id: string | number;
-  name?: string;
-  modelTag?: string;
 }
 
 export interface SystemPrompt {

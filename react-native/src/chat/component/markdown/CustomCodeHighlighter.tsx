@@ -196,7 +196,7 @@ export const CustomCodeHighlighter: FunctionComponent<CodeHighlighterProps> = ({
         </TextInput>
       );
     },
-    [processNode, rest.language]
+    [processNode]
   );
 
   const renderAndroidNode = useCallback(
