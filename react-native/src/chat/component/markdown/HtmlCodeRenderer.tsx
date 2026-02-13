@@ -7,7 +7,13 @@ import React, {
   useImperativeHandle,
   useEffect,
 } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  LayoutChangeEvent,
+} from 'react-native';
 import { ColorScheme } from '../../../theme';
 import HtmlPreviewRenderer from './HtmlPreviewRenderer';
 import { vs2015, github } from 'react-syntax-highlighter/dist/esm/styles/hljs';
@@ -88,10 +94,13 @@ const HtmlCodeRenderer = forwardRef<HtmlCodeRendererRef, HtmlCodeRendererProps>(
     );
     const [webViewLoaded, setWebViewLoaded] = useState(false);
     const htmlRendererRef = useRef<HtmlPreviewRendererRef>(null);
-    const codeContainerRef = useRef<View>(null);
-    const previewContainerRef = useRef<View>(null);
     const codeHeightRef = useRef<number>(0);
     const previewHeightRef = useRef<number>(0);
+    // Track pending scroll compensation when waiting for layout
+    const pendingToggleRef = useRef<'code' | 'preview' | null>(null);
+    const onPreviewToggleRef = useRef(onPreviewToggle);
+    onPreviewToggleRef.current = onPreviewToggle;
+
     const styles = createStyles(colors);
     const hljsStyle = isDark ? vs2015 : github;
     const previewHtmlCode = appliedHtmlCode || messageHtmlCode || currentText;
@@ -159,6 +168,42 @@ const HtmlCodeRenderer = forwardRef<HtmlCodeRendererRef, HtmlCodeRendererProps>(
       prevMessageHtmlCodeRef.current = messageHtmlCode;
     }, [messageHtmlCode]);
 
+    // Handle code container layout changes
+    const handleCodeLayout = useCallback((event: LayoutChangeEvent) => {
+      const newHeight = event.nativeEvent.layout.height;
+      codeHeightRef.current = newHeight;
+      // If we're waiting for code layout after switching to code mode
+      if (pendingToggleRef.current === 'code' && previewHeightRef.current > 0) {
+        pendingToggleRef.current = null;
+        const heightDiff = newHeight - previewHeightRef.current;
+        if (heightDiff !== 0) {
+          onPreviewToggleRef.current?.(
+            heightDiff > 0,
+            Math.abs(heightDiff),
+            true
+          );
+        }
+      }
+    }, []);
+
+    // Handle preview container layout changes
+    const handlePreviewLayout = useCallback((event: LayoutChangeEvent) => {
+      const newHeight = event.nativeEvent.layout.height;
+      previewHeightRef.current = newHeight;
+      // If we're waiting for preview layout after switching to preview mode
+      if (pendingToggleRef.current === 'preview' && codeHeightRef.current > 0) {
+        pendingToggleRef.current = null;
+        const heightDiff = newHeight - codeHeightRef.current;
+        if (heightDiff !== 0) {
+          onPreviewToggleRef.current?.(
+            heightDiff > 0,
+            Math.abs(heightDiff),
+            true
+          );
+        }
+      }
+    }, []);
+
     const setCodeMode = useCallback(() => {
       if (!showPreview) {
         return;
@@ -166,42 +211,21 @@ const HtmlCodeRenderer = forwardRef<HtmlCodeRendererRef, HtmlCodeRendererProps>(
       if (!hasLoadedCode) {
         setHasLoadedCode(true);
       }
-      if (previewHeightRef.current === 0) {
-        previewContainerRef.current?.measure((_x, _y, _width, height) => {
-          previewHeightRef.current = height;
-          setShowPreview(false);
-          setTimeout(() => {
-            codeContainerRef.current?.measure(
-              (_x2, _y2, _width2, codeHeight) => {
-                codeHeightRef.current = codeHeight;
-                const heightDiff = codeHeight - previewHeightRef.current;
-                if (heightDiff !== 0) {
-                  onPreviewToggle?.(heightDiff > 0, Math.abs(heightDiff), true);
-                }
-              }
-            );
-          }, 150);
-        });
-      } else {
+      // If we have both heights cached, use them directly
+      if (codeHeightRef.current > 0 && previewHeightRef.current > 0) {
+        const prevPreviewHeight = previewHeightRef.current;
         setShowPreview(false);
-        if (codeHeightRef.current === 0) {
-          setTimeout(() => {
-            codeContainerRef.current?.measure((_x, _y, _width, codeHeight) => {
-              codeHeightRef.current = codeHeight;
-              const heightDiff = codeHeight - previewHeightRef.current;
-              if (heightDiff !== 0) {
-                onPreviewToggle?.(heightDiff > 0, Math.abs(heightDiff), true);
-              }
-            });
-          }, 150);
-        } else {
-          const heightDiff = codeHeightRef.current - previewHeightRef.current;
+        // Use setTimeout to fire after layout settles
+        setTimeout(() => {
+          const heightDiff = codeHeightRef.current - prevPreviewHeight;
           if (heightDiff !== 0) {
-            setTimeout(() => {
-              onPreviewToggle?.(heightDiff > 0, Math.abs(heightDiff), false);
-            }, 0);
+            onPreviewToggle?.(heightDiff > 0, Math.abs(heightDiff), false);
           }
-        }
+        }, 0);
+      } else {
+        // Code view may not be loaded yet (lazy/suspense), wait for onLayout
+        pendingToggleRef.current = 'code';
+        setShowPreview(false);
       }
     }, [showPreview, hasLoadedCode, onPreviewToggle]);
 
@@ -209,44 +233,20 @@ const HtmlCodeRenderer = forwardRef<HtmlCodeRendererRef, HtmlCodeRendererProps>(
       if (showPreview) {
         return;
       }
-      if (codeHeightRef.current === 0) {
-        codeContainerRef.current?.measure((_x, _y, _width, height) => {
-          codeHeightRef.current = height;
-          setShowPreview(true);
-          setTimeout(() => {
-            previewContainerRef.current?.measure(
-              (_x2, _y2, _width2, previewHeight) => {
-                previewHeightRef.current = previewHeight;
-                const heightDiff = previewHeight - codeHeightRef.current;
-                if (heightDiff !== 0) {
-                  onPreviewToggle?.(heightDiff > 0, Math.abs(heightDiff), true);
-                }
-              }
-            );
-          }, 150);
-        });
-      } else {
+      // If we have both heights cached, use them directly
+      if (codeHeightRef.current > 0 && previewHeightRef.current > 0) {
+        const prevCodeHeight = codeHeightRef.current;
         setShowPreview(true);
-        if (previewHeightRef.current === 0) {
-          setTimeout(() => {
-            previewContainerRef.current?.measure(
-              (_x, _y, _width, previewHeight) => {
-                previewHeightRef.current = previewHeight;
-                const heightDiff = previewHeight - codeHeightRef.current;
-                if (heightDiff !== 0) {
-                  onPreviewToggle?.(heightDiff > 0, Math.abs(heightDiff), true);
-                }
-              }
-            );
-          }, 150);
-        } else {
-          const heightDiff = previewHeightRef.current - codeHeightRef.current;
+        setTimeout(() => {
+          const heightDiff = previewHeightRef.current - prevCodeHeight;
           if (heightDiff !== 0) {
-            setTimeout(() => {
-              onPreviewToggle?.(heightDiff > 0, Math.abs(heightDiff), false);
-            }, 0);
+            onPreviewToggle?.(heightDiff > 0, Math.abs(heightDiff), false);
           }
-        }
+        }, 0);
+      } else {
+        // Preview may not have been measured yet, wait for onLayout
+        pendingToggleRef.current = 'preview';
+        setShowPreview(true);
       }
     }, [showPreview, onPreviewToggle]);
 
@@ -287,7 +287,7 @@ const HtmlCodeRenderer = forwardRef<HtmlCodeRendererRef, HtmlCodeRendererProps>(
 
         {(!isCompleted || hasLoadedCode) && (
           <View
-            ref={codeContainerRef}
+            onLayout={handleCodeLayout}
             style={showPreview && isCompleted ? styles.hidden : undefined}>
             <Suspense fallback={<Text style={styles.loading}>Loading...</Text>}>
               <CustomCodeHighlighter
@@ -318,7 +318,7 @@ const HtmlCodeRenderer = forwardRef<HtmlCodeRendererRef, HtmlCodeRendererProps>(
         {/* Preview view: only render after completed */}
         {isCompleted && (
           <View
-            ref={previewContainerRef}
+            onLayout={handlePreviewLayout}
             style={!showPreview ? styles.hidden : undefined}>
             {/* Show WebView for last html message or if user clicked to load */}
             {isLastHtml || webViewLoaded || !hadMessageHtmlCodeRef.current ? (

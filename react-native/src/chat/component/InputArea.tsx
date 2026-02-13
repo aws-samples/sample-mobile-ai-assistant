@@ -57,73 +57,52 @@ export const InputArea = forwardRef<InputAreaRef, InputAreaProps>(
   ) => {
     const { colors } = useTheme();
     const textInputRef = useRef<TextInput>(null);
-    // Use ref to store text to avoid re-renders on every keystroke
-    const textRef = useRef('');
-    const [hasText, setHasText] = useState(false);
+    // Use controlled component for auto-grow to work on iOS
+    const [text, setText] = useState('');
+
+    const hasText = text.length > 0;
 
     useImperativeHandle(ref, () => ({
       clear: () => {
-        textRef.current = '';
-        textInputRef.current?.clear();
-        setHasText(false);
+        setText('');
         onHasTextChange?.(false);
       },
       focus: () => {
         textInputRef.current?.focus();
       },
-      getText: () => textRef.current,
-      setText: (text: string) => {
-        textRef.current = text;
-        textInputRef.current?.setNativeProps({ text });
-        const newHasText = text.length > 0;
-        if (newHasText !== hasText) {
-          setHasText(newHasText);
-          onHasTextChange?.(newHasText);
-        }
+      getText: () => text,
+      setText: (newText: string) => {
+        setText(newText);
+        onHasTextChange?.(newText.length > 0);
       },
       isFocused: () => textInputRef.current?.isFocused() ?? false,
     }));
 
     const handleTextChange = useCallback(
-      (text: string) => {
-        textRef.current = text;
-
-        // Only update state when crossing the 0/non-0 boundary
-        const newHasText = text.length > 0;
-        if (newHasText !== hasText) {
-          setHasText(newHasText);
-          onHasTextChange?.(newHasText);
-        }
-
-        // Optional: sync to external callback
-        onTextChange?.(text);
+      (newText: string) => {
+        setText(newText);
+        const newHasText = newText.length > 0;
+        onHasTextChange?.(newHasText);
+        onTextChange?.(newText);
       },
-      [hasText, onHasTextChange, onTextChange]
+      [onHasTextChange, onTextChange]
     );
 
     const handleSend = useCallback(() => {
-      const text = textRef.current.trim();
-      if (text.length > 0 && !disabled) {
-        onSend(text);
-        textRef.current = '';
-        textInputRef.current?.clear();
-        setHasText(false);
+      const trimmedText = text.trim();
+      if (trimmedText.length > 0 && !disabled) {
+        onSend(trimmedText);
+        setText('');
         onHasTextChange?.(false);
-        // Re-focus after sending on Mac
-        if (isMac) {
-          setTimeout(() => {
-            textInputRef.current?.focus();
-          }, 50);
-        }
       }
-    }, [onSend, disabled, onHasTextChange]);
+    }, [text, onSend, disabled, onHasTextChange]);
 
     const handleSubmitEditing = useCallback(() => {
       handleSend();
-      // Re-focus after submit
-      setTimeout(() => {
-        textInputRef.current?.focus();
-      }, 50);
+      // Re-focus after submit on Mac
+      if (isMac) {
+        setTimeout(() => textInputRef.current?.focus(), 50);
+      }
     }, [handleSend]);
 
     const styles = createStyles(colors);
@@ -140,6 +119,7 @@ export const InputArea = forwardRef<InputAreaRef, InputAreaProps>(
               placeholder="Message"
               placeholderTextColor={colors.textTertiary}
               multiline
+              value={text}
               onChangeText={handleTextChange}
               blurOnSubmit={blurOnSubmit}
               onSubmitEditing={handleSubmitEditing}

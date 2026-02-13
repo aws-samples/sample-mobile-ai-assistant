@@ -1,0 +1,69 @@
+diff --git a/node_modules/react-native/React/Fabric/Mounting/ComponentViews/ScrollView/RCTScrollViewComponentView.mm b/node_modules/react-native/React/Fabric/Mounting/ComponentViews/ScrollView/RCTScrollViewComponentView.mm
+index 1234567..abcdefg 100644
+--- a/node_modules/react-native/React/Fabric/Mounting/ComponentViews/ScrollView/RCTScrollViewComponentView.mm
++++ b/node_modules/react-native/React/Fabric/Mounting/ComponentViews/ScrollView/RCTScrollViewComponentView.mm
+@@ -491,6 +491,8 @@
+   [self _preserveContentOffsetIfNeededWithBlock:^{
+     self->_scrollView.contentSize = contentSize;
+   }];
++
++  [self _ensureMinOffsetForInvertedScrollView:_scrollView];
+ }
+
+ - (UIView *)betterHitTest:(CGPoint)point withEvent:(UIEvent *)event
+@@ -752,7 +754,25 @@
+ - (BOOL)scrollViewShouldScrollToTop:(UIScrollView *)scrollView
+ {
+   _isUserTriggeredScrolling = YES;
++
++  if ([self isInverted]) {
++    [self scrollToEnd:YES];
++    return NO;
++  }
++
+   return YES;
++}
++
++// For inverted scroll views, maintain a minimum offset of 0.5pt so iOS
++// always considers the scroll view as "not at top" and will call
++// scrollViewShouldScrollToTop: on status bar tap.
++- (void)_ensureMinOffsetForInvertedScrollView:(UIScrollView *)scrollView
++{
++  if ([self isInverted] && scrollView.scrollsToTop &&
++      scrollView.contentOffset.y <= 0 &&
++      scrollView.contentSize.height > scrollView.bounds.size.height) {
++    [scrollView setContentOffset:CGPointMake(scrollView.contentOffset.x, 0.5) animated:NO];
++  }
+ }
+
+ - (void)scrollViewDidScrollToTop:(UIScrollView *)scrollView
+@@ -793,6 +813,7 @@
+     // `_isUserTriggeredScrolling` must be set to NO here.
+     _isUserTriggeredScrolling = NO;
+     RCTSendScrollEventForNativeAnimations_DEPRECATED(scrollView, self.tag, kOnScrollEndEvent);
++    [self _ensureMinOffsetForInvertedScrollView:scrollView];
+   }
+ }
+
+@@ -820,11 +841,13 @@
+   _isUserTriggeredScrolling = NO;
+
+   RCTSendScrollEventForNativeAnimations_DEPRECATED(scrollView, self.tag, kOnScrollEndEvent);
++  [self _ensureMinOffsetForInvertedScrollView:scrollView];
+ }
+
+ - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView
+ {
+   [self _handleFinishedScrolling:scrollView];
++  [self _ensureMinOffsetForInvertedScrollView:scrollView];
+ }
+
+ - (void)didMoveToWindow
+@@ -861,6 +884,7 @@
+
+   static_cast<const ScrollViewEventEmitter &>(*_eventEmitter).onMomentumScrollEnd([self _scrollViewMetrics]);
+   [self _updateStateWithContentOffset];
++  [self _ensureMinOffsetForInvertedScrollView:scrollView];
+ }
+
+ - (void)scrollViewWillBeginZooming:(UIScrollView *)scrollView withView:(nullable UIView *)view

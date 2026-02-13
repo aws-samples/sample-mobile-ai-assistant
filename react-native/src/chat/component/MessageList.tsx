@@ -122,6 +122,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           inverted={true}
+          scrollsToTop={true}
           scrollEventThrottle={100}
           onScroll={handleScroll}
           onScrollBeginDrag={onScrollBeginDrag}

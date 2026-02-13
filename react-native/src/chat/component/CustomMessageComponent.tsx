@@ -377,6 +377,7 @@ const CustomMessageComponent: React.FC<CustomMessageProps> = ({
             <Text style={styles.reasoningTitle}>Reasoning</Text>
           </View>
           <TouchableOpacity
+            style={styles.reasoningCopyButton}
             hitSlop={8}
             onPress={e => {
               e.stopPropagation();
@@ -388,7 +389,9 @@ const CustomMessageComponent: React.FC<CustomMessageProps> = ({
                   ? isDark
                     ? require('../../assets/done_dark.png')
                     : require('../../assets/done.png')
-                  : require('../../assets/copy_grey.png')
+                  : isDark
+                    ? require('../../assets/copy_grey.png')
+                    : require('../../assets/copy.png')
               }
               style={styles.reasoningCopyIcon}
             />
@@ -554,7 +557,9 @@ const CustomMessageComponent: React.FC<CustomMessageProps> = ({
                   ? isDark
                     ? require('../../assets/done_dark.png')
                     : require('../../assets/done.png')
-                  : require('../../assets/copy_grey.png')
+                  : isDark
+                    ? require('../../assets/copy_grey.png')
+                    : require('../../assets/copy.png')
               }
               style={styles.actionButtonIcon}
             />
@@ -856,10 +861,12 @@ const createStyles = (colors: ColorScheme) =>
       color: colors.textTertiary,
       marginRight: 4,
     },
-    reasoningCopyIcon: {
+    reasoningCopyButton: {
       padding: 4,
-      width: 16,
-      height: 16,
+    },
+    reasoningCopyIcon: {
+      width: 18,
+      height: 18,
     },
     editButtonsContainer: {
       flexDirection: 'row',

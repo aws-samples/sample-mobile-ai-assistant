@@ -656,10 +656,12 @@ function ChatScreen(): React.JSX.Element {
     chatComponentRef.current?.scrollToEnd({ animated });
   };
 
+  const scrollOffsetRef = useRef(0);
+
   const handleScroll = (
-    _scrollEvent: NativeSyntheticEvent<NativeScrollEvent>
+    scrollEvent: NativeSyntheticEvent<NativeScrollEvent>
   ) => {
-    // No longer need to track scroll offset for scroll compensation
+    scrollOffsetRef.current = scrollEvent.nativeEvent.contentOffset.y;
   };
 
   const handleUserScroll = (_: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -681,14 +683,17 @@ function ChatScreen(): React.JSX.Element {
     }
   };
 
-  // Reasoning toggle callback for inverted list
-  // Need scroll compensation when content expands upward
+  // Reasoning/preview toggle callback for inverted list
+  // Need scroll compensation when content expands or collapses
   const handleReasoningToggle = useCallback(
     (expanded: boolean, height: number, animated: boolean) => {
-      // For inverted list, when content expands we need to compensate scroll position
-      if (expanded && height > 0) {
+      if (height > 0) {
+        const currentOffset = scrollOffsetRef.current;
+        const newOffset = expanded
+          ? currentOffset + height
+          : Math.max(0, currentOffset - height);
         chatComponentRef.current?.scrollToOffset({
-          offset: height,
+          offset: newOffset,
           animated,
         });
       }
