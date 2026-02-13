@@ -55,6 +55,7 @@ export interface CustomChatComponentProps {
     minIndexForVisible: number;
     autoscrollToTopThreshold?: number;
   } | null;
+  onScrollToBottomPress?: () => void;
 
   // State
   alwaysShowSend?: boolean;
@@ -105,6 +106,7 @@ export const CustomChatComponent = forwardRef<
     onContentSizeChange,
     onLayout,
     maintainVisibleContentPosition,
+    onScrollToBottomPress,
     bottomOffset,
     disabled = false,
     keyboardVerticalOffset = 106,
@@ -188,6 +190,7 @@ export const CustomChatComponent = forwardRef<
         onContentSizeChange={onContentSizeChange}
         onLayout={onLayout}
         maintainVisibleContentPosition={maintainVisibleContentPosition}
+        onScrollToBottomPress={onScrollToBottomPress}
       />
 
       {/* Chat footer (system prompt + file preview) above input */}

@@ -3,6 +3,7 @@ import {
   AppState,
   Dimensions,
   Keyboard,
+  LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Platform,
@@ -187,6 +188,8 @@ function ChatScreen(): React.JSX.Element {
   const systemPromptRef = useRef(systemPrompt);
   const drawerTypeRef = useRef(drawerType);
   const isVoiceLoading = useRef(false);
+  const contentHeightRef = useRef(0);
+  const containerHeightRef = useRef(0);
   const [isShowVoiceLoading, setIsShowVoiceLoading] = useState(false);
   const audioWaveformRef = useRef<AudioWaveformRef>(null);
   const [searchPhase, setSearchPhase] = useState<string>('');
@@ -1359,6 +1362,20 @@ function ChatScreen(): React.JSX.Element {
         onScrollEvent={handleScroll}
         onScrollBeginDrag={handleUserScroll}
         onMomentumScrollEnd={handleMomentumScrollEnd}
+        onLayout={(layoutEvent: LayoutChangeEvent) => {
+          containerHeightRef.current = layoutEvent.nativeEvent.layout.height;
+        }}
+        onContentSizeChange={(_width: number, height: number) => {
+          contentHeightRef.current = height;
+        }}
+        onScrollToBottomPress={() => setUserScrolled(false)}
+        maintainVisibleContentPosition={
+          userScrolled &&
+          chatStatus === ChatStatus.Running &&
+          contentHeightRef.current > containerHeightRef.current
+            ? { minIndexForVisible: 0, autoscrollToTopThreshold: 0 }
+            : null
+        }
         bottomOffset={
           Platform.OS === 'android'
             ? 0

@@ -1,17 +1,17 @@
 diff --git a/node_modules/react-native/React/Fabric/Mounting/ComponentViews/ScrollView/RCTScrollViewComponentView.mm b/node_modules/react-native/React/Fabric/Mounting/ComponentViews/ScrollView/RCTScrollViewComponentView.mm
-index 1234567..abcdefg 100644
+index 15a5ab7..149e4f2 100644
 --- a/node_modules/react-native/React/Fabric/Mounting/ComponentViews/ScrollView/RCTScrollViewComponentView.mm
 +++ b/node_modules/react-native/React/Fabric/Mounting/ComponentViews/ScrollView/RCTScrollViewComponentView.mm
-@@ -491,6 +491,8 @@
+@@ -491,6 +491,8 @@ - (void)updateState:(const State::Shared &)state oldState:(const State::Shared &
    [self _preserveContentOffsetIfNeededWithBlock:^{
      self->_scrollView.contentSize = contentSize;
    }];
 +
 +  [self _ensureMinOffsetForInvertedScrollView:_scrollView];
  }
-
+ 
  - (UIView *)betterHitTest:(CGPoint)point withEvent:(UIEvent *)event
-@@ -752,7 +754,25 @@
+@@ -752,9 +754,27 @@ - (void)scrollViewDidZoom:(UIScrollView *)scrollView
  - (BOOL)scrollViewShouldScrollToTop:(UIScrollView *)scrollView
  {
    _isUserTriggeredScrolling = YES;
@@ -22,8 +22,8 @@ index 1234567..abcdefg 100644
 +  }
 +
    return YES;
-+}
-+
+ }
+ 
 +// For inverted scroll views, maintain a minimum offset of 0.5pt so iOS
 +// always considers the scroll view as "not at top" and will call
 +// scrollViewShouldScrollToTop: on status bar tap.
@@ -34,36 +34,53 @@ index 1234567..abcdefg 100644
 +      scrollView.contentSize.height > scrollView.bounds.size.height) {
 +    [scrollView setContentOffset:CGPointMake(scrollView.contentOffset.x, 0.5) animated:NO];
 +  }
- }
-
++}
++
  - (void)scrollViewDidScrollToTop:(UIScrollView *)scrollView
-@@ -793,6 +813,7 @@
+ {
+   if (!_eventEmitter) {
+@@ -793,6 +813,7 @@ - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL
      // `_isUserTriggeredScrolling` must be set to NO here.
      _isUserTriggeredScrolling = NO;
      RCTSendScrollEventForNativeAnimations_DEPRECATED(scrollView, self.tag, kOnScrollEndEvent);
 +    [self _ensureMinOffsetForInvertedScrollView:scrollView];
    }
  }
-
-@@ -820,11 +841,13 @@
+ 
+@@ -820,11 +841,13 @@ - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
    _isUserTriggeredScrolling = NO;
-
+ 
    RCTSendScrollEventForNativeAnimations_DEPRECATED(scrollView, self.tag, kOnScrollEndEvent);
 +  [self _ensureMinOffsetForInvertedScrollView:scrollView];
  }
-
+ 
  - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView
  {
    [self _handleFinishedScrolling:scrollView];
 +  [self _ensureMinOffsetForInvertedScrollView:scrollView];
  }
-
+ 
  - (void)didMoveToWindow
-@@ -861,6 +884,7 @@
-
+@@ -861,6 +884,7 @@ - (void)_handleFinishedScrolling:(UIScrollView *)scrollView
+ 
    static_cast<const ScrollViewEventEmitter &>(*_eventEmitter).onMomentumScrollEnd([self _scrollViewMetrics]);
    [self _updateStateWithContentOffset];
 +  [self _ensureMinOffsetForInvertedScrollView:scrollView];
  }
-
+ 
  - (void)scrollViewWillBeginZooming:(UIScrollView *)scrollView withView:(nullable UIView *)view
+@@ -1100,6 +1124,14 @@ - (void)_adjustForMaintainVisibleContentPosition
+   } else {
+     CGRect newFrame = _firstVisibleView.frame;
+     CGFloat deltaY = newFrame.origin.y - _prevFirstVisibleFrame.origin.y;
++    // If the first visible view didn't move but grew in height,
++    // content below it still shifted. Use height change as delta.
++    if (ABS(deltaY) <= 0.5) {
++      CGFloat heightDelta = newFrame.size.height - _prevFirstVisibleFrame.size.height;
++      if (heightDelta > 0.5) {
++        deltaY = heightDelta;
++      }
++    }
+     if (ABS(deltaY) > 0.5) {
+       CGFloat y = _scrollView.contentOffset.y;
+       [self _forceDispatchNextScrollEvent];

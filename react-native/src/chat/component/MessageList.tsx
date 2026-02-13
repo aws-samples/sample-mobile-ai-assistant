@@ -34,6 +34,7 @@ export interface MessageListProps {
     minIndexForVisible: number;
     autoscrollToTopThreshold?: number;
   } | null;
+  onScrollToBottomPress?: () => void;
 }
 
 export interface MessageRenderProps {
@@ -64,6 +65,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
       onContentSizeChange,
       onLayout,
       maintainVisibleContentPosition,
+      onScrollToBottomPress,
     },
     ref
   ) => {
@@ -139,7 +141,10 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(
         />
         <ScrollToBottomButton
           visible={showScrollBottom}
-          onPress={() => scrollToBottom(true)}
+          onPress={() => {
+            onScrollToBottomPress?.();
+            scrollToBottom(true);
+          }}
           style={scrollToBottomStyle}
         />
       </View>
