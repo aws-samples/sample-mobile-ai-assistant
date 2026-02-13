@@ -1893,6 +1893,8 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - SocketRocket
+  - react-native-background-actions (4.0.1):
+    - React-Core
   - react-native-compressor (1.13.0):
     - boost
     - DoubleConversion
@@ -3172,6 +3174,7 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
+  - react-native-background-actions (from `../node_modules/react-native-background-actions`)
   - react-native-compressor (from `../node_modules/react-native-compressor`)
   - react-native-document-picker (from `../node_modules/react-native-document-picker`)
   - react-native-get-random-values (from `../node_modules/react-native-get-random-values`)
@@ -3319,6 +3322,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
+  react-native-background-actions:
+    :path: "../node_modules/react-native-background-actions"
   react-native-compressor:
     :path: "../node_modules/react-native-compressor"
   react-native-document-picker:
@@ -3469,6 +3474,7 @@ SPEC CHECKSUMS:
   React-logger: b8483fa08e0d62e430c76d864309d90576ca2f68
   React-Mapbuffer: 7b72a669e94662359dad4f42b5af005eb24b4e83
   React-microtasksnativemodule: cdc02da075f2857803ed63f24f5f72fc40e094c0
+  react-native-background-actions: 48e6bad9e2a47e3b04858634c5a05ea11062f680
   react-native-compressor: 3e04a6c707791c9731cda048c45d4ee343d7296e
   react-native-document-picker: dcf5e57f3bcae61bf8384a1c6f90896f81e17941
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba

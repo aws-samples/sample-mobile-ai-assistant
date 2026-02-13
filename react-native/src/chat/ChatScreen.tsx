@@ -89,6 +89,8 @@ import {
   getLatestMessage,
   updateLatestMessage,
 } from './utils/messageUtils.ts';
+import { backgroundStreamManager } from './service/BackgroundStreamManager.ts';
+import { startBackgroundTaskIfNeeded } from './service/BackgroundTaskService.ts';
 
 const BOT_ID = 2;
 const APP_PROMPT_NAME = 'App';
@@ -108,11 +110,17 @@ const findLatestHtmlCode = (messages: SwiftChatMessage[]): string => {
 };
 
 /**
- * Check if any AI message has diffCode (for detecting failed diff apply case)
+ * Check if session contains App mode content (htmlCode, diffCode, or html code block in text)
  */
-const hasAnyDiffCode = (messages: SwiftChatMessage[]): boolean => {
-  const aiMessages = messages.filter(m => m.user._id === BOT_ID);
-  return aiMessages.some(msg => msg.diffCode);
+const isAppModeSession = (messages: SwiftChatMessage[]): boolean => {
+  return messages.some(
+    msg =>
+      msg.user._id === BOT_ID &&
+      (msg.htmlCode ||
+        msg.diffCode ||
+        msg.text.includes('```html\n') ||
+        msg.text.includes('[HTML_OUTPUT_OMITTED]'))
+  );
 };
 
 const createBotMessage = (mode: string, isAppMode: boolean = false) => {
@@ -167,7 +175,7 @@ function ChatScreen(): React.JSX.Element {
   const bedrockMessages = useRef<BedrockMessage[]>([]);
   const chatComponentRef = useRef<CustomChatComponentRef>(null);
   const sessionIdRef = useRef(initialSessionId || getSessionId() + 1);
-  const isCanceled = useRef(false);
+  const activeCancelFlagRef = useRef<{ current: boolean }>({ current: false });
   const { sendEvent, event, drawerType } = useAppContext();
   const sendEventRef = useRef(sendEvent);
   const inputTextRef = useRef('');
@@ -328,22 +336,46 @@ function ChatScreen(): React.JSX.Element {
         return;
       }
       if (chatStatusRef.current === ChatStatus.Running) {
-        // there are still a request sending, abort the request and save current messages
-        controllerRef.current?.abort();
-        chatStatusRef.current = ChatStatus.Init;
-        if (modeRef.current === ChatMode.Image) {
-          // Update the latest message (first element in inverted array)
-          const lastMsg = getLatestMessage(messagesRef.current);
-          if (lastMsg && lastMsg.text === imagePlaceholder) {
-            setMessages(
-              updateLatestMessage(messagesRef.current, msg => ({
-                ...msg,
-                text: 'Request interrupted',
-              }))
-            );
+        const isAppStreaming =
+          (isAppModeRef.current ||
+            systemPromptRef.current?.name === APP_PROMPT_NAME) &&
+          modeRef.current === ChatMode.Text;
+        if (isAppStreaming) {
+          // App mode: register background stream instead of aborting
+          backgroundStreamManager.register(sessionIdRef.current, {
+            sessionId: sessionIdRef.current,
+            text: getLatestMessage(messagesRef.current)?.text || '',
+            reasoning:
+              getLatestMessage(messagesRef.current)?.reasoning || '',
+            usage: usageRef.current,
+            cancelFlag: activeCancelFlagRef.current,
+            controller: controllerRef.current!,
+            htmlCode: getLatestHtmlCode(),
+            isComplete: false,
+            needStop: false,
+            messages: [...messagesRef.current],
+            bedrockMessages: [...bedrockMessages.current],
+          });
+          saveCurrentMessages();
+          startBackgroundTaskIfNeeded();
+        } else {
+          // Non-App mode: abort as before
+          controllerRef.current?.abort();
+          activeCancelFlagRef.current.current = true;
+          if (modeRef.current === ChatMode.Image) {
+            const lastMsg = getLatestMessage(messagesRef.current);
+            if (lastMsg && lastMsg.text === imagePlaceholder) {
+              setMessages(
+                updateLatestMessage(messagesRef.current, msg => ({
+                  ...msg,
+                  text: 'Request interrupted',
+                }))
+              );
+            }
           }
+          saveCurrentMessages();
         }
-        saveCurrentMessages();
+        chatStatusRef.current = ChatStatus.Init;
       }
       if (modeRef.current !== mode) {
         // when change chat mode, clear system prompt and files
@@ -363,10 +395,54 @@ function ChatScreen(): React.JSX.Element {
       // click from history
       setMessages([]);
       isNewChatRef.current = false;
-      endVoiceConversationRef.current?.();
       setIsLoadingMessages(true);
-      const msg = getMessagesBySessionId(initialSessionId);
       sessionIdRef.current = initialSessionId;
+
+      // Check for active background streaming
+      const bgStream = backgroundStreamManager.get(initialSessionId);
+      if (bgStream) {
+        setLatestHtmlCode(bgStream.htmlCode);
+        isAppModeRef.current = true;
+        if (bgStream.isComplete) {
+          // Background streaming finished - load completed messages
+          setMessages(bgStream.messages);
+          setUsage(bgStream.messages[0]?.usage);
+          getBedrockMessagesFromChatMessages(bgStream.messages).then(m => {
+            bedrockMessages.current = m;
+          });
+        } else {
+          // Still streaming - reconnect UI
+          const restoredMessages = [...bgStream.messages];
+          restoredMessages[0] = {
+            ...restoredMessages[0],
+            text: bgStream.text,
+            reasoning: bgStream.reasoning,
+          };
+          setMessages(restoredMessages);
+          messagesRef.current = restoredMessages;
+          activeCancelFlagRef.current = bgStream.cancelFlag;
+          controllerRef.current = bgStream.controller;
+          bedrockMessages.current = bgStream.bedrockMessages;
+          // Don't restore isNewChat - saveCurrentMessages already saved it during registration
+          // Set both ref and state to Running so callback doesn't skip
+          chatStatusRef.current = ChatStatus.Running;
+          setChatStatus(ChatStatus.Running);
+        }
+        // Only remove completed streams; keep active ones so drawer shows green dot
+        if (bgStream.isComplete) {
+          backgroundStreamManager.remove(initialSessionId);
+        }
+        sendEventRef.current?.('selectAppPrompt');
+        setIsLoadingMessages(false);
+        scrollToBottom();
+        showKeyboard();
+        return;
+      }
+
+      // Only end voice conversation for non-background-stream sessions
+      endVoiceConversationRef.current?.();
+
+      const msg = getMessagesBySessionId(initialSessionId);
       // Get usage from the latest message (first element in inverted array)
       const latestMsg = getLatestMessage(msg);
       setUsage(latestMsg?.usage);
@@ -374,7 +450,7 @@ function ChatScreen(): React.JSX.Element {
       const restoredHtmlCode = findLatestHtmlCode(msg as SwiftChatMessage[]);
       setLatestHtmlCode(restoredHtmlCode);
 
-      if (restoredHtmlCode || hasAnyDiffCode(msg as SwiftChatMessage[])) {
+      if (isAppModeSession(msg as SwiftChatMessage[])) {
         isAppModeRef.current = true;
         sendEventRef.current?.('selectAppPrompt');
       } else {
@@ -427,6 +503,11 @@ function ChatScreen(): React.JSX.Element {
   useEffect(() => {
     if (event?.event === 'deleteChat' && event.params) {
       const { id } = event.params;
+      // Stop and clean up any background streaming for this session
+      if (id && backgroundStreamManager.has(id)) {
+        backgroundStreamManager.stop(id);
+        backgroundStreamManager.remove(id);
+      }
       if (sessionIdRef.current === id) {
         sessionIdRef.current = getSessionId() + 1;
         sendEventRef.current('updateHistorySelectedId', {
@@ -547,6 +628,8 @@ function ChatScreen(): React.JSX.Element {
         msg.text = replaceDiffWithPlaceholder(msg.text, msg.diffCode);
       }
       saveCurrentMessages();
+      // Clean up background stream manager entry when streaming completes in foreground
+      backgroundStreamManager.remove(sessionIdRef.current);
       const latestMsg = getLatestMessage(messagesRef.current);
       if (latestMsg) {
         getBedrockMessage(latestMsg).then(currentMsg => {
@@ -575,6 +658,14 @@ function ChatScreen(): React.JSX.Element {
       if (nextAppState === 'background' || nextAppState === 'inactive') {
         if (chatStatusRef.current === ChatStatus.Running) {
           saveCurrentMessages();
+          // Start background task to keep streaming alive in App mode
+          if (
+            (isAppModeRef.current ||
+              systemPromptRef.current?.name === APP_PROMPT_NAME) &&
+            modeRef.current === ChatMode.Text
+          ) {
+            startBackgroundTaskIfNeeded();
+          }
         }
       }
       if (nextAppState === 'active') {
@@ -721,9 +812,32 @@ function ChatScreen(): React.JSX.Element {
 
       // Wrap in async function to support await
       (async () => {
-        // Create AbortController before web search so it can be used throughout
+        // Per-streaming cancel flag and session ID capture
+        const streamingSessionId = sessionIdRef.current;
+        const localCancelFlag = { current: false };
+        activeCancelFlagRef.current = localCancelFlag;
         controllerRef.current = new AbortController();
-        isCanceled.current = false;
+
+        // Register in background manager at streaming start for App mode
+        // so the drawer green dot shows immediately
+        if (
+          isAppModeRef.current ||
+          systemPromptRef.current?.name === APP_PROMPT_NAME
+        ) {
+          backgroundStreamManager.register(streamingSessionId, {
+            sessionId: streamingSessionId,
+            text: '',
+            reasoning: '',
+            usage: usageRef.current,
+            cancelFlag: localCancelFlag,
+            controller: controllerRef.current,
+            htmlCode: getLatestHtmlCode(),
+            isComplete: false,
+            needStop: false,
+            messages: [...messagesRef.current],
+            bedrockMessages: [...bedrockMessages.current],
+          });
+        }
 
         // Get the last user message (for inverted: index 1, after bot message at 0)
         const userMessage = messages.length > 1 ? messages[1]?.text : null;
@@ -753,7 +867,7 @@ function ChatScreen(): React.JSX.Element {
         }
 
         // Check if aborted after web search completes
-        if (isCanceled.current) {
+        if (localCancelFlag.current) {
           setChatStatus(ChatStatus.Init);
           setSearchPhase('');
           return;
@@ -783,7 +897,7 @@ function ChatScreen(): React.JSX.Element {
           bedrockMessages.current,
           modeRef.current,
           effectiveSystemPrompt,
-          () => isCanceled.current,
+          () => localCancelFlag.current,
           controllerRef.current,
           (
             msg: string,
@@ -792,6 +906,46 @@ function ChatScreen(): React.JSX.Element {
             usageInfo?: Usage,
             reasoning?: string
           ) => {
+            // Background stream detection: session switched away
+            const isBackground =
+              streamingSessionId !== sessionIdRef.current;
+            if (isBackground) {
+              if (
+                !backgroundStreamManager.isStreaming(streamingSessionId)
+              ) {
+                return;
+              }
+              if (latencyMs === 0) {
+                latencyMs = new Date().getTime() - startRequestTime;
+              }
+              let bgMetrics = metrics;
+              if (usageInfo && !bgMetrics) {
+                const renderSec =
+                  (new Date().getTime() - startRequestTime - latencyMs) /
+                  1000;
+                const speed = usageInfo.outputTokens / renderSec;
+                bgMetrics = {
+                  latencyMs: (latencyMs / 1000).toFixed(2),
+                  speed: speed.toFixed(speed > 100 ? 1 : 2),
+                };
+                metrics = bgMetrics;
+              }
+              backgroundStreamManager.update(streamingSessionId, {
+                text: msg,
+                reasoning,
+                usage: usageInfo,
+                metrics: bgMetrics,
+                citations: webSearchCitations,
+              });
+              if (complete || needStop) {
+                backgroundStreamManager.markComplete(
+                  streamingSessionId,
+                  needStop
+                );
+              }
+              return;
+            }
+
             if (chatStatusRef.current !== ChatStatus.Running) {
               return;
             }
@@ -832,7 +986,7 @@ function ChatScreen(): React.JSX.Element {
                   updateLatestMessage(prevMessages, prevMsg => ({
                     ...prevMsg,
                     text:
-                      isCanceled.current &&
+                      localCancelFlag.current &&
                       (previousMessage.text === textPlaceholder ||
                         previousMessage.text === '')
                         ? 'Canceled...'
@@ -866,7 +1020,7 @@ function ChatScreen(): React.JSX.Element {
               }, 1000);
             }
             if (needStop) {
-              isCanceled.current = true;
+              localCancelFlag.current = true;
             }
           }
         ).then();
@@ -1164,7 +1318,7 @@ function ChatScreen(): React.JSX.Element {
                 });
                 saveCurrentMessages();
               } else {
-                isCanceled.current = true;
+                activeCancelFlagRef.current.current = true;
                 controllerRef.current?.abort();
               }
             }}
