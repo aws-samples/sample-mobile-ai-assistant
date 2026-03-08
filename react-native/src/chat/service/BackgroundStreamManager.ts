@@ -53,9 +53,21 @@ class BackgroundStreamManager {
     this.streams.delete(sessionId);
   }
 
+  removeCompleted(): void {
+    this.streams.forEach((s, id) => {
+      if (s.isComplete) {
+        this.streams.delete(id);
+      }
+    });
+  }
+
   isStreaming(sessionId: number): boolean {
     const s = this.streams.get(sessionId);
     return s !== undefined && !s.isComplete;
+  }
+
+  getTotalCount(): number {
+    return this.streams.size;
   }
 
   getActiveCount(): number {

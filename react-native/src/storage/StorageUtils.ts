@@ -79,6 +79,7 @@ const lastVirtualTryOnImgFileTag = keyPrefix + 'lastVirtualTryOnImgFileTag';
 const searchProviderKey = keyPrefix + 'searchProviderKey';
 const tavilyApiKeyTag = keyPrefix + 'tavilyApiKeyTag';
 const savedAppsKey = keyPrefix + 'savedAppsKey';
+const googleLoginDoneKey = keyPrefix + 'googleLoginDoneKey';
 
 let currentApiUrl: string | undefined;
 let currentApiKey: string | undefined;
@@ -754,6 +755,14 @@ export function getSearchProvider(): string {
   }
   currentSearchProvider = storage.getString(searchProviderKey) ?? 'disabled';
   return currentSearchProvider;
+}
+
+export function saveGoogleLoginDone() {
+  storage.set(googleLoginDoneKey, true);
+}
+
+export function isGoogleLoginDone(): boolean {
+  return storage.getBoolean(googleLoginDoneKey) ?? false;
 }
 
 export function saveTavilyApiKey(apiKey: string) {

@@ -672,12 +672,9 @@ const CustomMessageComponent: React.FC<CustomMessageProps> = ({
                 ...styles.inputText,
                 ...{
                   fontWeight: isMac ? '300' : 'normal',
-                  lineHeight: isMac ? 26 : Platform.OS === 'android' ? 24 : 28,
+                  lineHeight: isMac ? 26 : 24,
                   paddingTop: Platform.OS === 'android' ? 7 : 3,
-                  marginBottom: isUser.current
-                    ? 0
-                    : -inputHeight * (isAndroid ? 0 : isMac ? 0.115 : 0.138) +
-                      (isMac ? 10 : 8),
+                  paddingBottom: 8,
                 },
                 ...(isUser.current && {
                   backgroundColor: colors.messageBackground,

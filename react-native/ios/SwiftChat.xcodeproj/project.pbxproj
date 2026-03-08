@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -23,10 +23,16 @@
 		3A6846A92DA8FBBE003CFBEC /* VoiceChatModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A68469F2DA8FBBE003CFBEC /* VoiceChatModule.swift */; };
 		3A6846AA2DA8FBBE003CFBEC /* VoiceChatModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A68469E2DA8FBBE003CFBEC /* VoiceChatModule.m */; };
 		3ADD2B4F2E26337F00171D1D /* RCTNetworkingPatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 3ADD2B4E2E26337F00171D1D /* RCTNetworkingPatch.m */; };
+		3AF67D4F2F52DCC3003CD99C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AF67D4E2F52DCC3003CD99C /* WidgetKit.framework */; };
+		3AF67D512F52DCC3003CD99C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AF67D502F52DCC3003CD99C /* SwiftUI.framework */; };
+		3AF67D5E2F52DCC5003CD99C /* SwiftChatLiveActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3AF67D4D2F52DCC3003CD99C /* SwiftChatLiveActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3AFE00202E99999999999999 /* FilePasteModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AFE001E2E99999999999999 /* FilePasteModule.m */; };
+		4BCE9FA47196E1AE820D956E /* BackgroundAudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92DDE7B718B86DF54BE88074 /* BackgroundAudioService.swift */; };
+		5EC3CA95C332816127FC1D28 /* BackgroundKeepAliveModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2CDA17B8EF63BE16DC02D6A /* BackgroundKeepAliveModule.swift */; };
 		7923F2A519E6BC533C0F2749 /* libPods-SwiftChat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E954E88951117AE160D5618 /* libPods-SwiftChat.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		A98E989882C3A293A3C38335 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5D25C7B4CE6B3F2BED0CFCE0 /* PrivacyInfo.xcprivacy */; };
+		E44F1E5E4818F1E5D41BD2A3 /* BackgroundKeepAliveModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 6DA16C2713CEF20A2A57B2C8 /* BackgroundKeepAliveModule.m */; };
 		F9ACFB7A95231C4D17203673 /* libPods-SwiftChat-SwiftChatTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2010B02A49BCFD048093BFF4 /* libPods-SwiftChat-SwiftChatTests.a */; };
 /* End PBXBuildFile section */
 
@@ -38,7 +44,28 @@
 			remoteGlobalIDString = 13B07F861A680F5B00A75B9A;
 			remoteInfo = SwiftChat;
 		};
+		3AF67D5C2F52DCC5003CD99C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3AF67D4C2F52DCC3003CD99C;
+			remoteInfo = SwiftChatLiveActivityExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3AF67D602F52DCC6003CD99C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				3AF67D5E2F52DCC5003CD99C /* SwiftChatLiveActivityExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		00E356EE1AD99517003FC87E /* SwiftChatTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftChatTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -70,14 +97,42 @@
 		3A93A5722C932FC600C9F56C /* SwiftChat.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = SwiftChat.entitlements; path = SwiftChat/SwiftChat.entitlements; sourceTree = "<group>"; };
 		3ADD2B4D2E26337F00171D1D /* RCTNetworkingPatch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTNetworkingPatch.h; sourceTree = "<group>"; };
 		3ADD2B4E2E26337F00171D1D /* RCTNetworkingPatch.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RCTNetworkingPatch.m; sourceTree = "<group>"; };
+		3AF67D4D2F52DCC3003CD99C /* SwiftChatLiveActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SwiftChatLiveActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		3AF67D4E2F52DCC3003CD99C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		3AF67D502F52DCC3003CD99C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		3AF67D5F2F52DCC6003CD99C /* SwiftChatLiveActivityExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftChatLiveActivityExtension.entitlements; sourceTree = "<group>"; };
 		3AFE001D2E99999999999999 /* FilePasteModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FilePasteModule.h; sourceTree = "<group>"; };
 		3AFE001E2E99999999999999 /* FilePasteModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FilePasteModule.m; sourceTree = "<group>"; };
 		5D25C7B4CE6B3F2BED0CFCE0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = SwiftChat/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		6DA16C2713CEF20A2A57B2C8 /* BackgroundKeepAliveModule.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BackgroundKeepAliveModule.m; sourceTree = "<group>"; };
 		7C30B51B80BE1F65F927C2DD /* Pods-SwiftChat-SwiftChatTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwiftChat-SwiftChatTests.release.xcconfig"; path = "Target Support Files/Pods-SwiftChat-SwiftChatTests/Pods-SwiftChat-SwiftChatTests.release.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = SwiftChat/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		92DDE7B718B86DF54BE88074 /* BackgroundAudioService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackgroundAudioService.swift; sourceTree = "<group>"; };
 		E6F3C08C1AEBDE360232922B /* Pods-SwiftChat.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwiftChat.release.xcconfig"; path = "Target Support Files/Pods-SwiftChat/Pods-SwiftChat.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		F2CDA17B8EF63BE16DC02D6A /* BackgroundKeepAliveModule.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackgroundKeepAliveModule.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3AF67D632F52DCC6003CD99C /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3AF67D4C2F52DCC3003CD99C /* SwiftChatLiveActivityExtension */;
+		};
+		3AF67D682F52DE27003CD99C /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				LiveActivityAttributes.swift,
+			);
+			target = 13B07F861A680F5B00A75B9A /* SwiftChat */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		3AF67D522F52DCC3003CD99C /* SwiftChatLiveActivity */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (3AF67D682F52DE27003CD99C /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 3AF67D632F52DCC6003CD99C /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SwiftChatLiveActivity; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		00E356EB1AD99517003FC87E /* Frameworks */ = {
@@ -95,6 +150,15 @@
 				3A6846882DA8F8AA003CFBEC /* AWSBedrockRuntime in Frameworks */,
 				7923F2A519E6BC533C0F2749 /* libPods-SwiftChat.a in Frameworks */,
 				3A2384122E2A63DC00FBF762 /* AWSBedrockRuntime in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3AF67D4A2F52DCC3003CD99C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3AF67D512F52DCC3003CD99C /* SwiftUI.framework in Frameworks */,
+				3AF67D4F2F52DCC3003CD99C /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -151,6 +215,8 @@
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				0E954E88951117AE160D5618 /* libPods-SwiftChat.a */,
 				2010B02A49BCFD048093BFF4 /* libPods-SwiftChat-SwiftChatTests.a */,
+				3AF67D4E2F52DCC3003CD99C /* WidgetKit.framework */,
+				3AF67D502F52DCC3003CD99C /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -169,6 +235,7 @@
 			children = (
 				3A6846A02DA8FBBE003CFBEC /* VoiceChat */,
 				3AFE001C2E99999999999999 /* FilePaste */,
+				6DEEB690D303FF6F0E1F43D2 /* BackgroundKeepAlive */,
 			);
 			path = Modules;
 			sourceTree = "<group>";
@@ -179,6 +246,7 @@
 				3A6846A22DA8FBBE003CFBEC /* AudioManager.swift */,
 				3A6846A32DA8FBBE003CFBEC /* ConversationManager.swift */,
 				3A6846A42DA8FBBE003CFBEC /* NovaSonicService.swift */,
+				92DDE7B718B86DF54BE88074 /* BackgroundAudioService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -192,6 +260,15 @@
 			path = FilePaste;
 			sourceTree = "<group>";
 		};
+		6DEEB690D303FF6F0E1F43D2 /* BackgroundKeepAlive */ = {
+			isa = PBXGroup;
+			children = (
+				F2CDA17B8EF63BE16DC02D6A /* BackgroundKeepAliveModule.swift */,
+				6DA16C2713CEF20A2A57B2C8 /* BackgroundKeepAliveModule.m */,
+			);
+			path = BackgroundKeepAlive;
+			sourceTree = "<group>";
+		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -202,9 +279,11 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				3AF67D5F2F52DCC6003CD99C /* SwiftChatLiveActivityExtension.entitlements */,
 				13B07FAE1A68108700A75B9A /* SwiftChat */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				00E356EF1AD99517003FC87E /* SwiftChatTests */,
+				3AF67D522F52DCC3003CD99C /* SwiftChatLiveActivity */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
@@ -219,6 +298,7 @@
 			children = (
 				13B07F961A680F5B00A75B9A /* SwiftChat.app */,
 				00E356EE1AD99517003FC87E /* SwiftChatTests.xctest */,
+				3AF67D4D2F52DCC3003CD99C /* SwiftChatLiveActivityExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -269,15 +349,39 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				2EFD869F45294D63CA0BC82E /* [CP] Embed Pods Frameworks */,
 				FA9CA29F8A1E78A32F0317DD /* [CP] Copy Pods Resources */,
+				3AF67D602F52DCC6003CD99C /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				3AF67D5D2F52DCC5003CD99C /* PBXTargetDependency */,
 			);
 			name = SwiftChat;
 			productName = SwiftChat;
 			productReference = 13B07F961A680F5B00A75B9A /* SwiftChat.app */;
 			productType = "com.apple.product-type.application";
+		};
+		3AF67D4C2F52DCC3003CD99C /* SwiftChatLiveActivityExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3AF67D642F52DCC6003CD99C /* Build configuration list for PBXNativeTarget "SwiftChatLiveActivityExtension" */;
+			buildPhases = (
+				3AF67D492F52DCC3003CD99C /* Sources */,
+				3AF67D4A2F52DCC3003CD99C /* Frameworks */,
+				3AF67D4B2F52DCC3003CD99C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				3AF67D522F52DCC3003CD99C /* SwiftChatLiveActivity */,
+			);
+			name = SwiftChatLiveActivityExtension;
+			packageProductDependencies = (
+			);
+			productName = SwiftChatLiveActivityExtension;
+			productReference = 3AF67D4D2F52DCC3003CD99C /* SwiftChatLiveActivityExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -285,6 +389,7 @@
 		83CBB9F71A601CBA00E9B192 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1540;
 				TargetAttributes = {
 					00E356ED1AD99517003FC87E = {
@@ -294,6 +399,9 @@
 					};
 					13B07F861A680F5B00A75B9A = {
 						LastSwiftMigration = 1540;
+					};
+					3AF67D4C2F52DCC3003CD99C = {
+						CreatedOnToolsVersion = 16.2;
 					};
 				};
 			};
@@ -315,6 +423,7 @@
 			targets = (
 				13B07F861A680F5B00A75B9A /* SwiftChat */,
 				00E356ED1AD99517003FC87E /* SwiftChatTests */,
+				3AF67D4C2F52DCC3003CD99C /* SwiftChatLiveActivityExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -334,6 +443,13 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				A98E989882C3A293A3C38335 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3AF67D4B2F52DCC3003CD99C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -496,6 +612,16 @@
 				3AFE00202E99999999999999 /* FilePasteModule.m in Sources */,
 				3A22BD7A2D44D84300749246 /* PlatformModule.m in Sources */,
 				3A19D3892CCE980A001797C6 /* TestAddBridge.swift in Sources */,
+				4BCE9FA47196E1AE820D956E /* BackgroundAudioService.swift in Sources */,
+				5EC3CA95C332816127FC1D28 /* BackgroundKeepAliveModule.swift in Sources */,
+				E44F1E5E4818F1E5D41BD2A3 /* BackgroundKeepAliveModule.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3AF67D492F52DCC3003CD99C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -506,6 +632,11 @@
 			isa = PBXTargetDependency;
 			target = 13B07F861A680F5B00A75B9A /* SwiftChat */;
 			targetProxy = 00E356F41AD99517003FC87E /* PBXContainerItemProxy */;
+		};
+		3AF67D5D2F52DCC5003CD99C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3AF67D4C2F52DCC3003CD99C /* SwiftChatLiveActivityExtension */;
+			targetProxy = 3AF67D5C2F52DCC5003CD99C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -674,6 +805,97 @@
 			};
 			name = Release;
 		};
+		3AF67D612F52DCC6003CD99C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = SwiftChatLiveActivityExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = BUA6W9H7T3;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SwiftChatLiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SwiftChatLiveActivity;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aws.swiftchat.SwiftChatLiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3AF67D622F52DCC6003CD99C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = SwiftChatLiveActivityExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = BUA6W9H7T3;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SwiftChatLiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SwiftChatLiveActivity;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.aws.swiftchat.SwiftChatLiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		83CBBA201A601CBA00E9B192 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -748,10 +970,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -825,10 +1044,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -853,6 +1069,15 @@
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
 				13B07F951A680F5B00A75B9A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3AF67D642F52DCC6003CD99C /* Build configuration list for PBXNativeTarget "SwiftChatLiveActivityExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3AF67D612F52DCC6003CD99C /* Debug */,
+				3AF67D622F52DCC6003CD99C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

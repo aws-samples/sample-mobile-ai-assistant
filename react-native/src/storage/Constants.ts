@@ -77,6 +77,7 @@ export const BedrockThinkingModels = [
   'Claude 3.7 Sonnet',
   'Claude Sonnet 4',
   'Claude Sonnet 4.5',
+  'Claude Sonnet 4.6',
   'Claude Opus 4',
   'Claude Opus 4.1',
   'Claude Opus 4.5',

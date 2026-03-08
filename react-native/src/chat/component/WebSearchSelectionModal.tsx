@@ -24,12 +24,15 @@ import {
   getSearchProvider,
   saveSearchProvider,
   getTavilyApiKey,
+  isGoogleLoginDone,
+  saveGoogleLoginDone,
 } from '../../storage/StorageUtils';
 import { SEARCH_PROVIDER_CONFIGS } from '../../websearch/constants/SearchProviderConstants';
 import { SearchEngineOption } from '../../websearch/types';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RouteParamList } from '../../types/RouteTypes';
 import { isAndroid } from '../../utils/PlatformUtils';
+import { GoogleLoginModal } from '../../websearch/components/GoogleLoginModal';
 
 interface WebSearchSelectionModalProps {
   visible: boolean;
@@ -58,6 +61,7 @@ export const WebSearchSelectionModal: React.FC<
     getSearchProvider() as SearchEngineOption
   );
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
+  const [showGoogleLogin, setShowGoogleLogin] = useState(false);
 
   const translateX = useSharedValue(100);
   const translateY = useSharedValue(100);
@@ -92,6 +96,18 @@ export const WebSearchSelectionModal: React.FC<
     startCloseAnimation(onClose);
   };
 
+  const completeProviderSelect = (provider: SearchEngineOption) => {
+    setSelectedProvider(provider);
+    saveSearchProvider(provider);
+
+    sendEvent('searchProviderChanged');
+    sendEvent('unSelectSystemPrompt');
+
+    startCloseAnimation(() => {
+      onClose();
+    });
+  };
+
   const handleProviderSelect = (provider: SearchEngineOption) => {
     // Check if Tavily is selected and API key is not configured
     if (provider === 'tavily') {
@@ -102,14 +118,24 @@ export const WebSearchSelectionModal: React.FC<
       }
     }
 
-    setSelectedProvider(provider);
-    saveSearchProvider(provider);
+    // Check if Google is selected for the first time
+    if (provider === 'google' && !isGoogleLoginDone()) {
+      setShowGoogleLogin(true);
+      return;
+    }
 
-    sendEvent('searchProviderChanged');
+    completeProviderSelect(provider);
+  };
 
-    startCloseAnimation(() => {
-      onClose();
-    });
+  const handleGoogleLoginDone = () => {
+    saveGoogleLoginDone();
+    setShowGoogleLogin(false);
+    completeProviderSelect('google');
+  };
+
+  const handleGoogleLoginSkip = () => {
+    setShowGoogleLogin(false);
+    completeProviderSelect('google');
   };
 
   const handleGoToSettings = () => {
@@ -146,7 +172,12 @@ export const WebSearchSelectionModal: React.FC<
     return (
       <TouchableOpacity
         style={[styles.providerItem, isLastItem && styles.providerItemLastItem]}
-        onPress={() => handleProviderSelect(item.id)}>
+        onPress={() => handleProviderSelect(item.id)}
+        onLongPress={() => {
+          if (item.id === 'google') {
+            setShowGoogleLogin(true);
+          }
+        }}>
         <View style={styles.providerItemContent}>
           <Image
             source={getSearchProviderIcon(item.id, isDark)}
@@ -209,6 +240,11 @@ export const WebSearchSelectionModal: React.FC<
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
+      <GoogleLoginModal
+        visible={showGoogleLogin}
+        onSkip={handleGoogleLoginSkip}
+        onDone={handleGoogleLoginDone}
+      />
       <Dialog.Container visible={showApiKeyDialog}>
         <Dialog.Title>Tavily API Key Required</Dialog.Title>
         <Dialog.Description>

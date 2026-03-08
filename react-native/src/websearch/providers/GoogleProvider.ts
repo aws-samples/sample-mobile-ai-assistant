@@ -40,6 +40,11 @@ export class GoogleProvider {
               ? `
                 const expectedParam = 'q=${encodeURIComponent(expectedQuery)}';
                 if (!window.location.href.includes(expectedParam)) {
+                  // URL doesn't match expected query - likely redirected to consent/CAPTCHA page
+                  window.ReactNativeWebView.postMessage(JSON.stringify({
+                    type: 'captcha_required',
+                    message: 'Google redirected to verification page'
+                  }));
                   return;
                 }
               `
@@ -148,7 +153,6 @@ export class GoogleProvider {
             return;
           }
 
-          // No results and no CAPTCHA, return empty results
           window.ReactNativeWebView.postMessage(JSON.stringify({
             type: 'search_results',
             results: []

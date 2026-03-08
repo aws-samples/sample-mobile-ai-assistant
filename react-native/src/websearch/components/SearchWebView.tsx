@@ -233,7 +233,8 @@ export const SearchWebView: React.FC = () => {
               ref={webViewRef}
               source={{ uri: currentUrl }}
               javaScriptEnabled={true}
-              domStorageEnabled={false}
+              domStorageEnabled={true}
+              sharedCookiesEnabled={true}
               style={styles.webViewStyle}
               onMessage={messageEvent =>
                 handleMessage(messageEvent.nativeEvent.data)
@@ -251,7 +252,8 @@ export const SearchWebView: React.FC = () => {
           ref={webViewRef}
           source={{ uri: currentUrl }}
           javaScriptEnabled={true}
-          domStorageEnabled={false}
+          domStorageEnabled={true}
+          sharedCookiesEnabled={true}
           style={styles.hiddenWebView}
           onMessage={messageEvent =>
             handleMessage(messageEvent.nativeEvent.data)

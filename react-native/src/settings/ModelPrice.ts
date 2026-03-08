@@ -198,7 +198,15 @@ export const ModelPrice: ModelPriceType = {
       inputTokenPrice: 0.003,
       outputTokenPrice: 0.015,
     },
+    'Claude Sonnet 4.6': {
+      inputTokenPrice: 0.003,
+      outputTokenPrice: 0.015,
+    },
     'Claude Opus 4.5': {
+      inputTokenPrice: 0.005,
+      outputTokenPrice: 0.025,
+    },
+    'Claude Opus 4.6': {
       inputTokenPrice: 0.005,
       outputTokenPrice: 0.025,
     },

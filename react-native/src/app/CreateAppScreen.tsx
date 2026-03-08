@@ -67,14 +67,24 @@ function CreateAppScreen(): React.JSX.Element {
   }, [navigation, headerLeft]);
 
   // Auto-detect HTML and switch to preview
-  const handleCodeChange = useCallback((text: string) => {
-    setHtmlCode(text);
-    const shouldShowPreview = isHtmlContent(text);
-    setShowPreview(shouldShowPreview);
-    if (shouldShowPreview) {
-      setHasError(false);
-    }
-  }, []);
+  const handleCodeChange = useCallback(
+    (text: string) => {
+      setHtmlCode(text);
+      const shouldShowPreview = isHtmlContent(text);
+      setShowPreview(shouldShowPreview);
+      if (shouldShowPreview) {
+        setHasError(false);
+        // Auto-fill app name from HTML <title> if name is empty
+        if (!appName.trim()) {
+          const match = text.match(/<title[^>]*>(.*?)<\/title>/i);
+          if (match) {
+            setAppName(match[1].trim().slice(0, MAX_NAME_LENGTH));
+          }
+        }
+      }
+    },
+    [appName]
+  );
 
   // Import file from document picker
   const handleImportFile = useCallback(async () => {

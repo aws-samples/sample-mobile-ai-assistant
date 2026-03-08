@@ -20,6 +20,8 @@ import {
   isTokenValid,
   savePromptId,
   saveSystemPrompts,
+  getSearchProvider,
+  saveSearchProvider,
 } from '../../storage/StorageUtils.ts';
 import DraggableFlatList, {
   RenderItemParams,
@@ -177,6 +179,10 @@ export const PromptListComponent: React.FC<PromptListProps> = ({
       const newPrompt = selectedPrompt?.id === prompt.id ? null : prompt;
       setSelectedPrompt(newPrompt);
       onSelectPrompt(newPrompt);
+      if (newPrompt !== null && getSearchProvider() !== 'disabled') {
+        saveSearchProvider('disabled');
+        sendEvent('searchProviderChanged');
+      }
     }
   };
 

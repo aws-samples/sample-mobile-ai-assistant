@@ -314,10 +314,36 @@ function ChatScreen(): React.JSX.Element {
             chatComponentRef.current?.clearInput();
             setUsage(undefined);
             setSelectedFiles([]);
-            if (
-              messagesRef.current.length > 0 &&
-              chatStatusRef.current !== ChatStatus.Running
-            ) {
+            if (messagesRef.current.length > 0) {
+              if (chatStatusRef.current === ChatStatus.Running) {
+                const isAppStreaming =
+                  (isAppModeRef.current ||
+                    systemPromptRef.current?.name === APP_PROMPT_NAME) &&
+                  modeRef.current === ChatMode.Text;
+                if (!isAppStreaming) {
+                  return;
+                }
+                backgroundStreamManager.register(sessionIdRef.current, {
+                  sessionId: sessionIdRef.current,
+                  text:
+                    getLatestMessage(messagesRef.current)?.text || '',
+                  reasoning:
+                    getLatestMessage(messagesRef.current)?.reasoning || '',
+                  usage: usageRef.current,
+                  cancelFlag: activeCancelFlagRef.current,
+                  controller: controllerRef.current!,
+                  htmlCode: getLatestHtmlCode(),
+                  isComplete: false,
+                  needStop: false,
+                  messages: [...messagesRef.current],
+                  bedrockMessages: [...bedrockMessages.current],
+                });
+                saveCurrentMessages();
+                startBackgroundTaskIfNeeded();
+                chatStatusRef.current = ChatStatus.Init;
+                setChatStatus(ChatStatus.Init);
+                sendEventRef.current('updateHistory');
+              }
               startNewChat.current();
             }
           }}
@@ -361,6 +387,7 @@ function ChatScreen(): React.JSX.Element {
           });
           saveCurrentMessages();
           startBackgroundTaskIfNeeded();
+          sendEventRef.current('updateHistory');
         } else {
           // Non-App mode: abort as before
           controllerRef.current?.abort();
@@ -840,6 +867,9 @@ function ChatScreen(): React.JSX.Element {
             messages: [...messagesRef.current],
             bedrockMessages: [...bedrockMessages.current],
           });
+          if (isNewChatRef.current) {
+            saveCurrentMessages();
+          }
         }
 
         // Get the last user message (for inverted: index 1, after bot message at 0)
@@ -1045,11 +1075,13 @@ function ChatScreen(): React.JSX.Element {
       // Get all history messages after the user message
       const historyMessages = messagesRef.current.slice(userMessageIndex + 1);
 
-      // Update latestHtmlCode for app mode (only if found in history)
+      // Update latestHtmlCode for app mode
       if (isAppModeRef.current) {
         const foundHtmlCode = findLatestHtmlCode(historyMessages);
         if (foundHtmlCode) {
           setLatestHtmlCode(foundHtmlCode);
+        } else if (!newText) {
+          clearLatestHtmlCode();
         }
       }
 

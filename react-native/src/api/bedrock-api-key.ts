@@ -36,7 +36,9 @@ export const invokeBedrockWithAPIKey = async (
   if (modelId.startsWith('meta.llama')) {
     maxTokens = 2048;
   }
-  if (modelId.includes('deepseek.r1') || modelId.includes('claude-opus-4')) {
+  if (modelId.includes('claude-opus-4-6')) {
+    maxTokens = 128000;
+  } else if (modelId.includes('deepseek.r1') || modelId.includes('claude-opus-4')) {
     maxTokens = 32000;
   }
   if (
@@ -105,7 +107,6 @@ export const invokeBedrockWithAPIKey = async (
             // Split by SSE event boundaries
             const events = chunk.split('\n\n');
             for (const event of events) {
-              await sleep(0.1);
               const bedrockChunk = parseChunk(event);
               if (bedrockChunk) {
                 if (bedrockChunk.reasoning) {
@@ -121,7 +122,7 @@ export const invokeBedrockWithAPIKey = async (
                 if (bedrockChunk.text) {
                   completeMessage += bedrockChunk.text ?? '';
                   appendTimes++;
-                  if (appendTimes > 5000 && appendTimes % 2 === 0) {
+                  if (appendTimes > 500 && appendTimes % 2 === 0) {
                     continue;
                   }
                   callback(

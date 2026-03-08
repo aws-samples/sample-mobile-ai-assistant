@@ -40,6 +40,14 @@ interface HtmlPreviewRendererRef {
 // App screenshots directory
 const APP_SCREENSHOTS_DIR = `${RNFS.DocumentDirectoryPath}/app`;
 
+const MAX_APP_NAME_LENGTH = 20;
+
+// Extract <title> from HTML string
+const extractHtmlTitle = (html: string): string => {
+  const match = html.match(/<title[^>]*>(.*?)<\/title>/i);
+  return match ? match[1].trim().slice(0, MAX_APP_NAME_LENGTH) : '';
+};
+
 const HtmlPreviewRenderer = forwardRef<
   HtmlPreviewRendererRef,
   HtmlPreviewRendererProps
@@ -213,8 +221,8 @@ const HtmlPreviewRenderer = forwardRef<
       Alert.alert('Error', 'Please enter an app name');
       return;
     }
-    if (appName.length > 20) {
-      Alert.alert('Error', 'App name must be 20 characters or less');
+    if (appName.length > MAX_APP_NAME_LENGTH) {
+      Alert.alert('Error', `App name must be ${MAX_APP_NAME_LENGTH} characters or less`);
       return;
     }
 
@@ -322,7 +330,10 @@ const HtmlPreviewRenderer = forwardRef<
         {/* Save Button */}
         <TouchableOpacity
           style={styles.saveButton}
-          onPress={() => setShowSaveModal(true)}>
+          onPress={() => {
+            setAppName(extractHtmlTitle(code));
+            setShowSaveModal(true);
+          }}>
           <Image
             source={require('../../../assets/download.png')}
             style={styles.saveIcon}
@@ -349,8 +360,10 @@ const HtmlPreviewRenderer = forwardRef<
               placeholder="Enter app name (max 20 chars)"
               placeholderTextColor={colors.textSecondary}
               value={appName}
-              onChangeText={text => setAppName(text.slice(0, 20))}
-              maxLength={20}
+              onChangeText={text =>
+                setAppName(text.slice(0, MAX_APP_NAME_LENGTH))
+              }
+              maxLength={MAX_APP_NAME_LENGTH}
               autoFocus={true}
               returnKeyType="done"
               onSubmitEditing={handleSaveApp}

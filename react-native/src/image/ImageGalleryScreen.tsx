@@ -10,7 +10,10 @@ import {
   Platform,
   Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaProvider,
+  SafeAreaView,
+} from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteParamList } from '../types/RouteTypes';
@@ -237,6 +240,22 @@ function ImageGalleryScreen(): React.JSX.Element {
     [styles]
   );
 
+  const HeaderComponent = useCallback(
+    () => (
+      <SafeAreaProvider>
+        <SafeAreaView style={headerStyles.root} edges={['top']}>
+          <TouchableOpacity
+            style={headerStyles.closeButton}
+            onPress={() => setIsVisible(false)}
+            hitSlop={{ top: 16, left: 16, bottom: 16, right: 16 }}>
+            <Text style={headerStyles.closeText}>✕</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    ),
+    []
+  );
+
   const FooterComponent = useCallback(
     ({ imageIndex }: { imageIndex: number }) => {
       const currentImage = images[imageIndex];
@@ -290,6 +309,7 @@ function ImageGalleryScreen(): React.JSX.Element {
         imageIndex={viewerIndex}
         visible={visible}
         onRequestClose={() => setIsVisible(false)}
+        HeaderComponent={HeaderComponent}
         FooterComponent={FooterComponent}
       />
     </SafeAreaView>
@@ -369,5 +389,27 @@ const createStyles = (colors: ColorScheme, numColumns: number) => {
     },
   });
 };
+
+const headerStyles = StyleSheet.create({
+  root: {
+    alignItems: 'flex-end',
+  },
+  closeButton: {
+    marginRight: 8,
+    marginTop: 8,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 22,
+    backgroundColor: '#00000077',
+  },
+  closeText: {
+    lineHeight: 22,
+    fontSize: 19,
+    textAlign: 'center',
+    color: '#FFF',
+  },
+});
 
 export default ImageGalleryScreen;
