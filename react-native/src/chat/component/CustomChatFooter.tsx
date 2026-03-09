@@ -16,7 +16,7 @@ import { ModelSelectionModal } from './ModelSelectionModal.tsx';
 import { WebSearchIconButton } from './WebSearchIconButton.tsx';
 import { WebSearchSelectionModal } from './WebSearchSelectionModal.tsx';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { isAndroid, isMacCatalyst } from '../../utils/PlatformUtils.ts';
+import { isAndroid } from '../../utils/PlatformUtils.ts';
 
 interface CustomComposerProps {
   files: FileInfo[];

@@ -35,7 +35,7 @@ import { invokeOpenAIWithCallBack } from './open-api.ts';
 import { invokeOllamaWithCallBack } from './ollama-api.ts';
 import { BedrockThinkingModels } from '../storage/Constants.ts';
 import { getModelTag } from '../utils/ModelUtils.ts';
-import { invokeBedrockWithAPIKey, sleep } from './bedrock-api-key.ts';
+import { invokeBedrockWithAPIKey } from './bedrock-api-key.ts';
 import { genImageWithAPIKey } from './bedrock-api-key-image.ts';
 
 type CallbackFunction = (

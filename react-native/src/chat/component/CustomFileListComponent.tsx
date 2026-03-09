@@ -93,6 +93,22 @@ export const CustomFileListComponent: React.FC<CustomFileProps> = ({
     }
   }, [files, mode]);
 
+  const renderImageHeader = useCallback(
+    () => (
+      <SafeAreaProvider>
+        <SafeAreaView style={imageHeaderStyles.root} edges={['top']}>
+          <TouchableOpacity
+            style={imageHeaderStyles.closeButton}
+            onPress={() => setIsVisible(false)}
+            hitSlop={{ top: 16, left: 16, bottom: 16, right: 16 }}>
+            <Text style={imageHeaderStyles.closeText}>✕</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    ),
+    [],
+  );
+
   const handleCompression = useCallback(async () => {
     for (const file of filesRef.current) {
       if (
@@ -331,18 +347,7 @@ export const CustomFileListComponent: React.FC<CustomFileProps> = ({
         imageIndex={index}
         visible={visible}
         onRequestClose={() => setIsVisible(false)}
-        HeaderComponent={() => (
-          <SafeAreaProvider>
-            <SafeAreaView style={imageHeaderStyles.root} edges={['top']}>
-              <TouchableOpacity
-                style={imageHeaderStyles.closeButton}
-                onPress={() => setIsVisible(false)}
-                hitSlop={{ top: 16, left: 16, bottom: 16, right: 16 }}>
-                <Text style={imageHeaderStyles.closeText}>✕</Text>
-              </TouchableOpacity>
-            </SafeAreaView>
-          </SafeAreaProvider>
-        )}
+        HeaderComponent={renderImageHeader}
       />
     </ScrollView>
   );

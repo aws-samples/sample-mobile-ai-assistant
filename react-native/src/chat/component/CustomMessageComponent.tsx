@@ -91,7 +91,6 @@ const CustomMessageComponent: React.FC<CustomMessageProps> = ({
   const [isEdit, setIsEdit] = useState(false);
   const [editText, setEditText] = useState(currentMessage?.text || '');
 
-  const [inputHeight, setInputHeight] = useState(0);
   const chatStatusRef = useRef(chatStatus);
   const textInputRef = useRef<TextInput>(null);
   const [inputTextSelection, setInputTextSelection] = useState<
@@ -664,10 +663,6 @@ const CustomMessageComponent: React.FC<CustomMessageProps> = ({
               showSoftInputOnFocus={isUser.current ? true : false}
               value={isUser.current ? editText : undefined}
               onChangeText={isUser.current ? setEditText : undefined}
-              onContentSizeChange={event => {
-                const { height } = event.nativeEvent.contentSize;
-                setInputHeight(height);
-              }}
               style={{
                 ...styles.inputText,
                 ...{
