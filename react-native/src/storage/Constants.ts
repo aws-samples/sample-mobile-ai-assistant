@@ -33,22 +33,40 @@ const RegionList = [
 export const DefaultRegion = 'us-west-2';
 
 export const GPTModels = [
-  { modelName: 'GPT-5', modelId: 'gpt-5', modelTag: ModelTag.OpenAI },
+  { modelName: 'GPT-5.4', modelId: 'gpt-5.4', modelTag: ModelTag.OpenAI },
   {
-    modelName: 'GPT-5-chat',
-    modelId: 'gpt-5-chat-latest',
+    modelName: 'GPT-5.4 Pro',
+    modelId: 'gpt-5.4-pro',
     modelTag: ModelTag.OpenAI,
   },
-  { modelName: 'GPT-5-mini', modelId: 'gpt-5-mini', modelTag: ModelTag.OpenAI },
-  { modelName: 'GPT-5-nano', modelId: 'gpt-5-nano', modelTag: ModelTag.OpenAI },
+  {
+    modelName: 'GPT-5.3 Chat',
+    modelId: 'gpt-5.3-chat-latest',
+    modelTag: ModelTag.OpenAI,
+  },
+  { modelName: 'GPT-5.2', modelId: 'gpt-5.2', modelTag: ModelTag.OpenAI },
+  {
+    modelName: 'GPT-5.2 Pro',
+    modelId: 'gpt-5.2-pro',
+    modelTag: ModelTag.OpenAI,
+  },
+  { modelName: 'GPT-5.1', modelId: 'gpt-5.1', modelTag: ModelTag.OpenAI },
+  { modelName: 'GPT-5', modelId: 'gpt-5', modelTag: ModelTag.OpenAI },
+  {
+    modelName: 'GPT-5 Pro',
+    modelId: 'gpt-5-pro',
+    modelTag: ModelTag.OpenAI,
+  },
+  { modelName: 'GPT-5 mini', modelId: 'gpt-5-mini', modelTag: ModelTag.OpenAI },
+  { modelName: 'GPT-5 nano', modelId: 'gpt-5-nano', modelTag: ModelTag.OpenAI },
   { modelName: 'GPT-4.1', modelId: 'gpt-4.1', modelTag: ModelTag.OpenAI },
   {
-    modelName: 'GPT-4.1-mini',
+    modelName: 'GPT-4.1 mini',
     modelId: 'gpt-4.1-mini',
     modelTag: ModelTag.OpenAI,
   },
   {
-    modelName: 'GPT-4.1-nano',
+    modelName: 'GPT-4.1 nano',
     modelId: 'gpt-4.1-nano',
     modelTag: ModelTag.OpenAI,
   },

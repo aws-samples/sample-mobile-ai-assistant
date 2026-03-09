@@ -3,8 +3,10 @@
 //  SwiftChat
 //
 
+#if !targetEnvironment(macCatalyst)
 import ActivityKit
 
+@available(macCatalyst, unavailable)
 struct ChatActivityAttributes: ActivityAttributes, Hashable {
     var startTimestamp: Double
 
@@ -13,3 +15,4 @@ struct ChatActivityAttributes: ActivityAttributes, Hashable {
         var isFinished: Bool
     }
 }
+#endif

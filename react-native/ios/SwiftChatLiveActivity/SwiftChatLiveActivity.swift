@@ -3,10 +3,12 @@
 //  SwiftChatLiveActivity
 //
 
+#if !targetEnvironment(macCatalyst)
 import ActivityKit
 import SwiftUI
 import WidgetKit
 
+@available(macCatalyst, unavailable)
 struct SwiftChatLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: ChatActivityAttributes.self) { context in
@@ -104,3 +106,4 @@ struct SwiftChatLiveActivity: Widget {
         }
     }
 }
+#endif

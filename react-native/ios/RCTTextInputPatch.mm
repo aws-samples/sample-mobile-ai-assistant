@@ -99,40 +99,33 @@ static IMP originalTextInputShouldSubmitOnReturn = NULL;
 }
 
 + (void)setupPressEventPatches:(Class)targetClass isTextField:(BOOL)isTextField {
-    // Store reference to which IMP to use
     IMP *pressesBeganIMP = isTextField ? &originalTextFieldPressesBegan : &originalTextViewPressesBegan;
     IMP *pressesEndedIMP = isTextField ? &originalTextFieldPressesEnded : &originalTextViewPressesEnded;
 
-    // Get existing implementations if they exist
-    Method existingPressesBegan = class_getInstanceMethod(targetClass, @selector(pressesBegan:withEvent:));
-    Method existingPressesEnded = class_getInstanceMethod(targetClass, @selector(pressesEnded:withEvent:));
-
-    if (existingPressesBegan) {
-        *pressesBeganIMP = method_getImplementation(existingPressesBegan);
-    }
-    if (existingPressesEnded) {
-        *pressesEndedIMP = method_getImplementation(existingPressesEnded);
-    }
-
-    // Get our swizzled methods
     Method swizzledPressesBegan = class_getInstanceMethod([RCTTextInputPatch class], @selector(swizzled_pressesBegan:withEvent:));
     Method swizzledPressesEnded = class_getInstanceMethod([RCTTextInputPatch class], @selector(swizzled_pressesEnded:withEvent:));
 
-    // Add or replace the methods
-    if (existingPressesBegan) {
+    // Use class_addMethod to add the method directly on targetClass.
+    // This avoids replacing the superclass (UITextField/UITextView) implementation,
+    // which would affect ALL instances (e.g. WebView text fields) and cause infinite recursion.
+    BOOL addedPressesBegan = class_addMethod(targetClass, @selector(pressesBegan:withEvent:),
+                                             method_getImplementation(swizzledPressesBegan),
+                                             method_getTypeEncoding(swizzledPressesBegan));
+    if (!addedPressesBegan) {
+        // targetClass has its own implementation, safe to replace directly
+        Method existingPressesBegan = class_getInstanceMethod(targetClass, @selector(pressesBegan:withEvent:));
+        *pressesBeganIMP = method_getImplementation(existingPressesBegan);
         method_setImplementation(existingPressesBegan, method_getImplementation(swizzledPressesBegan));
-    } else {
-        class_addMethod(targetClass, @selector(pressesBegan:withEvent:),
-                       method_getImplementation(swizzledPressesBegan),
-                       method_getTypeEncoding(swizzledPressesBegan));
     }
+    // If added, the original is the superclass implementation - resolve via objc_msgSendSuper at call time
 
-    if (existingPressesEnded) {
+    BOOL addedPressesEnded = class_addMethod(targetClass, @selector(pressesEnded:withEvent:),
+                                             method_getImplementation(swizzledPressesEnded),
+                                             method_getTypeEncoding(swizzledPressesEnded));
+    if (!addedPressesEnded) {
+        Method existingPressesEnded = class_getInstanceMethod(targetClass, @selector(pressesEnded:withEvent:));
+        *pressesEndedIMP = method_getImplementation(existingPressesEnded);
         method_setImplementation(existingPressesEnded, method_getImplementation(swizzledPressesEnded));
-    } else {
-        class_addMethod(targetClass, @selector(pressesEnded:withEvent:),
-                       method_getImplementation(swizzledPressesEnded),
-                       method_getTypeEncoding(swizzledPressesEnded));
     }
 }
 
@@ -240,40 +233,11 @@ static IMP originalTextInputShouldSubmitOnReturn = NULL;
 - (BOOL)swizzled_textInputShouldSubmitOnReturn
 {
     if (altKeyPressed || shiftPressed) {
-        // Alt+Enter or Shift+Enter logic - insert newline
-        id<RCTBackedTextInputViewProtocol> backedTextInputView = nil;
-
-        // For RCTTextInputComponentView, access _backedTextInputView via KVC
-        @try {
-            backedTextInputView = [self valueForKey:@"_backedTextInputView"];
-        } @catch (NSException *exception) {
-            // Ignore exception
-        }
-
-        // Fallback: try backedTextInputView property
-        if (!backedTextInputView && [self respondsToSelector:@selector(backedTextInputView)]) {
-            backedTextInputView = [self performSelector:@selector(backedTextInputView)];
-        }
-
-        if (backedTextInputView) {
-            UITextRange *selectedRange = backedTextInputView.selectedTextRange;
-            if (selectedRange) {
-                // Use replaceRange:withText: to insert newline
-                [backedTextInputView replaceRange:selectedRange withText:@"\n"];
-
-                // Trigger text change event on the component view
-                if ([self respondsToSelector:@selector(textInputDidChange)]) {
-                    [self performSelector:@selector(textInputDidChange)];
-                }
-            }
-        }
-
-        // Reset modifier key states after processing
+        // Alt+Enter or Shift+Enter - return NO to let RN insert newline via default behavior
+        // (submitBehavior="submit" will insert newline when submission is rejected)
         altKeyPressed = NO;
         shiftPressed = NO;
         commandPressed = NO;
-
-        // Return NO to prevent submission
         return NO;
     } else {
         // Reset modifier key states

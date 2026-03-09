@@ -94,15 +94,43 @@ export const ModelPrice: ModelPriceType = {
       inputTokenPrice: 0.00055,
       outputTokenPrice: 0.00219,
     },
+    'GPT-5.4': {
+      inputTokenPrice: 0.00125,
+      outputTokenPrice: 0.0075,
+    },
+    'GPT-5.4 Pro': {
+      inputTokenPrice: 0.015,
+      outputTokenPrice: 0.09,
+    },
+    'GPT-5.3 Chat': {
+      inputTokenPrice: 0.00175,
+      outputTokenPrice: 0.014,
+    },
+    'GPT-5.2': {
+      inputTokenPrice: 0.000875,
+      outputTokenPrice: 0.007,
+    },
+    'GPT-5.2 Pro': {
+      inputTokenPrice: 0.0105,
+      outputTokenPrice: 0.084,
+    },
+    'GPT-5.1': {
+      inputTokenPrice: 0.000625,
+      outputTokenPrice: 0.005,
+    },
+    'GPT-5 Pro': {
+      inputTokenPrice: 0.0075,
+      outputTokenPrice: 0.06,
+    },
     'GPT-4.1': {
       inputTokenPrice: 0.002,
       outputTokenPrice: 0.008,
     },
-    'GPT-4.1-mini': {
+    'GPT-4.1 mini': {
       inputTokenPrice: 0.0004,
       outputTokenPrice: 0.0016,
     },
-    'GPT-4.1-nano': {
+    'GPT-4.1 nano': {
       inputTokenPrice: 0.0001,
       outputTokenPrice: 0.0004,
     },

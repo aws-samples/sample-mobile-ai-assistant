@@ -128,9 +128,6 @@ export const CustomChatFooter: React.FC<CustomComposerProps> = ({
           ...(files.length === 0 && {
             height: 60,
           }),
-          ...(isMacCatalyst && {
-            paddingBottom: 18,
-          }),
         }}>
         {(isHideFileList || files.length > 0) && (
           <CustomFileListComponent

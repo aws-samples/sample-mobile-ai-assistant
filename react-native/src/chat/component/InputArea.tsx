@@ -66,6 +66,9 @@ export const InputArea = forwardRef<InputAreaRef, InputAreaProps>(
       clear: () => {
         setText('');
         onHasTextChange?.(false);
+        if (isMac) {
+          textInputRef.current?.clear();
+        }
       },
       focus: () => {
         textInputRef.current?.focus();
@@ -99,9 +102,11 @@ export const InputArea = forwardRef<InputAreaRef, InputAreaProps>(
 
     const handleSubmitEditing = useCallback(() => {
       handleSend();
-      // Re-focus after submit on Mac
+      // On Mac, controlled component value="" doesn't trigger native layout recalculation.
+      // Calling clear() invokes the native setTextAndSelection which calls _updateState
+      // to push state to shadow tree and trigger Yoga height recalculation.
       if (isMac) {
-        setTimeout(() => textInputRef.current?.focus(), 50);
+        textInputRef.current?.clear();
       }
     }, [handleSend]);
 
@@ -121,7 +126,7 @@ export const InputArea = forwardRef<InputAreaRef, InputAreaProps>(
               multiline
               value={text}
               onChangeText={handleTextChange}
-              blurOnSubmit={blurOnSubmit}
+              submitBehavior={blurOnSubmit ? 'submit' : 'newline'}
               onSubmitEditing={handleSubmitEditing}
               editable={!disabled}
               spellCheck={false}

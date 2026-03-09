@@ -178,15 +178,21 @@ Congratulations 🎉 Your SwiftChat App is ready to use!
 1. Navigate to the **Settings Page** and select the **OpenAI** tab.
 2. Enter your OpenAI API Key.
 3. Select OpenAI models from the **Chat Model** dropdown list. The following OpenAI models are currently supported:
-    - `GPT-4o`
-    - `GPT-4o mini`
+    - `GPT-5.4`
+    - `GPT-5.4 Pro`
+    - `GPT-5.3 Chat`
+    - `GPT-5.2`
+    - `GPT-5.2 Pro`
+    - `GPT-5.1`
+    - `GPT-5`
+    - `GPT-5 Pro`
+    - `GPT-5 mini`
+    - `GPT-5 nano`
     - `GPT-4.1`
     - `GPT-4.1 mini`
     - `GPT-4.1 nano`
-    - `GPT-5`
-    - `GPT-5 chat`
-    - `GPT-5 mini`
-    - `GPT-5 nano`
+    - `GPT-4o`
+    - `GPT-4o mini`
 
 Additionally, if you have deployed and configured the [SwiftChat Server](#getting-started-with-amazon-bedrock), you
 can enable the **Use Proxy** option to forward your requests.

@@ -3,7 +3,9 @@
 //  SwiftChat
 //
 
+#if !targetEnvironment(macCatalyst)
 import ActivityKit
+#endif
 import Foundation
 import React
 
@@ -51,6 +53,7 @@ final class BackgroundKeepAliveModule: NSObject, @unchecked Sendable {
         resolve: @escaping RCTPromiseResolveBlock,
         reject: @escaping RCTPromiseRejectBlock
     ) {
+        #if !targetEnvironment(macCatalyst)
         if #available(iOS 16.2, *) {
             // If already active, update the task count (user is in foreground adding new tasks)
             if let existing = Activity<ChatActivityAttributes>.activities.first(where: { $0.activityState == .active }) {
@@ -88,6 +91,9 @@ final class BackgroundKeepAliveModule: NSObject, @unchecked Sendable {
         } else {
             resolve(false)
         }
+        #else
+        resolve(false)
+        #endif
     }
 
     @objc(endLiveActivity:withRejecter:)
@@ -95,6 +101,7 @@ final class BackgroundKeepAliveModule: NSObject, @unchecked Sendable {
         resolve: @escaping RCTPromiseResolveBlock,
         reject: @escaping RCTPromiseRejectBlock
     ) {
+        #if !targetEnvironment(macCatalyst)
         if #available(iOS 16.2, *) {
             self.currentActivity = nil
             resolve(true)
@@ -113,5 +120,8 @@ final class BackgroundKeepAliveModule: NSObject, @unchecked Sendable {
         } else {
             resolve(false)
         }
+        #else
+        resolve(false)
+        #endif
     }
 }

@@ -26,9 +26,12 @@ export interface BackgroundStream {
   bedrockMessages: BedrockMessage[];
 }
 
+type ActiveIdsListener = (activeIds: Set<number>) => void;
+
 class BackgroundStreamManager {
   private static instance: BackgroundStreamManager;
   private streams = new Map<number, BackgroundStream>();
+  private listeners = new Set<ActiveIdsListener>();
 
   static getInstance(): BackgroundStreamManager {
     if (!this.instance) {
@@ -37,8 +40,19 @@ class BackgroundStreamManager {
     return this.instance;
   }
 
+  onActiveIdsChanged(listener: ActiveIdsListener): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  private notifyListeners(): void {
+    const ids = new Set(this.getActiveSessionIds());
+    this.listeners.forEach(l => l(ids));
+  }
+
   register(sessionId: number, stream: BackgroundStream): void {
     this.streams.set(sessionId, stream);
+    this.notifyListeners();
   }
 
   get(sessionId: number): BackgroundStream | undefined {
@@ -51,14 +65,20 @@ class BackgroundStreamManager {
 
   remove(sessionId: number): void {
     this.streams.delete(sessionId);
+    this.notifyListeners();
   }
 
   removeCompleted(): void {
+    let removed = false;
     this.streams.forEach((s, id) => {
       if (s.isComplete) {
         this.streams.delete(id);
+        removed = true;
       }
     });
+    if (removed) {
+      this.notifyListeners();
+    }
   }
 
   isStreaming(sessionId: number): boolean {
@@ -136,6 +156,7 @@ class BackgroundStreamManager {
     }
     stream.isComplete = true;
     stream.needStop = needStop;
+    this.notifyListeners();
 
     // Update the latest bot message in the snapshot
     if (stream.messages.length > 0) {

@@ -84,12 +84,18 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = ({
   const { event, sendEvent } = useAppContext();
   const { drawerType, setDrawerType } = useAppContext();
 
-  const [activeStreamIds, setActiveStreamIds] = useState<Set<number>>(new Set());
+  const [activeStreamIds, setActiveStreamIds] = useState<Set<number>>(
+    () => new Set(backgroundStreamManager.getActiveSessionIds())
+  );
   const drawerTypeRef = useRef(drawerType);
   const setDrawerTypeRef = useRef(setDrawerType);
   useEffect(() => {
     drawerTypeRef.current = drawerType;
   }, [drawerType]);
+
+  useEffect(() => {
+    return backgroundStreamManager.onActiveIdsChanged(setActiveStreamIds);
+  }, []);
 
   useEffect(() => {
     groupChatHistoryRef.current = groupChatHistory;
@@ -126,9 +132,6 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = ({
     if (drawerStatus === 'open') {
       trigger(HapticFeedbackTypes.soft);
       trigger(HapticFeedbackTypes.selection);
-      setActiveStreamIds(
-        new Set(backgroundStreamManager.getActiveSessionIds())
-      );
       if (
         groupChatHistoryRef.current.length > 1 &&
         getSessionId() === groupChatHistoryRef.current[1].id
