@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 70;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -114,14 +114,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		3AF67D632F52DCC6003CD99C /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		3AF67D632F52DCC6003CD99C /* Exceptions for "SwiftChatLiveActivity" folder in "SwiftChatLiveActivityExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 3AF67D4C2F52DCC3003CD99C /* SwiftChatLiveActivityExtension */;
 		};
-		3AF67D682F52DE27003CD99C /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		3AF67D682F52DE27003CD99C /* Exceptions for "SwiftChatLiveActivity" folder in "SwiftChat" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				LiveActivityAttributes.swift,
@@ -131,7 +131,19 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		3AF67D522F52DCC3003CD99C /* SwiftChatLiveActivity */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (3AF67D682F52DE27003CD99C /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 3AF67D632F52DCC6003CD99C /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SwiftChatLiveActivity; sourceTree = "<group>"; };
+		3AF67D522F52DCC3003CD99C /* SwiftChatLiveActivity */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3AF67D682F52DE27003CD99C /* Exceptions for "SwiftChatLiveActivity" folder in "SwiftChat" target */,
+				3AF67D632F52DCC6003CD99C /* Exceptions for "SwiftChatLiveActivity" folder in "SwiftChatLiveActivityExtension" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = SwiftChatLiveActivity;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -377,8 +389,6 @@
 				3AF67D522F52DCC3003CD99C /* SwiftChatLiveActivity */,
 			);
 			name = SwiftChatLiveActivityExtension;
-			packageProductDependencies = (
-			);
 			productName = SwiftChatLiveActivityExtension;
 			productReference = 3AF67D4D2F52DCC3003CD99C /* SwiftChatLiveActivityExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -821,6 +831,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = BUA6W9H7T3;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -835,10 +846,16 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(SDKROOT)/usr/lib/swift",
+					"$(SDKROOT)/System/iOSSupport/usr/lib/swift",
+					"$(inherited)",
+				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
+				PRESERVE_DEAD_CODE_INITS_AND_TERMS = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.aws.swiftchat.SwiftChatLiveActivity;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -868,6 +885,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = BUA6W9H7T3;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -882,9 +900,15 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(SDKROOT)/usr/lib/swift",
+					"$(SDKROOT)/System/iOSSupport/usr/lib/swift",
+					"$(inherited)",
+				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_FAST_MATH = YES;
+				PRESERVE_DEAD_CODE_INITS_AND_TERMS = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.aws.swiftchat.SwiftChatLiveActivity;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -970,7 +994,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -1044,7 +1071,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
