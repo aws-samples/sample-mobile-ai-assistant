@@ -189,6 +189,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    marginBottom: isAndroid ? 12 : 0,
+    marginBottom: 0,
   },
 });

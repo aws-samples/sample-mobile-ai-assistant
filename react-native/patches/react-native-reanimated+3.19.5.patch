@@ -1,0 +1,118 @@
+diff --git a/node_modules/react-native-reanimated/android/src/main/cpp/worklets/CMakeLists.txt b/node_modules/react-native-reanimated/android/src/main/cpp/worklets/CMakeLists.txt
+index bb61ff7..49d8624 100644
+--- a/node_modules/react-native-reanimated/android/src/main/cpp/worklets/CMakeLists.txt
++++ b/node_modules/react-native-reanimated/android/src/main/cpp/worklets/CMakeLists.txt
+@@ -57,7 +57,11 @@ else()
+ endif()
+ 
+ if(${JS_RUNTIME} STREQUAL "hermes")
+-  target_link_libraries(worklets hermes-engine::libhermes)
++  if(TARGET hermes-engine::libhermes)
++    target_link_libraries(worklets hermes-engine::libhermes)
++  elseif(TARGET hermes-engine::hermesvm)
++    target_link_libraries(worklets hermes-engine::hermesvm)
++  endif()
+ 
+   if(${HERMES_ENABLE_DEBUGGER})
+     string(APPEND CMAKE_CXX_FLAGS " -DHERMES_ENABLE_DEBUGGER=1")
+diff --git a/node_modules/react-native-reanimated/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy.h b/node_modules/react-native-reanimated/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy.h
+index 8e970cb..7992d3a 100644
+--- a/node_modules/react-native-reanimated/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy.h
++++ b/node_modules/react-native-reanimated/Common/cpp/reanimated/LayoutAnimations/LayoutAnimationsProxy.h
+@@ -57,7 +57,7 @@ struct LayoutAnimationsProxy
+   mutable std::unordered_set<SurfaceId> surfacesToRemove_;
+   mutable std::vector<Tag> finishedAnimationTags_;
+   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
+-  ContextContainer::Shared contextContainer_;
++  std::shared_ptr<const ContextContainer> contextContainer_;
+   SharedComponentDescriptorRegistry componentDescriptorRegistry_;
+   jsi::Runtime &uiRuntime_;
+   const std::shared_ptr<UIScheduler> uiScheduler_;
+@@ -70,7 +70,7 @@ struct LayoutAnimationsProxy
+   LayoutAnimationsProxy(
+       std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager,
+       SharedComponentDescriptorRegistry componentDescriptorRegistry,
+-      ContextContainer::Shared contextContainer,
++      std::shared_ptr<const ContextContainer> contextContainer,
+       jsi::Runtime &uiRuntime,
+       const std::shared_ptr<UIScheduler> uiScheduler
+ #ifdef ANDROID
+diff --git a/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/ReanimatedModule.java b/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/ReanimatedModule.java
+index 14d252c..0ff649a 100644
+--- a/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/ReanimatedModule.java
++++ b/node_modules/react-native-reanimated/android/src/main/java/com/swmansion/reanimated/ReanimatedModule.java
+@@ -9,8 +9,6 @@ import com.facebook.react.bridge.UIManager;
+ import com.facebook.react.bridge.UIManagerListener;
+ import com.facebook.react.fabric.FabricUIManager;
+ import com.facebook.react.module.annotations.ReactModule;
+-import com.facebook.react.uimanager.UIManagerModule;
+-import com.facebook.react.uimanager.UIManagerModuleListener;
+ import com.swmansion.worklets.WorkletsModule;
+ import java.util.ArrayList;
+ import java.util.Objects;
+@@ -18,7 +16,7 @@ import javax.annotation.Nullable;
+ 
+ @ReactModule(name = ReanimatedModule.NAME)
+ public class ReanimatedModule extends NativeReanimatedModuleSpec
+-    implements LifecycleEventListener, UIManagerModuleListener, UIManagerListener {
++    implements LifecycleEventListener, UIManagerListener {
+ 
+   public void didDispatchMountItems(@NonNull UIManager uiManager) {
+     // Keep: Required for UIManagerListener
+@@ -78,23 +76,15 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
+   public void initialize() {
+     ReactApplicationContext reactCtx = getReactApplicationContext();
+ 
+-    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
+-      UIManager uiManager = reactCtx.getFabricUIManager();
+-      if (uiManager instanceof FabricUIManager) {
+-        ((FabricUIManager) uiManager).addUIManagerEventListener(this);
+-        mUnsubscribe =
+-            Utils.combineRunnables(
+-                mUnsubscribe,
+-                () -> ((FabricUIManager) uiManager).removeUIManagerEventListener(this));
+-      } else {
+-        throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
+-      }
+-    } else {
+-      UIManagerModule uiManager =
+-          Objects.requireNonNull(reactCtx.getNativeModule(UIManagerModule.class));
+-      uiManager.addUIManagerListener(this);
++    UIManager uiManager = reactCtx.getFabricUIManager();
++    if (uiManager instanceof FabricUIManager) {
++      ((FabricUIManager) uiManager).addUIManagerEventListener(this);
+       mUnsubscribe =
+-          Utils.combineRunnables(mUnsubscribe, () -> uiManager.removeUIManagerListener(this));
++          Utils.combineRunnables(
++              mUnsubscribe,
++              () -> ((FabricUIManager) uiManager).removeUIManagerEventListener(this));
++    } else {
++      throw new RuntimeException("[Reanimated] Failed to obtain instance of FabricUIManager.");
+     }
+     reactCtx.addLifecycleEventListener(this);
+     mUnsubscribe =
+@@ -120,24 +110,6 @@ public class ReanimatedModule extends NativeReanimatedModuleSpec
+     // do nothing
+   }
+ 
+-  @Override
+-  public void willDispatchViewUpdates(final UIManagerModule uiManager) {
+-    // This method is called for the interface of UIManagerModuleListener on
+-    // Paper. The below function with the same name won't be called.
+-    if (mOperations.isEmpty()) {
+-      return;
+-    }
+-    final ArrayList<UIThreadOperation> operations = mOperations;
+-    mOperations = new ArrayList<>();
+-    uiManager.addUIBlock(
+-        nativeViewHierarchyManager -> {
+-          NodesManager nodesManager = getNodesManager();
+-          for (UIThreadOperation operation : operations) {
+-            operation.execute(nodesManager);
+-          }
+-        });
+-  }
+-
+   /*package*/
+   public NodesManager getNodesManager() {
+     if (mNodesManager == null) {

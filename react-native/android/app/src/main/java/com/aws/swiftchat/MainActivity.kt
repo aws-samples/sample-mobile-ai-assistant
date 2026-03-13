@@ -2,6 +2,7 @@ package com.aws.swiftchat
 
 import android.content.res.Configuration
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
@@ -38,7 +39,10 @@ class MainActivity : ReactActivity() {
 
         runOnUiThread {
             window.navigationBarColor = if (isDarkMode) Color.BLACK else Color.WHITE
-            // Force update for all child windows (including modals)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.isNavigationBarContrastEnforced = false
+                window.isStatusBarContrastEnforced = false
+            }
             window.decorView.requestLayout()
         }
     }

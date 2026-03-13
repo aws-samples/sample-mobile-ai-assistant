@@ -1,4 +1,4 @@
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules, Platform, PermissionsAndroid } from 'react-native';
 import BackgroundService from 'react-native-background-actions';
 import { backgroundStreamManager } from './BackgroundStreamManager';
 
@@ -9,10 +9,16 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // Android: keep using react-native-background-actions (shows notification)
 const backgroundTask = async () => {
   while (BackgroundService.isRunning()) {
-    if (backgroundStreamManager.getActiveCount() === 0) {
+    const activeCount = backgroundStreamManager.getActiveCount();
+    if (activeCount === 0) {
       await BackgroundService.stop();
       return;
     }
+    const totalCount = backgroundStreamManager.getTotalCount();
+    const completedCount = totalCount - activeCount;
+    await BackgroundService.updateNotification({
+      taskDesc: `Generating app in background (${completedCount}/${totalCount})...`,
+    });
     await sleep(2000);
   }
 };
@@ -63,6 +69,11 @@ export async function startBackgroundTaskIfNeeded(): Promise<void> {
   } else {
     if (!BackgroundService.isRunning()) {
       try {
+        if (Number(Platform.Version) >= 33) {
+          await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+          );
+        }
         await BackgroundService.start(backgroundTask, androidOptions);
       } catch (e) {
         console.log('Failed to start background task:', e);

@@ -149,6 +149,7 @@ const AppWithTheme = () => {
       <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.background}
+        translucent={isAndroid}
       />
       <NavigationContainer
         onStateChange={_ => {

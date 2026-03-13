@@ -13,7 +13,7 @@ class NavigationBarModule(reactContext: ReactApplicationContext) : ReactContextB
 
     @ReactMethod
     fun setImmersiveMode(enabled: Boolean) {
-        val activity = currentActivity ?: return
+        val activity = reactApplicationContext.currentActivity ?: return
 
         activity.runOnUiThread {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -28,15 +28,15 @@ class NavigationBarModule(reactContext: ReactApplicationContext) : ReactContextB
                 @Suppress("DEPRECATION")
                 if (enabled) {
                     activity.window.decorView.systemUiVisibility =
-                        activity.window.decorView.systemUiVisibility or
-                                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        activity.window.decorView.systemUiVisibility
+                            .or(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION)
+                            .or(View.SYSTEM_UI_FLAG_LAYOUT_STABLE)
                     activity.window.navigationBarColor = Color.TRANSPARENT
                 } else {
                     activity.window.decorView.systemUiVisibility =
-                        activity.window.decorView.systemUiVisibility and
-                                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION.inv() and
-                                View.SYSTEM_UI_FLAG_LAYOUT_STABLE.inv()
+                        activity.window.decorView.systemUiVisibility
+                            .and(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION.inv())
+                            .and(View.SYSTEM_UI_FLAG_LAYOUT_STABLE.inv())
                 }
             }
         }
@@ -44,7 +44,7 @@ class NavigationBarModule(reactContext: ReactApplicationContext) : ReactContextB
 
     @ReactMethod
     fun resetToDefault() {
-        val activity = currentActivity ?: return
+        val activity = reactApplicationContext.currentActivity ?: return
 
         activity.runOnUiThread {
             // Trigger MainActivity's updateNavigationBarColor
@@ -55,18 +55,22 @@ class NavigationBarModule(reactContext: ReactApplicationContext) : ReactContextB
                 } else {
                     @Suppress("DEPRECATION")
                     activity.window.decorView.systemUiVisibility =
-                        activity.window.decorView.systemUiVisibility and
-                                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION.inv() and
-                                View.SYSTEM_UI_FLAG_LAYOUT_STABLE.inv()
+                        activity.window.decorView.systemUiVisibility
+                            .and(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION.inv())
+                            .and(View.SYSTEM_UI_FLAG_LAYOUT_STABLE.inv())
                 }
             }
 
             // Restore default navigation bar color based on theme
-            val isDarkMode = activity.resources.configuration.uiMode and
-                    android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+            val isDarkMode = activity.resources.configuration.uiMode
+                    .and(android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
                     android.content.res.Configuration.UI_MODE_NIGHT_YES
 
             activity.window.navigationBarColor = if (isDarkMode) Color.BLACK else Color.WHITE
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                activity.window.isNavigationBarContrastEnforced = false
+                activity.window.isStatusBarContrastEnforced = false
+            }
         }
     }
 }
