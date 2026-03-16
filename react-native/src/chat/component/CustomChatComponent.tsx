@@ -109,7 +109,7 @@ export const CustomChatComponent = forwardRef<
     onScrollToBottomPress,
     bottomOffset,
     disabled = false,
-    keyboardVerticalOffset = 106,
+    keyboardVerticalOffset = Platform.OS === 'ios' ? 106 : 114,
   } = props;
 
   const { colors } = useTheme();
@@ -169,8 +169,8 @@ export const CustomChatComponent = forwardRef<
     ? { style: styles.container }
     : {
         style: styles.container,
-        behavior: Platform.OS === 'ios' ? ('padding' as const) : undefined,
-        keyboardVerticalOffset: Platform.OS === 'ios' ? keyboardVerticalOffset : 0,
+        behavior: 'padding' as const,
+        keyboardVerticalOffset: keyboardVerticalOffset,
       };
 
   return (

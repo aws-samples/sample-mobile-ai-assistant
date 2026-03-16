@@ -60,7 +60,7 @@ export const CustomChatFooter: React.FC<CustomComposerProps> = ({
       modelIconRef.current?.measure((x, y, width, height, pageX, pageY) => {
         iconPositionRef.current = {
           x: pageX,
-          y: pageY + 10 + (isAndroid ? statusBarHeight.current : 0),
+          y: pageY + (isAndroid ? statusBarHeight.current - 32 : 10),
         };
         setIconPosition(iconPositionRef.current);
         setModalVisible(true);
@@ -75,7 +75,7 @@ export const CustomChatFooter: React.FC<CustomComposerProps> = ({
       searchIconRef.current?.measure((x, y, width, height, pageX, pageY) => {
         searchIconPositionRef.current = {
           x: pageX,
-          y: pageY + 10 + (isAndroid ? statusBarHeight.current : 0),
+          y: pageY + (isAndroid ? statusBarHeight.current - 32 : 10),
         };
         setSearchIconPosition(searchIconPositionRef.current);
         setSearchModalVisible(true);
@@ -91,7 +91,7 @@ export const CustomChatFooter: React.FC<CustomComposerProps> = ({
         if (iconPositionRef.current.y === 0) {
           iconPositionRef.current = {
             x: pageX,
-            y: pageY + 10 + (isAndroid ? statusBarHeight.current : 0),
+            y: pageY + (isAndroid ? statusBarHeight.current - 32 : 10),
           };
           setIconPosition(iconPositionRef.current);
         }
@@ -100,7 +100,7 @@ export const CustomChatFooter: React.FC<CustomComposerProps> = ({
         if (searchIconPositionRef.current.y === 0) {
           searchIconPositionRef.current = {
             x: pageX,
-            y: pageY + 10 + (isAndroid ? statusBarHeight.current : 0),
+            y: pageY + (isAndroid ? statusBarHeight.current - 32 : 10),
           };
           setSearchIconPosition(searchIconPositionRef.current);
         }
