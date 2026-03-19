@@ -86,11 +86,11 @@ export const ModelPrice: ModelPriceType = {
       inputTokenPrice: 0.00135,
       outputTokenPrice: 0.0054,
     },
-    'DeepSeek-V3': {
+    'DeepSeek-Chat': {
       inputTokenPrice: 0.00027,
       outputTokenPrice: 0.0011,
     },
-    'DeepSeek-R1': {
+    'DeepSeek-Reasoner': {
       inputTokenPrice: 0.00055,
       outputTokenPrice: 0.00219,
     },
@@ -101,6 +101,14 @@ export const ModelPrice: ModelPriceType = {
     'GPT-5.4 Pro': {
       inputTokenPrice: 0.015,
       outputTokenPrice: 0.09,
+    },
+    'GPT-5.4 mini': {
+      inputTokenPrice: 0.00075,
+      outputTokenPrice: 0.0045,
+    },
+    'GPT-5.4 nano': {
+      inputTokenPrice: 0.0002,
+      outputTokenPrice: 0.00125,
     },
     'GPT-5.3 Chat': {
       inputTokenPrice: 0.00175,

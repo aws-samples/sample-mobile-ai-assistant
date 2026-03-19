@@ -159,8 +159,8 @@ SwiftChat 是一款快速响应的 AI 助手，采用 [React Native](https://rea
 1. 前往 **设置页面** 并选择 **DeepSeek** 选项卡。
 2. 输入您的 DeepSeek API 密钥。
 3. 从 **Chat Model** 下拉列表中选择 DeepSeek 模型。目前支持以下 DeepSeek 模型：
-    - `DeepSeek-V3`
-    - `DeepSeek-R1`
+    - `DeepSeek-Chat`
+    - `DeepSeek-Reasoner`
 
 </details>
 
@@ -172,15 +172,23 @@ SwiftChat 是一款快速响应的 AI 助手，采用 [React Native](https://rea
 1. 导航到 **设置页面** 并选择 **OpenAI** 选项卡。
 2. 输入您的 OpenAI API 密钥。
 3. 从 **Chat Model** 下拉列表中选择 OpenAI 模型。目前支持以下 OpenAI 模型：
-    - `GPT-4o`
-    - `GPT-4o mini`
+    - `GPT-5.4`
+    - `GPT-5.4 Pro`
+    - `GPT-5.4 mini`
+    - `GPT-5.4 nano`
+    - `GPT-5.3 Chat`
+    - `GPT-5.2`
+    - `GPT-5.2 Pro`
+    - `GPT-5.1`
+    - `GPT-5`
+    - `GPT-5 Pro`
+    - `GPT-5 mini`
+    - `GPT-5 nano`
     - `GPT-4.1`
     - `GPT-4.1 mini`
     - `GPT-4.1 nano`
-    - `GPT-5`
-    - `GPT-5 chat`
-    - `GPT-5 mini`
-    - `GPT-5 nano`
+    - `GPT-4o`
+    - `GPT-4o mini`
 
 此外，如果您已部署并配置了 [SwiftChat 服务器](#amazon-bedrock-入门指南)，可以启用 **Use Proxy** 选项来转发您的请求。
 

@@ -165,8 +165,8 @@ Congratulations 🎉 Your SwiftChat App is ready to use!
 1. Go to the **Settings Page** and select the **DeepSeek** tab.
 2. Input your DeepSeek API Key.
 3. Choose DeepSeek models from the **Chat Model** dropdown list. Currently, the following DeepSeek models are supported:
-    - `DeepSeek-V3`
-    - `DeepSeek-R1`
+    - `DeepSeek-Chat`
+    - `DeepSeek-Reasoner`
 
 </details>
 
@@ -180,6 +180,8 @@ Congratulations 🎉 Your SwiftChat App is ready to use!
 3. Select OpenAI models from the **Chat Model** dropdown list. The following OpenAI models are currently supported:
     - `GPT-5.4`
     - `GPT-5.4 Pro`
+    - `GPT-5.4 mini`
+    - `GPT-5.4 nano`
     - `GPT-5.3 Chat`
     - `GPT-5.2`
     - `GPT-5.2 Pro`

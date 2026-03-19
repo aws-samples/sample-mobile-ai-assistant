@@ -40,6 +40,16 @@ export const GPTModels = [
     modelTag: ModelTag.OpenAI,
   },
   {
+    modelName: 'GPT-5.4 mini',
+    modelId: 'gpt-5.4-mini',
+    modelTag: ModelTag.OpenAI,
+  },
+  {
+    modelName: 'GPT-5.4 nano',
+    modelId: 'gpt-5.4-nano',
+    modelTag: ModelTag.OpenAI,
+  },
+  {
     modelName: 'GPT-5.3 Chat',
     modelId: 'gpt-5.3-chat-latest',
     modelTag: ModelTag.OpenAI,
@@ -80,12 +90,12 @@ export const GPTModels = [
 
 export const DeepSeekModels = [
   {
-    modelName: 'DeepSeek-V3',
+    modelName: 'DeepSeek-Chat',
     modelId: 'deepseek-chat',
     modelTag: ModelTag.DeepSeek,
   },
   {
-    modelName: 'DeepSeek-R1',
+    modelName: 'DeepSeek-Reasoner',
     modelId: 'deepseek-reasoner',
     modelTag: ModelTag.DeepSeek,
   },
