@@ -25,6 +25,7 @@ import { SavedApp } from '../types/Chat';
 import { injectErrorScript } from '../chat/component/markdown/htmlUtils';
 import { isMac } from '../App';
 import DocumentPicker from 'react-native-document-picker';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 type NavigationProp = DrawerNavigationProp<RouteParamList>;
 
@@ -51,6 +52,7 @@ function CreateAppScreen(): React.JSX.Element {
   const [showPreview, setShowPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const webViewRef = useRef<AIWebViewRef>(null);
   const screenshotRetryCount = useRef(0);
 
@@ -275,12 +277,14 @@ function CreateAppScreen(): React.JSX.Element {
         const message = JSON.parse(event.nativeEvent.data);
 
         if (message.type === 'console_error') {
-          setHasError(true);
           return;
         }
 
         if (message.type === 'rendered' || message.type === 'update_rendered') {
           setHasError(!message.success);
+          if (!message.success && message.error) {
+            setErrorMessage(message.error);
+          }
         }
 
         if (message.type === 'screenshot_success') {
@@ -405,6 +409,20 @@ function CreateAppScreen(): React.JSX.Element {
                 {hasError && (
                   <View style={styles.errorOverlay}>
                     <Text style={styles.errorText}>Invalid HTML</Text>
+                    {errorMessage ? (
+                      <>
+                        <Text style={styles.errorDetail} numberOfLines={3}>
+                          {errorMessage}
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.copyErrorButton}
+                          onPress={() => {
+                            Clipboard.setString(errorMessage);
+                          }}>
+                          <Text style={styles.copyErrorText}>Copy Error</Text>
+                        </TouchableOpacity>
+                      </>
+                    ) : null}
                   </View>
                 )}
               </View>
@@ -545,6 +563,24 @@ const createStyles = (colors: ColorScheme) =>
     errorText: {
       fontSize: 14,
       color: colors.text,
+    },
+    errorDetail: {
+      marginTop: 8,
+      fontSize: 12,
+      color: colors.placeholder,
+      paddingHorizontal: 20,
+      textAlign: 'center' as const,
+    },
+    copyErrorButton: {
+      marginTop: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 6,
+      borderRadius: 6,
+      backgroundColor: colors.promptScreenSaveButton,
+    },
+    copyErrorText: {
+      fontSize: 13,
+      color: '#fff',
     },
     createButton: {
       backgroundColor: colors.promptScreenSaveButton,

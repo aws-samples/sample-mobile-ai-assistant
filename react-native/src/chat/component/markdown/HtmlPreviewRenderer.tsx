@@ -27,6 +27,7 @@ import {
 } from '../../../storage/StorageUtils';
 import { SavedApp } from '../../../types/Chat';
 import AIWebView, { AIWebViewRef } from '../../../app/AIWebView';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 interface HtmlPreviewRendererProps {
   code: string;
@@ -54,6 +55,7 @@ const HtmlPreviewRenderer = forwardRef<
 >(({ code, style }, ref) => {
   const [showFullScreen, setShowFullScreen] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [appName, setAppName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -274,12 +276,14 @@ const HtmlPreviewRenderer = forwardRef<
 
         if (message.type === 'console_error') {
           console.error('[HtmlPreview]', message.message);
-          setHasError(true);
           return;
         }
 
         if (message.type === 'rendered' || message.type === 'update_rendered') {
           setHasError(!message.success);
+          if (!message.success && message.error) {
+            setErrorMessage(message.error);
+          }
         }
 
         if (message.type === 'screenshot_success') {
@@ -323,6 +327,20 @@ const HtmlPreviewRenderer = forwardRef<
           {hasError && (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{'Invalid HTML'}</Text>
+              {errorMessage ? (
+                <>
+                  <Text style={styles.errorDetail} numberOfLines={3}>
+                    {errorMessage}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.copyErrorButton}
+                    onPress={() => {
+                      Clipboard.setString(errorMessage);
+                    }}>
+                    <Text style={styles.copyErrorText}>Copy Error</Text>
+                  </TouchableOpacity>
+                </>
+              ) : null}
             </View>
           )}
         </TouchableOpacity>
@@ -429,6 +447,24 @@ const createStyles = (colors: ColorScheme) =>
       marginTop: 10,
       fontSize: 14,
       color: colors.text,
+    },
+    errorDetail: {
+      marginTop: 8,
+      fontSize: 12,
+      color: colors.placeholder,
+      paddingHorizontal: 20,
+      textAlign: 'center' as const,
+    },
+    copyErrorButton: {
+      marginTop: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 6,
+      borderRadius: 6,
+      backgroundColor: colors.promptScreenSaveButton,
+    },
+    copyErrorText: {
+      fontSize: 13,
+      color: '#fff',
     },
     saveButton: {
       position: 'absolute' as const,

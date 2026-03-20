@@ -12,6 +12,7 @@ import {
 import { useTheme } from '../../../theme';
 import { isMac } from '../../../App.tsx';
 import AIWebView, { AIWebViewRef } from '../../../app/AIWebView';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 interface HtmlFullScreenViewerProps {
   visible: boolean;
@@ -29,6 +30,7 @@ const HtmlFullScreenViewer: React.FC<HtmlFullScreenViewerProps> = ({
   const { colors, isDark } = useTheme();
   const webViewRef = useRef<AIWebViewRef>(null);
   const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [screenData, setScreenData] = useState(Dimensions.get('window'));
   const [isLandscape, setIsLandscape] = useState(
     isMac ? false : screenData.width > screenData.height
@@ -48,6 +50,7 @@ const HtmlFullScreenViewer: React.FC<HtmlFullScreenViewerProps> = ({
   useEffect(() => {
     if (visible) {
       setHasError(false);
+      setErrorMessage('');
     }
   }, [visible]);
 
@@ -58,6 +61,9 @@ const HtmlFullScreenViewer: React.FC<HtmlFullScreenViewerProps> = ({
 
         if (message.type === 'rendered') {
           setHasError(!message.success);
+          if (!message.success && message.error) {
+            setErrorMessage(message.error);
+          }
         }
       } catch (error) {
         console.log('[HtmlFullScreenViewer] Message parse error:', error);
@@ -123,6 +129,24 @@ const HtmlFullScreenViewer: React.FC<HtmlFullScreenViewerProps> = ({
       fontSize: 16,
       color: colors.text,
     },
+    errorDetail: {
+      marginTop: 8,
+      fontSize: 13,
+      color: isDark ? '#aaa' : '#666',
+      paddingHorizontal: 24,
+      textAlign: 'center' as const,
+    },
+    copyErrorButton: {
+      marginTop: 14,
+      paddingHorizontal: 20,
+      paddingVertical: 8,
+      borderRadius: 6,
+      backgroundColor: isDark ? '#555' : '#007AFF',
+    },
+    copyErrorText: {
+      fontSize: 14,
+      color: '#fff',
+    },
   });
 
   if (!visible) {
@@ -166,6 +190,20 @@ const HtmlFullScreenViewer: React.FC<HtmlFullScreenViewerProps> = ({
         {hasError && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{'Invalid HTML'}</Text>
+            {errorMessage ? (
+              <>
+                <Text style={styles.errorDetail} numberOfLines={5}>
+                  {errorMessage}
+                </Text>
+                <TouchableOpacity
+                  style={styles.copyErrorButton}
+                  onPress={() => {
+                    Clipboard.setString(errorMessage);
+                  }}>
+                  <Text style={styles.copyErrorText}>Copy Error</Text>
+                </TouchableOpacity>
+              </>
+            ) : null}
           </View>
         )}
       </View>
