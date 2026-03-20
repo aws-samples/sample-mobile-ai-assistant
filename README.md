@@ -16,12 +16,12 @@ capabilities across Android, iOS, and macOS platforms.
 ![](assets/promo.avif)
 
 ### What's New 🔥
+- 🚀 Support creating multiple apps in background with Live Activity on iOS and notifications on Android (From v2.8.0).
+- 🚀 Upgrade to React Native 0.83 with New Architecture enabled (From v2.8.0).
 - 🚀 Support create or edit instant web apps with one prompt (From v2.7.0).
 - 🚀 Support Web Search for real-time information retrieval (From v2.7.0).
 - 🚀 Update SwiftChat Server with API Gateway + Lambda deployment supporting 15-minute streaming output (From v2.7.0).
 - 🚀 Support Image Gallery for browsing and managing generated images (From v2.7.0).
-- 🚀 Support streaming rendering of Mermaid charts (From v2.6.0).
-- 🚀 Support using Bedrock API Key for Amazon Bedrock models (From v2.5.0).
 
 **Create App**: Generate, Edit, Share and Preview Instant Web Apps
 
@@ -221,6 +221,7 @@ can enable the **Use Proxy** option to forward your requests.
 
 - Real-time streaming chat with AI
 - Instant web app creation, editing and sharing
+- Background app creation with progress tracking
 - Web search for real-time information retrieval
 - Rich Markdown Support: Tables, Code Blocks, LaTeX, Mermaid Chart and More
 - AI image generation with progress

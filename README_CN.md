@@ -15,12 +15,12 @@ SwiftChat 是一款快速响应的 AI 助手，采用 [React Native](https://rea
 ![](assets/promo.avif)
 
 ### 新功能 🔥
+- 🚀 支持后台创建多个应用，iOS 使用 Live Activity 显示进度，Android 使用通知显示进度（自 v2.8.0 起）。
+- 🚀 升级至 React Native 0.83，启用 New Architecture（自 v2.8.0 起）。
 - 🚀 支持一句话创建或编辑极速 Web 应用（自 v2.7.0 起）。
 - 🚀 支持网络搜索，获取实时信息（自 v2.7.0 起）。
 - 🚀 更新 SwiftChat 服务器，支持 API Gateway + Lambda 部署，最长支持 15 分钟流式输出（自 v2.7.0 起）。
 - 🚀 支持图片画廊，浏览和管理生成的图片（自 v2.7.0 起）。
-- 🚀 支持流式渲染 Mermaid 图表（自 v2.6.0 起）。
-- 🚀 支持使用 Bedrock API Key 连接 Amazon Bedrock 模型（自 v2.5.0 起）。
 
 **创建应用**：生成、编辑、分享和预览极速 Web 应用
 
@@ -213,6 +213,7 @@ SwiftChat 是一款快速响应的 AI 助手，采用 [React Native](https://rea
 
 - 与 AI 进行实时流式聊天
 - 极速 Web 应用创建、编辑和分享
+- 支持后台创建应用并显示进度
 - 网络搜索实时信息检索
 - 丰富的 Markdown 支持：表格、代码块、LaTeX、Mermaid 图表等
 - 带进度显示的 AI 图像生成
