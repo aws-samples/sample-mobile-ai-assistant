@@ -869,6 +869,7 @@ function ChatScreen(): React.JSX.Element {
           });
           if (isNewChatRef.current) {
             saveCurrentMessages();
+            sendEventRef.current('updateHistory');
           }
         }
 
@@ -1380,6 +1381,7 @@ function ChatScreen(): React.JSX.Element {
             systemPrompt={systemPrompt}
           />
         )}
+        disabled={isMac && chatStatus === ChatStatus.Running}
         maxComposerHeight={isMac ? 360 : 200}
         inputToolbarContainerStyle={styles.inputToolbarContainer}
         inputToolbarPrimaryStyle={styles.inputToolbarPrimary}

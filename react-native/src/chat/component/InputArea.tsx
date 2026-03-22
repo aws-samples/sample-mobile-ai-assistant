@@ -126,9 +126,8 @@ export const InputArea = forwardRef<InputAreaRef, InputAreaProps>(
               multiline
               value={text}
               onChangeText={handleTextChange}
-              submitBehavior={blurOnSubmit ? 'submit' : 'newline'}
+              submitBehavior={blurOnSubmit && !disabled ? 'submit' : 'newline'}
               onSubmitEditing={handleSubmitEditing}
-              editable={!disabled}
               spellCheck={false}
               autoComplete="off"
               autoCorrect={false}
