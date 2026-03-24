@@ -3,7 +3,7 @@
  * Phase 1: Analyze user intent and extract search keywords
  */
 
-import { BedrockMessage } from '../../chat/util/BedrockMessageConvertor';
+import { BedrockMessage } from '../../api/BedrockMessageConvertor';
 import { SearchIntentResult } from '../types';
 import { invokeBedrockWithCallBack } from '../../api/bedrock-api';
 import { ChatMode } from '../../types/Chat';

@@ -13,7 +13,7 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RouteParamList } from '../types/RouteTypes.ts';
 import { SystemPrompt } from '../types/Chat.ts';
-import { showInfo } from '../chat/util/ToastUtils.ts';
+import { showInfo } from '../core/ToastUtils';
 import { useAppContext } from '../history/AppProvider.tsx';
 import { getPromptId, getTextModel } from '../storage/StorageUtils.ts';
 import { HeaderLeftView } from './HeaderLeftView.tsx';

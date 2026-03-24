@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import ImageSpinner from './ImageSpinner';
+import ImageSpinner from '../../imagegen/components/ImageSpinner';
 import { ChatMode } from '../../types/Chat.ts';
 import { useNavigation } from '@react-navigation/native';
 import { RouteParamList } from '../../types/RouteTypes.ts';

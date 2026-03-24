@@ -1,6 +1,6 @@
 import { NativeModules, Platform, PermissionsAndroid } from 'react-native';
 import BackgroundService from 'react-native-background-actions';
-import { backgroundStreamManager } from './BackgroundStreamManager';
+import { backgroundStreamManager } from '../../appgen/service/BackgroundStreamManager';
 
 const { BackgroundKeepAliveModule } = NativeModules;
 

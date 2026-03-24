@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Dialog from 'react-native-dialog';
 import RNFS from 'react-native-fs';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { setHapticFeedbackEnabled, trigger } from '../chat/util/HapticUtils.ts';
+import { setHapticFeedbackEnabled, trigger } from '../core/HapticUtils';
 import { HapticFeedbackTypes } from 'react-native-haptic-feedback/src';
 import {
   getAllImageSize,
@@ -88,11 +88,11 @@ import {
   VoiceIDList,
 } from '../storage/Constants.ts';
 import CustomTextInput from './CustomTextInput.tsx';
-import { requestAllOllamaModels } from '../api/ollama-api.ts';
+import { requestAllOllamaModels } from '../api/providers/ollama-api.ts';
 import TabButton from './TabButton';
 import { useAppContext } from '../history/AppProvider.tsx';
 import { useTheme, ColorScheme } from '../theme';
-import { requestAllModelsByBedrockAPI } from '../api/bedrock-api-key.ts';
+import { requestAllModelsByBedrockAPI } from '../api/providers/bedrock-api-key.ts';
 import OpenAICompatConfigsSection from './OpenAICompatConfigsSection.tsx';
 
 const initUpgradeInfo: UpgradeInfo = {

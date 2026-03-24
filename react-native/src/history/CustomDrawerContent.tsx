@@ -24,13 +24,13 @@ import {
 } from '../storage/StorageUtils.ts';
 import Dialog from 'react-native-dialog';
 import { useAppContext } from './AppProvider.tsx';
-import { trigger } from '../chat/util/HapticUtils.ts';
+import { trigger } from '../core/HapticUtils';
 import { HapticFeedbackTypes } from 'react-native-haptic-feedback/src';
 import { groupMessagesByDate } from './HistoryGroupUtil.ts';
 import { isMac } from '../App.tsx';
 import { DrawerActions } from '@react-navigation/native';
 import { useTheme, ColorScheme } from '../theme';
-import { backgroundStreamManager } from '../chat/service/BackgroundStreamManager';
+import { backgroundStreamManager } from '../appgen/service/BackgroundStreamManager';
 
 const breathingDotStyle = StyleSheet.create({
   dot: {
