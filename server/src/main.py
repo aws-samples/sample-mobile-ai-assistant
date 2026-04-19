@@ -69,14 +69,6 @@ async def create_bedrock_command(request: ConverseRequest) -> tuple[boto3.client
 
     client = boto3.client("bedrock-runtime", region_name=region)
 
-    max_tokens = 4096
-    if model_id.startswith('meta.llama'):
-        max_tokens = 2048
-    if 'deepseek.r1' in model_id or 'claude-opus-4' in model_id:
-        max_tokens = 32000
-    if 'claude-3-7-sonnet' in model_id or 'claude-sonnet-4' in model_id:
-        max_tokens = 64000
-
     for message in request.messages:
         if message["role"] == "user":
             for content in message["content"]:
@@ -91,7 +83,6 @@ async def create_bedrock_command(request: ConverseRequest) -> tuple[boto3.client
                     content['document']['source']['bytes'] = document_bytes
 
     command = {
-        "inferenceConfig": {"maxTokens": max_tokens},
         "messages": request.messages,
         "modelId": model_id
     }

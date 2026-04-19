@@ -31,24 +31,11 @@ export const invokeBedrockWithAPIKey = async (
 ) => {
   const modelId = getTextModel().modelId;
 
-  // Set max_tokens based on model type
-  let maxTokens = 4096;
-  if (modelId.startsWith('meta.llama')) {
-    maxTokens = 2048;
-  }
-  if (modelId.includes('claude-opus-4-6')) {
-    maxTokens = 128000;
-  } else if (modelId.includes('deepseek.r1') || modelId.includes('claude-opus-4')) {
-    maxTokens = 32000;
-  }
-  if (
-    modelId.includes('claude-3-7-sonnet') ||
-    modelId.includes('claude-sonnet-4')
-  ) {
-    maxTokens = 64000;
-  }
-  const bodyObject = {
-    inferenceConfig: { maxTokens },
+  const bodyObject: {
+    messages: BedrockMessage[];
+    additionalModelRequestFields: Record<string, unknown>;
+    system: { text: string }[] | undefined;
+  } = {
     messages: messages,
     additionalModelRequestFields: {},
     system: prompt ? [{ text: prompt?.prompt }] : undefined,

@@ -383,6 +383,12 @@
         "Fn::Sub": "https://${SwiftChatApi}.execute-api.${AWS::Region}.amazonaws.com/v1"
       }
     },
+    "ApiKeyId": {
+      "Description": "API Key ID (use with `aws apigateway get-api-key --include-value` to retrieve the key value)",
+      "Value": {
+        "Ref": "SwiftChatApiKey"
+      }
+    },
     "ApiKeyConsole": {
       "Description": "Open this URL to get your API Key, find and copy the key named <StackName>-api-key",
       "Value": {

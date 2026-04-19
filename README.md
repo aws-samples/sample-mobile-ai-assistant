@@ -87,48 +87,31 @@ You can choose one of the following two methods for configuration
 
 We use **API Gateway** combined with **AWS Lambda** to enable streaming responses for up to 15 minutes. All requests are authenticated via API Gateway's API Key validation before being forwarded to Lambda, ensuring secure access to backend services.
 
-### Step 1: Build and push container images to ECR
+### Step 1: One-command deploy
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/aws-samples/swift-chat.git
-   cd swift-chat
-   ```
+**Prerequisites:** AWS CLI configured with credentials (`aws configure`).
 
-2. Run the build and push script:
-   ```bash
-   cd server/scripts
-   bash ./push-to-ecr.sh
-   ```
+**Deploy with one command:**
 
-3. Follow the prompts to configure:
-   - ECR repository name (or use default: `swift-chat-api`)
-   - Image tag (please use default: `latest`)
-   - AWS region (the region you want to deploy, e.g.,: `us-east-1`)
+```bash
+git clone https://github.com/aws-samples/swift-chat.git && cd swift-chat/server && ./install.sh
+```
 
-4. The script will build and push the Docker image to your ECR repository.
+By default this deploys to **the account of your current AWS profile**, in the region from `$AWS_REGION` or your `aws configure` default (fallback: `us-east-1`), with stack name `SwiftChat`. Wait about 3-4 minutes to see your **API URL**, **API Key**, and a scannable QR code for auto-configuring the app.
 
-5. **Important**: Copy the image URI displayed at the end of the script output. You'll need this in the next step.
+To target a different account, region, or stack:
 
-### Step 2: Deploy stack and get your API URL and API Key
+```bash
+./install.sh --region us-west-2 --stack MySwiftChat --profile myprofile
+```
 
-1. Download the CloudFormation template:
-   - Lambda: [SwiftChatLambda.template](https://github.com/aws-samples/swift-chat/blob/main/server/template/SwiftChatLambda.template)
+| Flag | Purpose | Default |
+|---|---|---|
+| `--region` | AWS region to deploy into | `$AWS_REGION` or `us-east-1` |
+| `--stack` | CloudFormation stack name | `SwiftChat` |
+| `--profile` | AWS CLI profile to use | current default profile |
 
-2. Go to [CloudFormation Console](https://console.aws.amazon.com/cloudformation/home#/stacks/create/template?stackName=SwiftChat) and select **Upload a template file** under **Specify template**, then upload the template file you downloaded.
-
-3. Click **Next**, On the "Specify stack details" page, provide the following information:
-    - **ContainerImageUri**: Enter the ECR image URI from Step 1 output
-
-4. Click **Next**, Keep the "Configure stack options" page as default, Read the Capabilities and Check the "I
-   acknowledge that AWS CloudFormation might create IAM resources" checkbox at the bottom.
-5. Click **Next**, In the "Review and create" Review your configuration and click **Submit**.
-
-6. Wait about 1-2 minutes for the deployment to finish, then click the CloudFormation stack and go to **Outputs** tab:
-   - **APIURL**: Your API URL (e.g., `https://xxx.execute-api.us-east-1.amazonaws.com/v1`)
-   - **ApiKeyConsole**: Click this URL to open the API Gateway API Keys console, find the key named `SwiftChat-api-key` and copy the API Key value
-
-### Step 3: Open the App and setup with API URL and API Key
+### Step 2: Open the App and setup with API URL and API Key
 
 1. Launch the App, open the drawer menu, and tap **Settings**.
 2. Paste the `API URL` and `API Key` under Amazon Bedrock -> SwiftChat Server, then select your Region.
@@ -453,14 +436,12 @@ the [release notes](https://github.com/aws-samples/swift-chat/releases) to see i
 
 ### Upgrade API
 
-1. First, re-run the build script to update the image:
-   ```bash
-   cd server/scripts
-   bash ./push-to-ecr.sh
-   ```
+Re-run the same install script; it will rebuild the image and refresh the Lambda automatically:
 
-2. Click and open [Lambda Services](https://console.aws.amazon.com/lambda/home#/functions), find and open
-   your Lambda which starts with your stack name and `APIHandlerxxxxxxxx`, e.g. `SwiftChatAPI-APIHandler38F11976-ktGBZmQtp0D8`, click the **Deploy new image** button and click Save.
+```bash
+cd server
+./install.sh --region <your-region> --stack <your-stack>
+```
 
 
 ## Security
