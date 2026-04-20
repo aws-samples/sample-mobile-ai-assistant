@@ -265,12 +265,15 @@ fi
 API_KEY=$(aws apigateway get-api-key --api-key "$KEY_ID" --include-value --region "$REGION" \
   --query 'value' --output text)
 
+API_KEY_CONSOLE="https://${REGION}.console.aws.amazon.com/apigateway/main/api-keys?region=${REGION}"
+
 echo ""
 echo "${C_GREEN}${LINE}${C_RESET}"
 echo "${C_GREEN}${C_BOLD}  ✅ Deploy successful!${C_RESET}"
 echo "${C_GREEN}${LINE}${C_RESET}"
-echo "  ${C_BOLD}API URL:${C_RESET} $API_URL"
-echo "  ${C_BOLD}API Key:${C_RESET} $API_KEY"
+echo "  ${C_BOLD}API URL:${C_RESET}     $API_URL"
+echo "  ${C_BOLD}API Key:${C_RESET}     open $API_KEY_CONSOLE"
+echo "               and copy the key named '${STACK_NAME}-api-key'"
 echo "${C_GREEN}${LINE}${C_RESET}"
 
 # Print scannable QR if Node.js is available (non-fatal if not)

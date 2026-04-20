@@ -63,6 +63,30 @@ class UpgradeRequest(BaseModel):
     version: str
 
 
+# Claude requires max_tokens on Converse; omitting it truncates at 4096.
+# Other families default to their server-side max, so None leaves them alone.
+def _resolve_max_tokens(model_id: str) -> int | None:
+    mid = model_id.lower()
+    if "anthropic" in mid or "claude" in mid:
+        if "claude-opus-4-7" in mid or "claude-opus-4-6" in mid:
+            return 128000
+        if (
+            "claude-opus-4-5" in mid
+            or "claude-sonnet-4" in mid
+            or "claude-3-7-sonnet" in mid
+            or "claude-haiku-4-5" in mid
+        ):
+            return 64000
+        if "claude-opus-4" in mid:
+            return 32000
+        if "claude-3-5" in mid:
+            return 8192
+        return 4096
+    if "nova-premier" in mid:
+        return 25000
+    return None
+
+
 async def create_bedrock_command(request: ConverseRequest) -> tuple[boto3.client, dict]:
     model_id = request.modelId
     region = request.region
@@ -86,6 +110,10 @@ async def create_bedrock_command(request: ConverseRequest) -> tuple[boto3.client
         "messages": request.messages,
         "modelId": model_id
     }
+
+    max_tokens = _resolve_max_tokens(model_id)
+    if max_tokens is not None:
+        command["inferenceConfig"] = {"maxTokens": max_tokens}
 
     if request.enableThinking:
         command['additionalModelRequestFields'] = {

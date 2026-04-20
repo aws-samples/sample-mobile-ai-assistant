@@ -37,7 +37,7 @@ target 'SwiftChat' do
       # :ccache_enabled => true
     )
     # Fix Swift version mismatch - use Swift 5.0 for pods that don't support Swift 6.0
-    swift5_pods = ['react-native-compressor', 'react-native-keyboard-controller', 'KeyboardController']
+    swift5_pods = ['react-native-compressor', 'react-native-keyboard-controller', 'KeyboardController', 'VisionCamera']
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
         if swift5_pods.include?(target.name)

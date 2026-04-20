@@ -6,6 +6,8 @@ buildscript {
         targetSdkVersion = 35
         ndkVersion = "27.1.12297006"
         kotlinVersion = "2.0.21"
+        // Enable MLKit-based QR scanner in react-native-vision-camera
+        VisionCamera_enableCodeScanner = true
     }
     repositories {
         google()

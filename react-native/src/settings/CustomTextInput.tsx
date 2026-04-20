@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  ImageSourcePropType,
   StyleSheet,
   Text,
   TextInput,
@@ -17,6 +18,8 @@ interface CustomTextInputProps {
   placeholder: string;
   secureTextEntry?: boolean;
   numberOfLines?: number;
+  rightIcon?: ImageSourcePropType;
+  onRightIconPress?: () => void;
 }
 
 const CustomTextInput: React.FC<CustomTextInputProps> = ({
@@ -26,6 +29,8 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
   placeholder,
   secureTextEntry = false,
   numberOfLines = 1,
+  rightIcon,
+  onRightIconPress,
 }) => {
   const { colors, isDark } = useTheme();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -35,6 +40,7 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
   };
 
   const styles = createStyles(colors);
+  const hasRightAffordance = secureTextEntry || !!rightIcon;
 
   return (
     <View style={styles.container}>
@@ -43,7 +49,7 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
         <TextInput
           style={{
             ...styles.input,
-            ...(secureTextEntry && styles.inputPadding),
+            ...(hasRightAffordance && styles.inputPadding),
             ...(numberOfLines > 1 && { lineHeight: 22 }),
           }}
           value={value}
@@ -69,6 +75,13 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
               }
               style={styles.eyeIcon}
             />
+          </TouchableOpacity>
+        )}
+        {!secureTextEntry && rightIcon && (
+          <TouchableOpacity
+            style={styles.eyeButton}
+            onPress={onRightIconPress}>
+            <Image source={rightIcon} style={styles.eyeIcon} />
           </TouchableOpacity>
         )}
       </View>
