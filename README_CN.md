@@ -110,8 +110,8 @@ git clone https://github.com/aws-samples/swift-chat.git && cd swift-chat/server 
 ### 步骤 2：打开应用并使用 API URL 和 API Key 进行设置
 
 1. 启动应用，打开抽屉菜单，点击 **设置**。
-2. 粘贴 `API URL` 和 `API Key` 到 Amazon Bedrock -> SwiftChat Server 下，然后选择您的区域。
-3. 点击右上角 ✓ 图标保存配置并开始聊天。
+2. 在 Amazon Bedrock → SwiftChat Server 下，点击 **API URL** 右侧的扫码图标扫描二维码（iOS/Android），或手动粘贴 `API URL` 和 `API Key`。
+3. 选择 Region，然后点击右上角 ✓ 保存。
 
 恭喜 🎉 您的 SwiftChat 应用已准备就绪！
 

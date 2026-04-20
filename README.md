@@ -114,8 +114,8 @@ To target a different account, region, or stack:
 ### Step 2: Open the App and setup with API URL and API Key
 
 1. Launch the App, open the drawer menu, and tap **Settings**.
-2. Paste the `API URL` and `API Key` under Amazon Bedrock -> SwiftChat Server, then select your Region.
-3. Click the top right ✓ icon to save your configuration and start your chat.
+2. Under Amazon Bedrock → SwiftChat Server, tap the scan icon next to **API URL** to scan the QR (iOS/Android) — or paste `API URL` and `API Key` manually.
+3. Select your Region, then tap the top right ✓ to save.
 
 Congratulations 🎉 Your SwiftChat App is ready to use!
 
