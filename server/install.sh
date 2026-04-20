@@ -141,7 +141,7 @@ aws iam put-role-policy --role-name "$CODEBUILD_ROLE" --policy-name build-policy
 # Wait for IAM propagation only if role is new: poll simulate-principal-policy until it evaluates the new permission
 if [ "$ROLE_JUST_CREATED" = "true" ]; then
   ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/${CODEBUILD_ROLE}"
-  for i in $(seq 1 12); do  # up to ~60s
+  for i in $(seq 1 30); do  # up to ~150s
     RESULT=$(aws iam simulate-principal-policy \
       --policy-source-arn "$ROLE_ARN" \
       --action-names "logs:CreateLogStream" \
