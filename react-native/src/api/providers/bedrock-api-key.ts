@@ -22,6 +22,15 @@ type CallbackFunction = (
   reasoning?: string
 ) => void;
 
+// Sonnet >= 4 and Opus >= 4.5 accept the 1M input-context beta.
+const supports1MContext = (modelId: string): boolean => {
+  const id = modelId.toLowerCase();
+  if (id.includes('claude-sonnet-4')) return true;
+  return ['claude-opus-4-5', 'claude-opus-4-6', 'claude-opus-4-7'].some(v =>
+    id.includes(v)
+  );
+};
+
 export const invokeBedrockWithAPIKey = async (
   messages: BedrockMessage[],
   prompt: SystemPrompt | null,
@@ -31,22 +40,26 @@ export const invokeBedrockWithAPIKey = async (
 ) => {
   const modelId = getTextModel().modelId;
 
+  const additionalModelRequestFields: Record<string, unknown> = {};
+  if (isEnableThinking()) {
+    additionalModelRequestFields.reasoning_config = {
+      type: 'enabled',
+      budget_tokens: 16000,
+    };
+  }
+  if (supports1MContext(modelId)) {
+    additionalModelRequestFields.anthropic_beta = ['context-1m-2025-08-07'];
+  }
   const bodyObject: {
     messages: BedrockMessage[];
-    additionalModelRequestFields: Record<string, unknown>;
+    additionalModelRequestFields?: Record<string, unknown>;
     system: { text: string }[] | undefined;
   } = {
     messages: messages,
-    additionalModelRequestFields: {},
     system: prompt ? [{ text: prompt?.prompt }] : undefined,
   };
-  if (isEnableThinking()) {
-    bodyObject.additionalModelRequestFields = {
-      reasoning_config: {
-        type: 'enabled',
-        budget_tokens: 16000,
-      },
-    };
+  if (Object.keys(additionalModelRequestFields).length > 0) {
+    bodyObject.additionalModelRequestFields = additionalModelRequestFields;
   }
   // Add system prompt if provided
   let completeMessage = '';

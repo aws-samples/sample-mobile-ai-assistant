@@ -87,6 +87,17 @@ def _resolve_max_tokens(model_id: str) -> int | None:
     return None
 
 
+# Sonnet >= 4 and Opus >= 4.5 accept the 1M input-context beta.
+def _supports_1m_context(model_id: str) -> bool:
+    mid = model_id.lower()
+    if "claude-sonnet-4" in mid:
+        return True
+    return any(
+        v in mid
+        for v in ("claude-opus-4-5", "claude-opus-4-6", "claude-opus-4-7")
+    )
+
+
 async def create_bedrock_command(request: ConverseRequest) -> tuple[boto3.client, dict]:
     model_id = request.modelId
     region = request.region
@@ -115,13 +126,13 @@ async def create_bedrock_command(request: ConverseRequest) -> tuple[boto3.client
     if max_tokens is not None:
         command["inferenceConfig"] = {"maxTokens": max_tokens}
 
+    extra: dict = {}
     if request.enableThinking:
-        command['additionalModelRequestFields'] = {
-            "reasoning_config": {
-                "type": "enabled",
-                "budget_tokens": 16000
-            }
-        }
+        extra["reasoning_config"] = {"type": "enabled", "budget_tokens": 16000}
+    if _supports_1m_context(model_id):
+        extra["anthropic_beta"] = ["context-1m-2025-08-07"]
+    if extra:
+        command["additionalModelRequestFields"] = extra
 
     if request.system is not None:
         command["system"] = request.system
