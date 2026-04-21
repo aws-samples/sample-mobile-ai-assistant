@@ -27,9 +27,6 @@ REPO_URL="https://github.com/aws-samples/swift-chat.git"
 SELF_MARKER="server/template/SwiftChatLambda.template"
 
 if [ ! -f "$(dirname "${BASH_SOURCE[0]:-$0}")/../$SELF_MARKER" ] 2>/dev/null; then
-  echo "${C_BOLD}SwiftChat Server — one-command deploy${C_RESET}"
-  echo ""
-
   # Check git
   if ! command -v git >/dev/null 2>&1; then
     echo "${C_RED}ERROR: git is required but not installed.${C_RESET}"
@@ -50,7 +47,7 @@ if [ ! -f "$(dirname "${BASH_SOURCE[0]:-$0}")/../$SELF_MARKER" ] 2>/dev/null; th
   CLONE_DIR=$(mktemp -d)
   trap 'rm -rf "$CLONE_DIR"' EXIT
   echo "Cloning swift-chat..."
-  if ! git clone --depth 1 --quiet "$REPO_URL" "$CLONE_DIR/swift-chat"; then
+  if ! git clone --depth 1 --quiet "$REPO_URL" "$CLONE_DIR/swift-chat" </dev/null; then
     echo "${C_RED}ERROR: Failed to clone repository${C_RESET}"
     exit 1
   fi
