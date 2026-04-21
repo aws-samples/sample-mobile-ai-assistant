@@ -162,7 +162,7 @@ EOF
 (cd "$SRC_DIR" && zip -qr "$SRC_ZIP" .)
 (cd "$BUILDSPEC_DIR" && zip -q "$SRC_ZIP" buildspec.yml)
 rm -rf "$BUILDSPEC_DIR"
-aws s3 cp "$SRC_ZIP" "s3://${S3_BUCKET}/build/src.zip" --region "$REGION" --quiet
+aws s3 cp "$SRC_ZIP" "s3://${S3_BUCKET}/build/src.zip" --region "$REGION" --only-show-errors
 rm -f "$SRC_ZIP"
 
 # CodeBuild role (create if missing). Propagation is handled by retrying create-project below.
