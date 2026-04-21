@@ -9,6 +9,7 @@
 #   ./install.sh --region us-west-2 --stack MySwiftChat
 #   ./install.sh --profile myprofile --region us-west-2
 
+main() {
 set -euo pipefail
 
 # Colors (only when stdout is a terminal)
@@ -47,7 +48,7 @@ if [ ! -f "$(dirname "${BASH_SOURCE[0]:-$0}")/../$SELF_MARKER" ] 2>/dev/null; th
   CLONE_DIR=$(mktemp -d)
   trap 'rm -rf "$CLONE_DIR"' EXIT
   echo "Cloning swift-chat..."
-  if ! git clone --depth 1 --quiet "$REPO_URL" "$CLONE_DIR/swift-chat" </dev/null; then
+  if ! git clone --depth 1 --quiet "$REPO_URL" "$CLONE_DIR/swift-chat"; then
     echo "${C_RED}ERROR: Failed to clone repository${C_RESET}"
     exit 1
   fi
@@ -327,3 +328,6 @@ if command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
       2>/dev/null | sed 's/^/  /'
   ) || true
 fi
+}
+
+main "$@"
