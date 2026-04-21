@@ -154,15 +154,13 @@ rm -rf "$BUILDSPEC_DIR"
 aws s3 cp "$SRC_ZIP" "s3://${S3_BUCKET}/build/src.zip" --region "$REGION" --quiet
 rm -f "$SRC_ZIP"
 
-# CodeBuild role (create if missing, then poll until IAM has propagated)
-ROLE_JUST_CREATED=false
+# CodeBuild role (create if missing). Propagation is handled by retrying create-project below.
 if ! aws iam get-role --role-name "$CODEBUILD_ROLE" >/dev/null 2>&1; then
   aws iam create-role --role-name "$CODEBUILD_ROLE" \
     --assume-role-policy-document '{
       "Version":"2012-10-17",
       "Statement":[{"Effect":"Allow","Principal":{"Service":"codebuild.amazonaws.com"},"Action":"sts:AssumeRole"}]
     }' >/dev/null
-  ROLE_JUST_CREATED=true
 fi
 aws iam put-role-policy --role-name "$CODEBUILD_ROLE" --policy-name build-policy \
   --policy-document '{
@@ -175,20 +173,6 @@ aws iam put-role-policy --role-name "$CODEBUILD_ROLE" --policy-name build-policy
     ]
   }' >/dev/null
 
-# Wait for IAM propagation only if role is new: poll simulate-principal-policy until it evaluates the new permission
-if [ "$ROLE_JUST_CREATED" = "true" ]; then
-  ROLE_ARN="arn:aws:iam::${ACCOUNT_ID}:role/${CODEBUILD_ROLE}"
-  for i in $(seq 1 30); do  # up to ~150s
-    RESULT=$(aws iam simulate-principal-policy \
-      --policy-source-arn "$ROLE_ARN" \
-      --action-names "logs:CreateLogStream" \
-      --resource-arns "*" \
-      --query 'EvaluationResults[0].EvalDecision' --output text 2>/dev/null || echo "")
-    if [ "$RESULT" = "allowed" ]; then break; fi
-    sleep 5
-  done
-fi
-
 # ===== Step 2: Build via CodeBuild =====
 echo "[2/4] Building image via CodeBuild..."
 
@@ -196,19 +180,29 @@ echo "[2/4] Building image via CodeBuild..."
 # Pass REPO_NAME / TAG as build-time env vars so buildspec stays static.
 ENV_OVERRIDES="name=REPO_NAME,value=${REPO_NAME},type=PLAINTEXT name=TAG,value=${TAG},type=PLAINTEXT"
 
-if aws codebuild batch-get-projects --names "$CODEBUILD_PROJECT" --region "$REGION" \
-     --query 'projects[0].name' --output text 2>/dev/null | grep -q "$CODEBUILD_PROJECT"; then
-  aws codebuild update-project --name "$CODEBUILD_PROJECT" --region "$REGION" \
-    --source "type=S3,location=${S3_BUCKET}/build/src.zip" \
-    >/dev/null
-else
-  aws codebuild create-project --name "$CODEBUILD_PROJECT" --region "$REGION" \
-    --source "type=S3,location=${S3_BUCKET}/build/src.zip" \
-    --artifacts "type=NO_ARTIFACTS" \
-    --environment "type=ARM_CONTAINER,image=aws/codebuild/amazonlinux2-aarch64-standard:3.0,computeType=BUILD_GENERAL1_SMALL,privilegedMode=true" \
-    --service-role "arn:aws:iam::${ACCOUNT_ID}:role/${CODEBUILD_ROLE}" \
-    >/dev/null
-fi
+PROJECT_EXISTS=$(aws codebuild batch-get-projects --names "$CODEBUILD_PROJECT" --region "$REGION" \
+  --query 'projects[0].name' --output text 2>/dev/null | grep -q "$CODEBUILD_PROJECT" && echo true || echo false)
+
+# Retry create/update until CodeBuild sees the IAM role (propagation can take 1-3 min for new roles)
+for i in $(seq 1 36); do  # up to ~3 minutes
+  if [ "$PROJECT_EXISTS" = "true" ]; then
+    ERR=$(aws codebuild update-project --name "$CODEBUILD_PROJECT" --region "$REGION" \
+      --source "type=S3,location=${S3_BUCKET}/build/src.zip" \
+      --service-role "arn:aws:iam::${ACCOUNT_ID}:role/${CODEBUILD_ROLE}" 2>&1 >/dev/null) && break
+  else
+    ERR=$(aws codebuild create-project --name "$CODEBUILD_PROJECT" --region "$REGION" \
+      --source "type=S3,location=${S3_BUCKET}/build/src.zip" \
+      --artifacts "type=NO_ARTIFACTS" \
+      --environment "type=ARM_CONTAINER,image=aws/codebuild/amazonlinux2-aarch64-standard:3.0,computeType=BUILD_GENERAL1_SMALL,privilegedMode=true" \
+      --service-role "arn:aws:iam::${ACCOUNT_ID}:role/${CODEBUILD_ROLE}" 2>&1 >/dev/null) && break
+  fi
+  if echo "$ERR" | grep -qE "InvalidInputException|not authorized|cannot be assumed"; then
+    sleep 5
+  else
+    echo "$ERR" >&2
+    exit 1
+  fi
+done
 
 BUILD_ID=$(aws codebuild start-build --project-name "$CODEBUILD_PROJECT" --region "$REGION" \
   --environment-variables-override $ENV_OVERRIDES \
