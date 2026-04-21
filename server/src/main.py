@@ -63,19 +63,46 @@ class UpgradeRequest(BaseModel):
     version: str
 
 
+# Claude requires max_tokens on Converse; omitting it truncates at 4096.
+# Other families default to their server-side max, so None leaves them alone.
+def _resolve_max_tokens(model_id: str) -> int | None:
+    mid = model_id.lower()
+    if "anthropic" in mid or "claude" in mid:
+        if "claude-opus-4-7" in mid or "claude-opus-4-6" in mid:
+            return 128000
+        if (
+            "claude-opus-4-5" in mid
+            or "claude-sonnet-4" in mid
+            or "claude-3-7-sonnet" in mid
+            or "claude-haiku-4-5" in mid
+        ):
+            return 64000
+        if "claude-opus-4" in mid:
+            return 32000
+        if "claude-3-5" in mid:
+            return 8192
+        return 4096
+    if "nova-premier" in mid:
+        return 25000
+    return None
+
+
+# Sonnet >= 4 and Opus >= 4.5 accept the 1M input-context beta.
+def _supports_1m_context(model_id: str) -> bool:
+    mid = model_id.lower()
+    if "claude-sonnet-4" in mid:
+        return True
+    return any(
+        v in mid
+        for v in ("claude-opus-4-5", "claude-opus-4-6", "claude-opus-4-7")
+    )
+
+
 async def create_bedrock_command(request: ConverseRequest) -> tuple[boto3.client, dict]:
     model_id = request.modelId
     region = request.region
 
     client = boto3.client("bedrock-runtime", region_name=region)
-
-    max_tokens = 4096
-    if model_id.startswith('meta.llama'):
-        max_tokens = 2048
-    if 'deepseek.r1' in model_id or 'claude-opus-4' in model_id:
-        max_tokens = 32000
-    if 'claude-3-7-sonnet' in model_id or 'claude-sonnet-4' in model_id:
-        max_tokens = 64000
 
     for message in request.messages:
         if message["role"] == "user":
@@ -91,18 +118,21 @@ async def create_bedrock_command(request: ConverseRequest) -> tuple[boto3.client
                     content['document']['source']['bytes'] = document_bytes
 
     command = {
-        "inferenceConfig": {"maxTokens": max_tokens},
         "messages": request.messages,
         "modelId": model_id
     }
 
+    max_tokens = _resolve_max_tokens(model_id)
+    if max_tokens is not None:
+        command["inferenceConfig"] = {"maxTokens": max_tokens}
+
+    extra: dict = {}
     if request.enableThinking:
-        command['additionalModelRequestFields'] = {
-            "reasoning_config": {
-                "type": "enabled",
-                "budget_tokens": 16000
-            }
-        }
+        extra["reasoning_config"] = {"type": "enabled", "budget_tokens": 16000}
+    if _supports_1m_context(model_id):
+        extra["anthropic_beta"] = ["context-1m-2025-08-07"]
+    if extra:
+        command["additionalModelRequestFields"] = extra
 
     if request.system is not None:
         command["system"] = request.system

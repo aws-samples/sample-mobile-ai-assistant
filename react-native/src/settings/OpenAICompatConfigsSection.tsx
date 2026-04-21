@@ -9,7 +9,7 @@ import { useTheme, ColorScheme } from '../theme';
 import OpenAICompatConfigComponent from './OpenAICompatConfigComponent.tsx';
 import { v4 as uuidv4 } from 'uuid';
 import Dialog from 'react-native-dialog';
-import { showInfo } from '../chat/util/ToastUtils.ts';
+import { showInfo } from '../core/ToastUtils';
 
 interface OpenAICompatConfigsSectionProps {
   isDark: boolean;

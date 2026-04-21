@@ -4,7 +4,7 @@
  */
 
 import { SystemPrompt, Citation } from '../../types/Chat';
-import { BedrockMessage } from '../../chat/util/BedrockMessageConvertor';
+import { BedrockMessage } from '../../api/BedrockMessageConvertor';
 import { SearchEngine, SearchEngineOption } from '../types';
 import { intentAnalysisService } from './IntentAnalysisService';
 import { webViewSearchService } from './WebViewSearchService';

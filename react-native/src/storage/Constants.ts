@@ -110,6 +110,8 @@ export const BedrockThinkingModels = [
   'Claude Opus 4.1',
   'Claude Opus 4.5',
   'Claude Opus 4.6',
+  'Claude Opus 4.7',
+  'Claude Haiku 4.5',
 ];
 export const BedrockVoiceModels = ['Nova Sonic'];
 

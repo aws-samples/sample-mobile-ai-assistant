@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Dialog from 'react-native-dialog';
 import RNFS from 'react-native-fs';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { setHapticFeedbackEnabled, trigger } from '../chat/util/HapticUtils.ts';
+import { setHapticFeedbackEnabled, trigger } from '../core/HapticUtils';
 import { HapticFeedbackTypes } from 'react-native-haptic-feedback/src';
 import {
   getAllImageSize,
@@ -88,11 +88,12 @@ import {
   VoiceIDList,
 } from '../storage/Constants.ts';
 import CustomTextInput from './CustomTextInput.tsx';
-import { requestAllOllamaModels } from '../api/ollama-api.ts';
+import ScanQRSheet, { ScanQRSheetRef } from './ScanQRSheet.tsx';
+import { requestAllOllamaModels } from '../api/providers/ollama-api.ts';
 import TabButton from './TabButton';
 import { useAppContext } from '../history/AppProvider.tsx';
 import { useTheme, ColorScheme } from '../theme';
-import { requestAllModelsByBedrockAPI } from '../api/bedrock-api-key.ts';
+import { requestAllModelsByBedrockAPI } from '../api/providers/bedrock-api-key.ts';
 import OpenAICompatConfigsSection from './OpenAICompatConfigsSection.tsx';
 
 const initUpgradeInfo: UpgradeInfo = {
@@ -147,6 +148,7 @@ function SettingsScreen(): React.JSX.Element {
   const [clearCountdown, setClearCountdown] = useState(10);
   const [isClearing, setIsClearing] = useState(false);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const scanSheetRef = useRef<ScanQRSheetRef>(null);
 
   // Handle OpenAI Compatible configs change
   const handleOpenAICompatConfigsChange = useCallback(
@@ -550,6 +552,18 @@ function SettingsScreen(): React.JSX.Element {
                   value={apiUrl}
                   onChangeText={setApiUrl}
                   placeholder="Enter API URL"
+                  rightIcon={
+                    !isMac
+                      ? isDark
+                        ? require('../assets/scan_dark.png')
+                        : require('../assets/scan.png')
+                      : undefined
+                  }
+                  onRightIconPress={
+                    !isMac
+                      ? () => scanSheetRef.current?.present()
+                      : undefined
+                  }
                 />
                 <CustomTextInput
                   label="API Key"
@@ -883,6 +897,15 @@ function SettingsScreen(): React.JSX.Element {
           color={clearCountdown > 0 ? '#999' : '#FF3B30'}
         />
       </Dialog.Container>
+      {!isMac && (
+        <ScanQRSheet
+          ref={scanSheetRef}
+          onScanned={({ apiUrl: scannedUrl, apiKey: scannedKey }) => {
+            setApiUrl(scannedUrl);
+            setApiKey(scannedKey);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }

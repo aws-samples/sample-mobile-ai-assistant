@@ -1,4 +1,6 @@
 import 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import {
@@ -6,7 +8,7 @@ import {
   DrawerContentComponentProps,
 } from '@react-navigation/drawer';
 import CustomDrawerContent from './history/CustomDrawerContent.tsx';
-import { Dimensions, Keyboard, StatusBar } from 'react-native';
+import { Dimensions, Keyboard, StatusBar, StyleSheet } from 'react-native';
 import ChatScreen from './chat/ChatScreen.tsx';
 import { RouteParamList } from './types/RouteTypes.ts';
 import { AppProvider, useAppContext } from './history/AppProvider.tsx';
@@ -15,10 +17,10 @@ import Toast from 'react-native-toast-message';
 import TokenUsageScreen from './settings/TokenUsageScreen.tsx';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import PromptScreen from './prompt/PromptScreen.tsx';
-import AppGalleryScreen from './app/AppGalleryScreen.tsx';
-import AppViewerScreen from './app/AppViewerScreen.tsx';
-import CreateAppScreen from './app/CreateAppScreen.tsx';
-import ImageGalleryScreen from './image/ImageGalleryScreen.tsx';
+import AppGalleryScreen from './appgen/screens/AppGalleryScreen.tsx';
+import AppViewerScreen from './appgen/screens/AppViewerScreen.tsx';
+import CreateAppScreen from './appgen/screens/CreateAppScreen.tsx';
+import ImageGalleryScreen from './imagegen/ImageGalleryScreen.tsx';
 import { isAndroid, isMacCatalyst } from './utils/PlatformUtils';
 import { ThemeProvider, useTheme } from './theme';
 import { configureErrorHandling } from './utils/ErrorUtils';
@@ -180,11 +182,17 @@ const App = () => {
   );
 
   return (
-    <>
-      {isMac ? content : <KeyboardProvider>{content}</KeyboardProvider>}
-      <Toast />
-    </>
+    <GestureHandlerRootView style={styles.root}>
+      <BottomSheetModalProvider>
+        {isMac ? content : <KeyboardProvider>{content}</KeyboardProvider>}
+        <Toast />
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
   );
 };
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+});
 
 export default App;

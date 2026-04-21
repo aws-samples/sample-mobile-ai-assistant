@@ -83,51 +83,35 @@ SwiftChat 是一款快速响应的 AI 助手，采用 [React Native](https://rea
 
 我们使用 **API Gateway** 与 **AWS Lambda** 结合的方式，实现最长 15 分钟的流式传输。所有请求通过 API Gateway 的 API Key 验证后才会转发到 Lambda，确保后端服务的安全访问。
 
-### 步骤 1：构建并推送容器镜像到 ECR
+### 步骤 1：一键部署
 
-1. 克隆此仓库：
-   ```bash
-   git clone https://github.com/aws-samples/swift-chat.git
-   cd swift-chat
-   ```
+**前置条件：** 已配置 AWS CLI 凭证（`aws configure`）。
 
-2. 运行构建和推送脚本：
-   ```bash
-   cd server/scripts
-   bash ./push-to-ecr.sh
-   ```
+**一行命令部署：**
 
-3. 按照提示进行配置：
-   - ECR 仓库名称（或使用默认值：`swift-chat-api`）
-   - 镜像标签（请使用默认值：`latest`）
-   - AWS 区域（填写你希望部署的区域，例如：`us-east-1`）
+```bash
+curl -fsSL https://raw.githubusercontent.com/aws-samples/swift-chat/main/server/install.sh | bash
+```
 
-4. 脚本将构建并推送 Docker 镜像到您的 ECR 仓库。
+默认部署到**当前 AWS profile 的账户**，region 取 `$AWS_REGION` 或 `aws configure` 的默认值（都未设置则为 `us-east-1`），堆栈名为 `SwiftChat`。等待约 3-4 分钟，您会看到 **API URL**、**API Key** 获取链接，以及可用手机扫描自动配置的二维码。
 
-5. **重要**：复制脚本输出末尾显示的镜像 URI。您将在下一步中需要它。
+需要指定其他目标时：
 
-### 步骤 2：部署堆栈并获取 API URL 和 API Key
+```bash
+./install.sh --region us-west-2 --stack MySwiftChat --profile myprofile
+```
 
-1. 下载 CloudFormation 模板：
-   - Lambda：[SwiftChatLambda.template](https://github.com/aws-samples/swift-chat/blob/main/server/template/SwiftChatLambda.template)
+| 参数 | 作用 | 默认值 |
+|---|---|---|
+| `--region` | 部署到的 AWS region | `$AWS_REGION` 或 `us-east-1` |
+| `--stack` | CloudFormation 堆栈名 | `SwiftChat` |
+| `--profile` | 使用的 AWS CLI profile | 当前默认 profile |
 
-2. 前往 [CloudFormation 控制台](https://console.aws.amazon.com/cloudformation/home#/stacks/create/template?stackName=SwiftChat)，在**指定模板**下选择**上传模板文件**，然后上传您下载的模板文件。
-
-3. 点击 **下一步**，在"指定堆栈详细信息"页面，提供以下信息：
-    - **ContainerImageUri**：输入步骤 1 输出的 ECR 镜像 URI
-
-4. 点击 **下一步**，保持"配置堆栈选项"页面为默认，阅读功能并勾选底部的"我确认 AWS CloudFormation 可能会创建 IAM 资源"复选框。
-5. 点击 **下一步**，在"审核并创建"中检查您的配置并点击 **提交**。
-
-6. 等待约 1-2 分钟完成部署，然后点击 CloudFormation 堆栈并转到 **输出** 选项卡：
-   - **APIURL**：您的 API URL（例如：`https://xxx.execute-api.us-east-1.amazonaws.com/v1`）
-   - **ApiKeyConsole**：点击此 URL 打开 API Gateway API Keys 控制台，找到名为 `<StackName>-api-key` 的密钥并复制 API Key 值
-
-### 步骤 3：打开应用并使用 API URL 和 API Key 进行设置
+### 步骤 2：打开应用并使用 API URL 和 API Key 进行设置
 
 1. 启动应用，打开抽屉菜单，点击 **设置**。
-2. 粘贴 `API URL` 和 `API Key` 到 Amazon Bedrock -> SwiftChat Server 下，然后选择您的区域。
-3. 点击右上角 ✓ 图标保存配置并开始聊天。
+2. 在 Amazon Bedrock → SwiftChat Server 下，点击 **API URL** 右侧的扫码图标扫描二维码（iOS/Android），或手动粘贴 `API URL` 和 `API Key`。
+3. 选择 Region，然后点击右上角 ✓ 保存。
 
 恭喜 🎉 您的 SwiftChat 应用已准备就绪！
 
@@ -435,13 +419,12 @@ npm run ios
 
 ### 升级 API
 
-1. 首先重新运行构建脚本以更新镜像：
-   ```bash
-   cd server/scripts
-   bash ./push-to-ecr.sh
-   ```
+重新执行同一条部署命令即可，脚本会自动重新构建镜像并刷新 Lambda：
 
-2. 点击打开 [Lambda 服务](https://console.aws.amazon.com/lambda/home#/functions) 页面，找到并打开以stack名和`APIHandlerxxxxxxxx`开头的 Lambda 函数，例如`SwiftChatAPI-APIHandler38F11976-ktGBZmQtp0D8`，点击 **部署新镜像** 按钮并点击保存。
+```bash
+cd server
+./install.sh --region <你的 region> --stack <你的 stack>
+```
 
 ## 安全
 

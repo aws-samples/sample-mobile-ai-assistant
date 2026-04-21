@@ -2,7 +2,7 @@ import RNFS from 'react-native-fs';
 import { Platform } from 'react-native';
 import { ChatMode, FileInfo, FileType } from '../../types/Chat.ts';
 import { getImageModel, getTextModel } from '../../storage/StorageUtils.ts';
-import { showInfo } from './ToastUtils.ts';
+import { showInfo } from '../../core/ToastUtils';
 
 export const saveImageToLocal = async (
   base64ImageData: string
