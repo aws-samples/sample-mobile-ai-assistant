@@ -2,7 +2,9 @@
 # SwiftChat Server — one-command deploy
 #
 # Usage:
-#   ./install.sh                                 # default region + stack
+#   curl -fsSL https://raw.githubusercontent.com/aws-samples/swift-chat/main/server/install.sh | bash
+#   curl ... | bash -s -- --region us-west-2
+#   ./install.sh                                 # from cloned repo
 #   ./install.sh --region us-west-2
 #   ./install.sh --region us-west-2 --stack MySwiftChat
 #   ./install.sh --profile myprofile --region us-west-2
@@ -19,6 +21,43 @@ LINE="=================================================================="
 
 # On any error, print the failing line + command
 trap 'rc=$?; echo ""; echo "${C_RED}ERROR: install.sh failed at line $LINENO (exit $rc): $BASH_COMMAND${C_RESET}" >&2; exit $rc' ERR
+
+# ===== Self-bootstrap: if not inside the repo, clone it first =====
+REPO_URL="https://github.com/aws-samples/swift-chat.git"
+SELF_MARKER="server/template/SwiftChatLambda.template"
+
+if [ ! -f "$(dirname "${BASH_SOURCE[0]:-$0}")/../$SELF_MARKER" ] 2>/dev/null; then
+  echo "${C_BOLD}SwiftChat Server — one-command deploy${C_RESET}"
+  echo ""
+
+  # Check git
+  if ! command -v git >/dev/null 2>&1; then
+    echo "${C_RED}ERROR: git is required but not installed.${C_RESET}"
+    case "$(uname -s)" in
+      Darwin) echo "  Install: ${C_BOLD}xcode-select --install${C_RESET}" ;;
+      Linux)  echo "  Install: ${C_BOLD}sudo apt install git${C_RESET} or ${C_BOLD}sudo yum install git${C_RESET}" ;;
+    esac
+    exit 1
+  fi
+
+  # Check AWS CLI
+  if ! command -v aws >/dev/null 2>&1; then
+    echo "${C_RED}ERROR: AWS CLI is required but not installed.${C_RESET}"
+    echo "  Install: ${C_BOLD}https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html${C_RESET}"
+    exit 1
+  fi
+
+  CLONE_DIR=$(mktemp -d)
+  trap 'rm -rf "$CLONE_DIR"' EXIT
+  echo "Cloning swift-chat..."
+  if ! git clone --depth 1 --quiet "$REPO_URL" "$CLONE_DIR/swift-chat"; then
+    echo "${C_RED}ERROR: Failed to clone repository${C_RESET}"
+    exit 1
+  fi
+  set +e
+  bash "$CLONE_DIR/swift-chat/server/install.sh" "$@"
+  exit $?
+fi
 
 # Poll CloudFormation stack status every 5 seconds (vs 30s for `aws cloudformation wait`)
 wait_stack() {
@@ -51,7 +90,7 @@ while [[ $# -gt 0 ]]; do
     --repo)    REPO_NAME="$2"; shift 2 ;;
     --tag)     TAG="$2"; shift 2 ;;
     -h|--help)
-      head -n 8 "$0" | tail -n 7
+      head -n 10 "$0" | tail -n 7
       exit 0
       ;;
     *) echo "Unknown arg: $1"; exit 1 ;;

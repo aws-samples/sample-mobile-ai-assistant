@@ -90,7 +90,7 @@ SwiftChat 是一款快速响应的 AI 助手，采用 [React Native](https://rea
 **一行命令部署：**
 
 ```bash
-git clone https://github.com/aws-samples/swift-chat.git && cd swift-chat/server && ./install.sh
+curl -fsSL https://raw.githubusercontent.com/aws-samples/swift-chat/main/server/install.sh | bash
 ```
 
 默认部署到**当前 AWS profile 的账户**，region 取 `$AWS_REGION` 或 `aws configure` 的默认值（都未设置则为 `us-east-1`），堆栈名为 `SwiftChat`。等待约 3-4 分钟，您会看到 **API URL**、**API Key** 获取链接，以及可用手机扫描自动配置的二维码。
