@@ -108,9 +108,20 @@ fi
 
 # ===== Prerequisites =====
 command -v aws >/dev/null 2>&1 || { echo "ERROR: AWS CLI required"; exit 1; }
-aws sts get-caller-identity --region "$REGION" >/dev/null 2>&1 || {
-  echo "ERROR: AWS credentials not configured${PROFILE:+ for profile '$PROFILE'}"; exit 1; }
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+# Check AWS credentials. Capture stderr so the user sees the real reason
+# (missing / expired / invalid token) rather than a generic message.
+STS_OUT=$(aws sts get-caller-identity --region "$REGION" --output text --query Account 2>&1) || {
+  echo "${C_RED}ERROR: AWS credentials are not usable${PROFILE:+ for profile '$PROFILE'}.${C_RESET}" >&2
+  echo "$STS_OUT" | sed 's/^/  /' >&2
+  if echo "$STS_OUT" | grep -qE "ExpiredToken|InvalidClientTokenId|SignatureDoesNotMatch|token.*expired"; then
+    echo "  Hint: refresh credentials (${C_BOLD}aws sso login${C_RESET} or update temporary keys) and retry." >&2
+  else
+    echo "  Hint: run ${C_BOLD}aws configure${C_RESET} to set up credentials." >&2
+  fi
+  exit 1
+}
+ACCOUNT_ID="$STS_OUT"
 
 echo "Deploying SwiftChat → region=$REGION, stack=$STACK_NAME, account=$ACCOUNT_ID"
 
