@@ -148,7 +148,7 @@ const ScanQRSheet = forwardRef<ScanQRSheetRef, Props>(({ onScanned }, ref) => {
       enablePanDownToClose
       onChange={handleSheetChange}
       backdropComponent={renderBackdrop}
-      handleIndicatorStyle={{ backgroundColor: 'rgba(255,255,255,0.6)' }}
+      handleIndicatorStyle={styles.handleIndicator}
       handleStyle={styles.handle}
       backgroundStyle={styles.sheetBackground}>
       <View style={styles.content}>
@@ -206,6 +206,9 @@ const createStyles = (colors: ColorScheme) =>
       left: 0,
       right: 0,
       zIndex: 10,
+    },
+    handleIndicator: {
+      backgroundColor: 'rgba(255,255,255,0.6)',
     },
     content: {
       flex: 1,

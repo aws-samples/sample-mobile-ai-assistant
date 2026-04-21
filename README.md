@@ -97,7 +97,7 @@ We use **API Gateway** combined with **AWS Lambda** to enable streaming response
 git clone https://github.com/aws-samples/swift-chat.git && cd swift-chat/server && ./install.sh
 ```
 
-By default this deploys to **the account of your current AWS profile**, in the region from `$AWS_REGION` or your `aws configure` default (fallback: `us-east-1`), with stack name `SwiftChat`. Wait about 3-4 minutes to see your **API URL**, **API Key**, and a scannable QR code for auto-configuring the app.
+By default this deploys to **the account of your current AWS profile**, in the region from `$AWS_REGION` or your `aws configure` default (fallback: `us-east-1`), with stack name `SwiftChat`. Wait about 3-4 minutes to see your **API URL**, **API Key** obtain link, and a scannable QR code for auto-configuring the app.
 
 To target a different account, region, or stack:
 

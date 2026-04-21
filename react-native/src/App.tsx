@@ -8,7 +8,7 @@ import {
   DrawerContentComponentProps,
 } from '@react-navigation/drawer';
 import CustomDrawerContent from './history/CustomDrawerContent.tsx';
-import { Dimensions, Keyboard, StatusBar } from 'react-native';
+import { Dimensions, Keyboard, StatusBar, StyleSheet } from 'react-native';
 import ChatScreen from './chat/ChatScreen.tsx';
 import { RouteParamList } from './types/RouteTypes.ts';
 import { AppProvider, useAppContext } from './history/AppProvider.tsx';
@@ -182,7 +182,7 @@ const App = () => {
   );
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={styles.root}>
       <BottomSheetModalProvider>
         {isMac ? content : <KeyboardProvider>{content}</KeyboardProvider>}
         <Toast />
@@ -190,5 +190,9 @@ const App = () => {
     </GestureHandlerRootView>
   );
 };
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+});
 
 export default App;
