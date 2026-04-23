@@ -233,7 +233,8 @@ async def get_models(request: ModelsRequest):
             image_model = []
             for model in response["modelSummaries"]:
                 need_cross_region = "INFERENCE_PROFILE" in model["inferenceTypesSupported"]
-                if (model["modelLifecycle"]["status"] == "ACTIVE"
+                if ((model["modelLifecycle"]["status"] == "ACTIVE"
+                     or model["modelId"] == "amazon.nova-canvas-v1:0")
                         and ("ON_DEMAND" in model["inferenceTypesSupported"] or need_cross_region)
                         and not model["modelId"].endswith("k")
                         and model["modelName"] not in model_names):
