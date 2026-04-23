@@ -57,7 +57,7 @@
     "react-native-webview": "^13.16.0",
     "react-syntax-highlighter": "^15.5.0",
     "turndown": "^7.2.2",
-    "uuid": "^13.0.0"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",
