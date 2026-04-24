@@ -90,16 +90,18 @@ export const GPTModels = [
 
 export const DeepSeekModels = [
   {
-    modelName: 'DeepSeek-Chat',
-    modelId: 'deepseek-chat',
+    modelName: 'DeepSeek-V4-Flash',
+    modelId: 'deepseek-v4-flash',
     modelTag: ModelTag.DeepSeek,
   },
   {
-    modelName: 'DeepSeek-Reasoner',
-    modelId: 'deepseek-reasoner',
+    modelName: 'DeepSeek-V4-Pro',
+    modelId: 'deepseek-v4-pro',
     modelTag: ModelTag.DeepSeek,
   },
 ];
+
+export const DeepSeekThinkingModels = ['DeepSeek-V4-Flash', 'DeepSeek-V4-Pro'];
 
 export const BedrockThinkingModels = [
   'Claude 3.7 Sonnet',
