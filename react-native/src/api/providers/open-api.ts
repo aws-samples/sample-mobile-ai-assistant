@@ -5,7 +5,9 @@ import {
   getOpenAIApiKey,
   getOpenAIProxyEnabled,
   getTextModel,
+  getThinkingEnabled,
 } from '../../storage/StorageUtils.ts';
+import { DeepSeekThinkingModels } from '../../storage/Constants.ts';
 import {
   BedrockMessage,
   ImageContent,
@@ -32,7 +34,7 @@ export const invokeOpenAIWithCallBack = async (
   callback: CallbackFunction
 ) => {
   const isOpenRouter = isOpenRouterRequest();
-  const bodyObject = {
+  const bodyObject: Record<string, unknown> = {
     model: getTextModel().modelId,
     messages: getOpenAIMessages(messages, prompt),
     stream: true,
@@ -40,6 +42,11 @@ export const invokeOpenAIWithCallBack = async (
       include_usage: true,
     },
   };
+  if (DeepSeekThinkingModels.includes(getTextModel().modelName)) {
+    bodyObject.thinking = {
+      type: getThinkingEnabled() ? 'enabled' : 'disabled',
+    };
+  }
 
   const options = {
     method: 'POST',

@@ -82,6 +82,7 @@ import {
 import {
   BedrockThinkingModels,
   BedrockVoiceModels,
+  DeepSeekThinkingModels,
   DefaultTextModel,
   getAllRegions,
   getDefaultApiKeyModels,
@@ -703,7 +704,8 @@ function SettingsScreen(): React.JSX.Element {
           placeholder="Select a model"
         />
         {selectedTextModel &&
-          BedrockThinkingModels.includes(selectedTextModel.modelName) && (
+          (BedrockThinkingModels.includes(selectedTextModel.modelName) ||
+            DeepSeekThinkingModels.includes(selectedTextModel.modelName)) && (
             <View style={styles.thinkingSwitchContainer}>
               <Text style={styles.proxyLabel}>Enable Thinking</Text>
               <Switch

@@ -86,13 +86,13 @@ export const ModelPrice: ModelPriceType = {
       inputTokenPrice: 0.00135,
       outputTokenPrice: 0.0054,
     },
-    'DeepSeek-Chat': {
-      inputTokenPrice: 0.00027,
-      outputTokenPrice: 0.0011,
+    'DeepSeek-V4-Flash': {
+      inputTokenPrice: 0.00014,
+      outputTokenPrice: 0.00028,
     },
-    'DeepSeek-Reasoner': {
-      inputTokenPrice: 0.00055,
-      outputTokenPrice: 0.00219,
+    'DeepSeek-V4-Pro': {
+      inputTokenPrice: 0.00174,
+      outputTokenPrice: 0.00348,
     },
     'GPT-5.4': {
       inputTokenPrice: 0.00125,
@@ -243,6 +243,10 @@ export const ModelPrice: ModelPriceType = {
       outputTokenPrice: 0.025,
     },
     'Claude Opus 4.6': {
+      inputTokenPrice: 0.005,
+      outputTokenPrice: 0.025,
+    },
+    'Claude Opus 4.7': {
       inputTokenPrice: 0.005,
       outputTokenPrice: 0.025,
     },
