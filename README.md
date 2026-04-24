@@ -54,8 +54,8 @@ capabilities across Android, iOS, and macOS platforms.
 
 ## 📱 Quick Download
 
-- [Download for Android](https://github.com/aws-samples/swift-chat/releases/download/2.8.0/SwiftChat.apk)
-- [Download for macOS](https://github.com/aws-samples/swift-chat/releases/download/2.8.0/SwiftChat.dmg)
+- [Download for Android](https://github.com/aws-samples/swift-chat/releases/download/2.9.0/SwiftChat.apk)
+- [Download for macOS](https://github.com/aws-samples/swift-chat/releases/download/2.9.0/SwiftChat.dmg)
 - For iOS: Currently available through local build with Xcode
 
 ## Getting Started with Amazon Bedrock
