@@ -7,6 +7,7 @@ import {
   createDrawerNavigator,
   DrawerContentComponentProps,
 } from '@react-navigation/drawer';
+import { Header } from '@react-navigation/elements';
 import CustomDrawerContent from './history/CustomDrawerContent.tsx';
 import { Dimensions, Keyboard, StatusBar, StyleSheet } from 'react-native';
 import ChatScreen from './chat/ChatScreen.tsx';
@@ -27,6 +28,7 @@ import { configureErrorHandling } from './utils/ErrorUtils';
 import { migrateOpenAICompatConfig } from './storage/StorageUtils.ts';
 import { SearchWebView } from './websearch/components/SearchWebView';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { HeaderLeftView } from './prompt/HeaderLeftView.tsx';
 
 export const isMac = isMacCatalyst;
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -62,6 +64,7 @@ const DrawerNavigator = () => {
           borderBottomWidth: isDark ? 0.3 : undefined,
           borderBottomColor: isDark ? colors.chatScreenSplit : undefined,
         },
+        headerStatusBarHeight: isMac ? 20 : undefined,
         drawerType: isMac ? drawerType : 'slide',
       }}
       drawerContent={renderCustomDrawerContent}>
@@ -72,42 +75,47 @@ const DrawerNavigator = () => {
     </Drawer.Navigator>
   );
 };
+const MacStackHeader = ({ navigation, options }: any) => {
+  const { isDark, colors } = useTheme();
+  return (
+    <Header
+      title={options.title ?? ''}
+      headerLeft={options.headerLeft ?? (() => HeaderLeftView(navigation, isDark))}
+      headerRight={options.headerRight}
+      headerStyle={{ backgroundColor: colors.background, height: 66, ...options.headerStyle }}
+      headerLeftContainerStyle={{ paddingLeft: 6 }}
+      headerRightContainerStyle={{ paddingRight: 6 }}
+      headerTintColor={options.headerTintColor}
+      headerTitleAlign="center"
+      headerStatusBarHeight={20}
+    />
+  );
+};
+
 const AppNavigator = () => {
   const { colors } = useTheme();
   return (
-    <Stack.Navigator initialRouteName="Drawer" screenOptions={{}}>
+    <Stack.Navigator initialRouteName="Drawer" screenOptions={{
+      contentStyle: isMac ? { backgroundColor: colors.background } : undefined,
+      header: isMac ? MacStackHeader : undefined,
+      headerTitleAlign: 'center',
+      headerStyle: { backgroundColor: colors.background },
+      headerTintColor: colors.text,
+    }}>
       <Stack.Screen
         name="Drawer"
         component={DrawerNavigator}
-        options={{ headerShown: false, headerLargeTitleShadowVisible: false }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="TokenUsage"
         component={TokenUsageScreen}
-        options={{
-          title: 'Usage',
-          contentStyle: {
-            height: isMac ? 66 : undefined,
-            backgroundColor: colors.background,
-          },
-          headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: colors.background },
-          headerTintColor: colors.text,
-        }}
+        options={{ title: 'Usage' }}
       />
       <Stack.Screen
         name="Prompt"
         component={PromptScreen}
-        options={{
-          title: 'System Prompt',
-          contentStyle: {
-            height: isMac ? 66 : undefined,
-            backgroundColor: colors.background,
-          },
-          headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: colors.background },
-          headerTintColor: colors.text,
-        }}
+        options={{ title: 'System Prompt' }}
       />
       <Stack.Screen
         name="AppViewer"
@@ -116,29 +124,14 @@ const AppNavigator = () => {
           const params = route.params as RouteParamList['AppViewer'];
           return {
             title: params?.app?.name ?? 'App',
-            contentStyle: {
-              height: isMac ? 66 : undefined,
-              backgroundColor: '#000000',
-            },
-            headerTitleAlign: 'center',
-            headerStyle: { backgroundColor: colors.background },
-            headerTintColor: colors.text,
+            contentStyle: { backgroundColor: '#000000' },
           };
         }}
       />
       <Stack.Screen
         name="CreateApp"
         component={CreateAppScreen}
-        options={{
-          title: 'Create App',
-          contentStyle: {
-            height: isMac ? 66 : undefined,
-            backgroundColor: colors.background,
-          },
-          headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: colors.background },
-          headerTintColor: colors.text,
-        }}
+        options={{ title: 'Create App' }}
       />
     </Stack.Navigator>
   );

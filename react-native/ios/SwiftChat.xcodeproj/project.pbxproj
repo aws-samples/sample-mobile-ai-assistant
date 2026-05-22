@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -22,6 +22,7 @@
 		3A6846A82DA8FBBE003CFBEC /* NovaSonicService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A6846A42DA8FBBE003CFBEC /* NovaSonicService.swift */; };
 		3A6846A92DA8FBBE003CFBEC /* VoiceChatModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A68469F2DA8FBBE003CFBEC /* VoiceChatModule.swift */; };
 		3A6846AA2DA8FBBE003CFBEC /* VoiceChatModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A68469E2DA8FBBE003CFBEC /* VoiceChatModule.m */; };
+		3A71CC3B2FADB79600FAA59D /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 3A71CC3A2FADB79600FAA59D /* AppIcon.icon */; };
 		3ADD2B4F2E26337F00171D1D /* RCTNetworkingPatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 3ADD2B4E2E26337F00171D1D /* RCTNetworkingPatch.m */; };
 		3AF67D4F2F52DCC3003CD99C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AF67D4E2F52DCC3003CD99C /* WidgetKit.framework */; };
 		3AF67D512F52DCC3003CD99C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AF67D502F52DCC3003CD99C /* SwiftUI.framework */; };
@@ -94,6 +95,7 @@
 		3A6846A22DA8FBBE003CFBEC /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		3A6846A32DA8FBBE003CFBEC /* ConversationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationManager.swift; sourceTree = "<group>"; };
 		3A6846A42DA8FBBE003CFBEC /* NovaSonicService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NovaSonicService.swift; sourceTree = "<group>"; };
+		3A71CC3A2FADB79600FAA59D /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		3A93A5722C932FC600C9F56C /* SwiftChat.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = SwiftChat.entitlements; path = SwiftChat/SwiftChat.entitlements; sourceTree = "<group>"; };
 		3ADD2B4D2E26337F00171D1D /* RCTNetworkingPatch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTNetworkingPatch.h; sourceTree = "<group>"; };
 		3ADD2B4E2E26337F00171D1D /* RCTNetworkingPatch.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RCTNetworkingPatch.m; sourceTree = "<group>"; };
@@ -114,14 +116,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		3AF67D632F52DCC6003CD99C /* Exceptions for "SwiftChatLiveActivity" folder in "SwiftChatLiveActivityExtension" target */ = {
+		3AF67D632F52DCC6003CD99C /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 3AF67D4C2F52DCC3003CD99C /* SwiftChatLiveActivityExtension */;
 		};
-		3AF67D682F52DE27003CD99C /* Exceptions for "SwiftChatLiveActivity" folder in "SwiftChat" target */ = {
+		3AF67D682F52DE27003CD99C /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				LiveActivityAttributes.swift,
@@ -131,19 +133,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		3AF67D522F52DCC3003CD99C /* SwiftChatLiveActivity */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				3AF67D682F52DE27003CD99C /* Exceptions for "SwiftChatLiveActivity" folder in "SwiftChat" target */,
-				3AF67D632F52DCC6003CD99C /* Exceptions for "SwiftChatLiveActivity" folder in "SwiftChatLiveActivityExtension" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = SwiftChatLiveActivity;
-			sourceTree = "<group>";
-		};
+		3AF67D522F52DCC3003CD99C /* SwiftChatLiveActivity */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (3AF67D682F52DE27003CD99C /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 3AF67D632F52DCC6003CD99C /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SwiftChatLiveActivity; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -206,6 +196,7 @@
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
+				3A71CC3A2FADB79600FAA59D /* AppIcon.icon */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				3A60BCF62E35D91F00C60918 /* RCTTextInputPatch.h */,
@@ -451,6 +442,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
+				3A71CC3B2FADB79600FAA59D /* AppIcon.icon in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				A98E989882C3A293A3C38335 /* PrivacyInfo.xcprivacy in Resources */,
 			);
@@ -512,9 +504,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SwiftChat-SwiftChatTests/Pods-SwiftChat-SwiftChatTests-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SwiftChat-SwiftChatTests/Pods-SwiftChat-SwiftChatTests-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -529,9 +525,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SwiftChat/Pods-SwiftChat-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SwiftChat/Pods-SwiftChat-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -568,9 +568,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SwiftChat-SwiftChatTests/Pods-SwiftChat-SwiftChatTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SwiftChat-SwiftChatTests/Pods-SwiftChat-SwiftChatTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -585,9 +589,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SwiftChat/Pods-SwiftChat-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SwiftChat/Pods-SwiftChat-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -727,6 +735,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				ASSETCATALOG_COMPILER_STANDALONE_ICON_BEHAVIOR = default;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = SwiftChat/SwiftChat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -775,6 +784,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
+				ASSETCATALOG_COMPILER_STANDALONE_ICON_BEHAVIOR = default;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = SwiftChat/SwiftChat.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -994,10 +1004,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -1071,10 +1078,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
