@@ -1,3 +1,12 @@
+# Workaround: xcodeproj gem doesn't know about Xcode 26 project object version 70
+require 'xcodeproj'
+unless Xcodeproj::Constants::COMPATIBILITY_VERSION_BY_OBJECT_VERSION.key?(70)
+  versions = Xcodeproj::Constants::COMPATIBILITY_VERSION_BY_OBJECT_VERSION.dup
+  versions[70] = 'Xcode 26.0'
+  Xcodeproj::Constants.send(:remove_const, :COMPATIBILITY_VERSION_BY_OBJECT_VERSION)
+  Xcodeproj::Constants::COMPATIBILITY_VERSION_BY_OBJECT_VERSION = versions.freeze
+end
+
 # Resolve react_native_pods.rb with node to allow for hoisting
 require Pod::Executable.execute_command('node', ['-p',
   'require.resolve(
@@ -47,6 +56,21 @@ target 'SwiftChat' do
         else
           config.build_settings['SWIFT_VERSION'] = '6.0'
         end
+        # Fix fmt consteval error on Mac Catalyst (Apple Clang consteval is broken in Catalyst context)
+        if target.name == 'fmt'
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'FMT_USE_CONSTEVAL=0'
+        end
+      end
+    end
+
+    # Fix fmt consteval error on Mac Catalyst (Apple Clang consteval is broken in Catalyst context)
+    fmt_xcconfigs = Dir.glob(File.join(installer.sandbox.root, 'Target Support Files', 'fmt', '*.xcconfig'))
+    fmt_xcconfigs.each do |xcconfig_path|
+      content = File.read(xcconfig_path)
+      unless content.include?('FMT_USE_CONSTEVAL=0')
+        content.gsub!(/^(GCC_PREPROCESSOR_DEFINITIONS = .*)$/, '\1 FMT_USE_CONSTEVAL=0')
+        File.write(xcconfig_path, content)
       end
     end
 
