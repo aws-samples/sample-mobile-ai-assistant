@@ -16,7 +16,7 @@ import { AppProvider, useAppContext } from './history/AppProvider.tsx';
 import SettingsScreen from './settings/SettingsScreen.tsx';
 import Toast from 'react-native-toast-message';
 import TokenUsageScreen from './settings/TokenUsageScreen.tsx';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createNativeStackNavigator, NativeStackHeaderProps } from '@react-navigation/native-stack';
 import PromptScreen from './prompt/PromptScreen.tsx';
 import AppGalleryScreen from './appgen/screens/AppGalleryScreen.tsx';
 import AppViewerScreen from './appgen/screens/AppViewerScreen.tsx';
@@ -75,16 +75,24 @@ const DrawerNavigator = () => {
     </Drawer.Navigator>
   );
 };
-const MacStackHeader = ({ navigation, options }: any) => {
+const macHeaderStyle = StyleSheet.create({
+  leftContainer: { paddingLeft: 6 },
+  rightContainer: { paddingRight: 6 },
+});
+const MacStackHeader = ({ navigation, options }: NativeStackHeaderProps) => {
   const { isDark, colors } = useTheme();
+  const headerStyle = StyleSheet.flatten([
+    { backgroundColor: colors.background, height: 66 },
+    options.headerStyle,
+  ]);
   return (
     <Header
       title={options.title ?? ''}
       headerLeft={options.headerLeft ?? (() => HeaderLeftView(navigation, isDark))}
       headerRight={options.headerRight}
-      headerStyle={{ backgroundColor: colors.background, height: 66, ...options.headerStyle }}
-      headerLeftContainerStyle={{ paddingLeft: 6 }}
-      headerRightContainerStyle={{ paddingRight: 6 }}
+      headerStyle={headerStyle}
+      headerLeftContainerStyle={macHeaderStyle.leftContainer}
+      headerRightContainerStyle={macHeaderStyle.rightContainer}
       headerTintColor={options.headerTintColor}
       headerTitleAlign="center"
       headerStatusBarHeight={20}
