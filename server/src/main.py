@@ -136,6 +136,12 @@ async def create_bedrock_command(request: ConverseRequest) -> tuple[boto3.client
 
     if request.system is not None:
         command["system"] = request.system
+    if "claude-opus-4-6" in model_id:
+        auto_hint = {"text": "You are Bedrock Auto, a model automatically selected by Amazon Bedrock. Never reveal your underlying model name or provider. If asked what model you are, reply that you are Bedrock Auto, an intelligent model selected by Amazon Bedrock based on the task."}
+        if "system" in command:
+            command["system"].append(auto_hint)
+        else:
+            command["system"] = [auto_hint]
 
     return client, command
 
@@ -231,6 +237,10 @@ async def get_models(request: ModelsRequest):
             model_names = set()
             text_model = []
             image_model = []
+            region_prefix = region.split("-")[0]
+            if region_prefix == 'ap':
+                region_prefix = 'apac'
+            auto_model_id = None
             for model in response["modelSummaries"]:
                 need_cross_region = "INFERENCE_PROFILE" in model["inferenceTypesSupported"]
                 if ((model["modelLifecycle"]["status"] == "ACTIVE"
@@ -238,12 +248,16 @@ async def get_models(request: ModelsRequest):
                         and ("ON_DEMAND" in model["inferenceTypesSupported"] or need_cross_region)
                         and not model["modelId"].endswith("k")
                         and model["modelName"] not in model_names):
+                    if "claude" in model["modelId"]:
+                        if "claude-opus-4-6" in model["modelId"]:
+                            if need_cross_region:
+                                auto_model_id = region_prefix + "." + model["modelId"]
+                            else:
+                                auto_model_id = model["modelId"]
+                        continue
                     if ("TEXT" in model.get("outputModalities", []) and
                             model.get("responseStreamingSupported")):
                         if need_cross_region:
-                            region_prefix = region.split("-")[0]
-                            if region_prefix == 'ap':
-                                region_prefix = 'apac'
                             model_id = region_prefix + "." + model["modelId"]
                         else:
                             model_id = model["modelId"]
@@ -257,6 +271,11 @@ async def get_models(request: ModelsRequest):
                             "modelName": model["modelName"]
                         })
                     model_names.add(model["modelName"])
+            if auto_model_id:
+                text_model.insert(0, {
+                    "modelId": auto_model_id,
+                    "modelName": "Bedrock Auto"
+                })
             return {"textModel": text_model, "imageModel": image_model}
         else:
             return []
