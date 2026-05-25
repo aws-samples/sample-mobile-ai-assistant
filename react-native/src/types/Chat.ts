@@ -49,6 +49,7 @@ export enum ModelTag {
   OpenAICompatible = 'OpenAICompatible',
   DeepSeek = 'DeepSeek',
   Ollama = 'Ollama',
+  LiteRT = 'LiteRT',
 }
 
 export type OllamaModel = {

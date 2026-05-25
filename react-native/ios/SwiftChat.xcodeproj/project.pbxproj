@@ -23,6 +23,10 @@
 		3A6846A92DA8FBBE003CFBEC /* VoiceChatModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A68469F2DA8FBBE003CFBEC /* VoiceChatModule.swift */; };
 		3A6846AA2DA8FBBE003CFBEC /* VoiceChatModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A68469E2DA8FBBE003CFBEC /* VoiceChatModule.m */; };
 		3A71CC3B2FADB79600FAA59D /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 3A71CC3A2FADB79600FAA59D /* AppIcon.icon */; };
+		3A932E722FC3366B0037D911 /* LiteRTLM in Frameworks */ = {isa = PBXBuildFile; productRef = 3A932E712FC3366B0037D911 /* LiteRTLM */; };
+		3A932E812FC338160037D911 /* LiteRTModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A932E7E2FC338160037D911 /* LiteRTModule.m */; };
+		3A932E822FC338160037D911 /* LiteRTModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A932E7F2FC338160037D911 /* LiteRTModule.swift */; };
+		3AB093832FC3D53400BFC8DC /* LiteRTLM in Frameworks */ = {isa = PBXBuildFile; productRef = 3AB093822FC3D53400BFC8DC /* LiteRTLM */; };
 		3ADD2B4F2E26337F00171D1D /* RCTNetworkingPatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 3ADD2B4E2E26337F00171D1D /* RCTNetworkingPatch.m */; };
 		3AF67D4F2F52DCC3003CD99C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AF67D4E2F52DCC3003CD99C /* WidgetKit.framework */; };
 		3AF67D512F52DCC3003CD99C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AF67D502F52DCC3003CD99C /* SwiftUI.framework */; };
@@ -96,6 +100,8 @@
 		3A6846A32DA8FBBE003CFBEC /* ConversationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationManager.swift; sourceTree = "<group>"; };
 		3A6846A42DA8FBBE003CFBEC /* NovaSonicService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NovaSonicService.swift; sourceTree = "<group>"; };
 		3A71CC3A2FADB79600FAA59D /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		3A932E7E2FC338160037D911 /* LiteRTModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LiteRTModule.m; sourceTree = "<group>"; };
+		3A932E7F2FC338160037D911 /* LiteRTModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiteRTModule.swift; sourceTree = "<group>"; };
 		3A93A5722C932FC600C9F56C /* SwiftChat.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = SwiftChat.entitlements; path = SwiftChat/SwiftChat.entitlements; sourceTree = "<group>"; };
 		3ADD2B4D2E26337F00171D1D /* RCTNetworkingPatch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTNetworkingPatch.h; sourceTree = "<group>"; };
 		3ADD2B4E2E26337F00171D1D /* RCTNetworkingPatch.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RCTNetworkingPatch.m; sourceTree = "<group>"; };
@@ -150,6 +156,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				3A6846882DA8F8AA003CFBEC /* AWSBedrockRuntime in Frameworks */,
+				3AB093832FC3D53400BFC8DC /* LiteRTLM in Frameworks */,
+				3A932E722FC3366B0037D911 /* LiteRTLM in Frameworks */,
 				7923F2A519E6BC533C0F2749 /* libPods-SwiftChat.a in Frameworks */,
 				3A2384122E2A63DC00FBF762 /* AWSBedrockRuntime in Frameworks */,
 			);
@@ -236,6 +244,7 @@
 		3A6846A12DA8FBBE003CFBEC /* Modules */ = {
 			isa = PBXGroup;
 			children = (
+				3A932E802FC338160037D911 /* LiteRT */,
 				3A6846A02DA8FBBE003CFBEC /* VoiceChat */,
 				3AFE001C2E99999999999999 /* FilePaste */,
 				6DEEB690D303FF6F0E1F43D2 /* BackgroundKeepAlive */,
@@ -252,6 +261,15 @@
 				92DDE7B718B86DF54BE88074 /* BackgroundAudioService.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		3A932E802FC338160037D911 /* LiteRT */ = {
+			isa = PBXGroup;
+			children = (
+				3A932E7E2FC338160037D911 /* LiteRTModule.m */,
+				3A932E7F2FC338160037D911 /* LiteRTModule.swift */,
+			);
+			path = LiteRT;
 			sourceTree = "<group>";
 		};
 		3AFE001C2E99999999999999 /* FilePaste */ = {
@@ -417,6 +435,7 @@
 			mainGroup = 83CBB9F61A601CBA00E9B192;
 			packageReferences = (
 				3A2384102E2A63DC00FBF762 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */,
+				3AB093812FC3D53400BFC8DC /* XCLocalSwiftPackageReference "LocalPackages/LiteRT-LM" */,
 			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
@@ -631,6 +650,8 @@
 				3A22BD7A2D44D84300749246 /* PlatformModule.m in Sources */,
 				3A19D3892CCE980A001797C6 /* TestAddBridge.swift in Sources */,
 				4BCE9FA47196E1AE820D956E /* BackgroundAudioService.swift in Sources */,
+				3A932E812FC338160037D911 /* LiteRTModule.m in Sources */,
+				3A932E822FC338160037D911 /* LiteRTModule.swift in Sources */,
 				5EC3CA95C332816127FC1D28 /* BackgroundKeepAliveModule.swift in Sources */,
 				E44F1E5E4818F1E5D41BD2A3 /* BackgroundKeepAliveModule.m in Sources */,
 			);
@@ -748,7 +769,7 @@
 				INFOPLIST_FILE = SwiftChat/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = SwiftChat;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -796,7 +817,7 @@
 				INFOPLIST_FILE = SwiftChat/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = SwiftChat;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1127,6 +1148,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		3AB093812FC3D53400BFC8DC /* XCLocalSwiftPackageReference "LocalPackages/LiteRT-LM" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "LocalPackages/LiteRT-LM";
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		3A2384102E2A63DC00FBF762 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -1156,6 +1184,14 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3A6846862DA8F8AA003CFBEC /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
 			productName = AWSBedrockRuntime;
+		};
+		3A932E712FC3366B0037D911 /* LiteRTLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LiteRTLM;
+		};
+		3AB093822FC3D53400BFC8DC /* LiteRTLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LiteRTLM;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

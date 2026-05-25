@@ -86,6 +86,7 @@ import {
   DefaultTextModel,
   getAllRegions,
   getDefaultApiKeyModels,
+  LiteRTModels,
   VoiceIDList,
 } from '../storage/Constants.ts';
 import CustomTextInput from './CustomTextInput.tsx';
@@ -227,12 +228,14 @@ function SettingsScreen(): React.JSX.Element {
               ...ollamaModels,
               ...getDefaultApiKeyModels(),
               ...openAICompatModelList,
+              ...LiteRTModels,
             ]
           : [
               ...bedrockResponse.textModel,
               ...ollamaModels,
               ...getDefaultApiKeyModels(),
               ...openAICompatModelList,
+              ...LiteRTModels,
             ];
 
       setTextModels(allTextModels);

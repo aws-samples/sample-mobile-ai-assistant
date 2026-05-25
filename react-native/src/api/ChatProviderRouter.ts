@@ -12,6 +12,7 @@ import type { BedrockMessage } from './BedrockMessageConvertor.ts';
 import type { SystemPrompt } from '../types/Chat.ts';
 import { invokeOpenAIWithCallBack } from './providers/open-api.ts';
 import { invokeOllamaWithCallBack } from './providers/ollama-api.ts';
+import { invokeLiteRTWithCallBack } from './providers/litert-api.ts';
 import { invokeBedrockWithAPIKey } from './providers/bedrock-api-key.ts';
 import {
   invokeBedrockServerWithCallBack,
@@ -30,6 +31,18 @@ export const invokeChatProvider = async (
   callback: ChatCallbackFunction
 ): Promise<void> => {
   const currentModelTag = getModelTag(getTextModel());
+
+  // On-device LiteRT provider
+  if (currentModelTag === ModelTag.LiteRT) {
+    await invokeLiteRTWithCallBack(
+      messages,
+      prompt,
+      shouldStop,
+      controller,
+      callback
+    );
+    return;
+  }
 
   // Non-Bedrock providers
   if (currentModelTag !== ModelTag.Bedrock) {

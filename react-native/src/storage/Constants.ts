@@ -117,6 +117,14 @@ export const BedrockThinkingModels = [
 ];
 export const BedrockVoiceModels = ['Nova Sonic'];
 
+export const LiteRTModels: Model[] = [
+  {
+    modelName: 'Gemma 4 E2B',
+    modelId: 'gemma-4-E2B-it',
+    modelTag: ModelTag.LiteRT,
+  },
+];
+
 export const DefaultTextModel = [
   {
     modelName: 'Nova Pro',
@@ -274,7 +282,7 @@ export function getAllRegions() {
 }
 
 export function getDefaultTextModels() {
-  return [...DefaultTextModel, ...getDefaultApiKeyModels()] as Model[];
+  return [...DefaultTextModel, ...getDefaultApiKeyModels(), ...LiteRTModels] as Model[];
 }
 
 export function getDefaultApiKeyModels() {
