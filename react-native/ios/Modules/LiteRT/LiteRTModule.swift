@@ -81,6 +81,7 @@ final class LiteRTModule: RCTEventEmitter, @unchecked Sendable {
         let engineConfig = try EngineConfig(
           modelPath: modelPath,
           backend: backend,
+          visionBackend: .cpu(),
           maxNumTokens: maxTokens,
           cacheDir: cacheDir
         )
@@ -102,9 +103,10 @@ final class LiteRTModule: RCTEventEmitter, @unchecked Sendable {
     }
   }
 
-  @objc(sendMessage:withSystemPrompt:withResolver:withRejecter:)
+  @objc(sendMessage:withSystemPrompt:withImagePaths:withResolver:withRejecter:)
   func sendMessage(_ text: String,
                    systemPrompt: String?,
+                   imagePaths: [String]?,
                    resolve: @escaping RCTPromiseResolveBlock,
                    reject: @escaping RCTPromiseRejectBlock) {
     let safeResolve = SendableResolve(block: resolve)
@@ -140,8 +142,18 @@ final class LiteRTModule: RCTEventEmitter, @unchecked Sendable {
           return
         }
 
+        // Build message with optional images
+        let message: Message
+        if let paths = imagePaths, !paths.isEmpty {
+          var contents: [Content] = paths.map { .imageFile($0) }
+          contents.append(.text(text))
+          message = Message(contents: contents)
+        } else {
+          message = Message(text)
+        }
+
         var fullResponse = ""
-        for try await chunk in conversation.sendMessageStream(Message(text)) {
+        for try await chunk in conversation.sendMessageStream(message) {
           guard self.isGenerating else { break }
           let tokenText = chunk.toString
           fullResponse += tokenText

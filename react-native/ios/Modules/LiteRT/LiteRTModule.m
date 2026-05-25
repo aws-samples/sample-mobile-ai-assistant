@@ -9,6 +9,7 @@ RCT_EXTERN_METHOD(initialize:(NSDictionary *)config
 
 RCT_EXTERN_METHOD(sendMessage:(NSString *)text
                   withSystemPrompt:(NSString *)systemPrompt
+                  withImagePaths:(NSArray *)imagePaths
                   withResolver:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject)
 

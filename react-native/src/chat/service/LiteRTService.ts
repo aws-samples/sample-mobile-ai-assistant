@@ -82,7 +82,8 @@ export class LiteRTService {
 
   public async sendMessage(
     text: string,
-    systemPrompt?: string
+    systemPrompt?: string,
+    imagePaths?: string[]
   ): Promise<string | null> {
     if (!LiteRTModule || !this.isInitialized) {
       this.onErrorCallback?.('LiteRT engine not ready');
@@ -92,7 +93,8 @@ export class LiteRTService {
     try {
       const result = await LiteRTModule.sendMessage(
         text,
-        systemPrompt || null
+        systemPrompt || null,
+        imagePaths || null
       );
       return result.text;
     } catch (err: unknown) {

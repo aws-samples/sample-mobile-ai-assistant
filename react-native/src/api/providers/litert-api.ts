@@ -1,8 +1,13 @@
 import { SystemPrompt, Usage } from '../../types/Chat.ts';
-import { BedrockMessage, TextContent } from '../BedrockMessageConvertor.ts';
+import {
+  BedrockMessage,
+  TextContent,
+  ImageContent,
+} from '../BedrockMessageConvertor.ts';
 import { liteRTService } from '../../chat/service/LiteRTService.ts';
 import { getTextModel } from '../../storage/StorageUtils.ts';
 import type { ChatCallbackFunction } from '../types.ts';
+import RNFS from 'react-native-fs';
 
 export const invokeLiteRTWithCallBack = async (
   messages: BedrockMessage[],
@@ -67,6 +72,23 @@ export const invokeLiteRTWithCallBack = async (
     }
   );
 
+  // Extract image paths from message content
+  const imageContents = lastMessage.content.filter(
+    c => (c as ImageContent).image
+  ) as ImageContent[];
+
+  let imagePaths: string[] | undefined;
+  if (imageContents.length > 0) {
+    imagePaths = [];
+    for (let i = 0; i < imageContents.length; i++) {
+      const base64Data = imageContents[i].image.source.bytes;
+      const format = imageContents[i].image.format || 'jpeg';
+      const tmpPath = `${RNFS.TemporaryDirectoryPath}/litert_img_${i}.${format}`;
+      await RNFS.writeFile(tmpPath, base64Data, 'base64');
+      imagePaths.push(tmpPath);
+    }
+  }
+
   const systemPromptText = prompt?.prompt || undefined;
-  await liteRTService.sendMessage(textContent, systemPromptText);
+  await liteRTService.sendMessage(textContent, systemPromptText, imagePaths);
 };
