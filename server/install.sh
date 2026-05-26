@@ -48,7 +48,7 @@ if [ ! -f "$(dirname "${BASH_SOURCE[0]:-$0}")/../$SELF_MARKER" ] 2>/dev/null; th
   CLONE_DIR=$(mktemp -d)
   trap 'rm -rf "$CLONE_DIR"' EXIT
   echo "Cloning swift-chat..."
-  if ! git clone --depth 1 --quiet "$REPO_URL" "$CLONE_DIR/swift-chat"; then
+  if ! git clone --depth 1 --branch "$BRANCH" --quiet "$REPO_URL" "$CLONE_DIR/swift-chat"; then
     echo "${C_RED}ERROR: Failed to clone repository${C_RESET}"
     exit 1
   fi
@@ -79,6 +79,7 @@ STACK_NAME="SwiftChat"
 REPO_NAME="swift-chat-api"
 TAG="latest"
 PROFILE=""
+BRANCH="auto-model"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
