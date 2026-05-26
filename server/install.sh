@@ -25,6 +25,7 @@ trap 'rc=$?; echo ""; echo "${C_RED}ERROR: install.sh failed at line $LINENO (ex
 
 # ===== Self-bootstrap: if not inside the repo, clone it first =====
 REPO_URL="https://github.com/aws-samples/swift-chat.git"
+BRANCH="auto-model"
 SELF_MARKER="server/template/SwiftChatLambda.template"
 
 if [ ! -f "$(dirname "${BASH_SOURCE[0]:-$0}")/../$SELF_MARKER" ] 2>/dev/null; then
@@ -79,7 +80,6 @@ STACK_NAME="SwiftChat"
 REPO_NAME="swift-chat-api"
 TAG="latest"
 PROFILE=""
-BRANCH="auto-model"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
