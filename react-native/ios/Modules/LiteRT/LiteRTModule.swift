@@ -80,6 +80,8 @@ final class LiteRTModule: RCTEventEmitter, @unchecked Sendable {
         #if targetEnvironment(simulator)
         let backend: Backend = .cpu()
         #else
+        ExperimentalFlags.optIntoExperimentalAPIs()
+        ExperimentalFlags.enableSpeculativeDecoding = true
         let backend: Backend = .gpu
         #endif
 
