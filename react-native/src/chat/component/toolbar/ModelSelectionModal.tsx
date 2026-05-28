@@ -50,6 +50,9 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
   const { sendEvent } = useAppContext();
   const [models, setModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState<Model>(getTextModel());
+  const [downloading, setDownloading] = useState(liteRTService.downloading);
+  const [downloadProgress, setDownloadProgress] = useState(liteRTService.downloadProgress);
+  const [downloadSpeed, setDownloadSpeed] = useState(liteRTService.downloadSpeedText);
 
   // Animation values
   const translateX = useSharedValue(100);
@@ -69,9 +72,25 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
 
   useEffect(() => {
     if (visible) {
-      // Load models and start animation
       loadModels();
       startOpenAnimation();
+      if (liteRTService.downloading) {
+        setDownloading(true);
+        setDownloadProgress(liteRTService.downloadProgress);
+        setDownloadSpeed(liteRTService.downloadSpeedText);
+        liteRTService.setDownloadCallbacks(
+          (progress, speed) => {
+            setDownloadProgress(progress);
+            setDownloadSpeed(speed);
+          },
+          () => {
+            setDownloading(false);
+          },
+          () => {
+            setDownloading(false);
+          }
+        );
+      }
     }
   }, [startOpenAnimation, visible]);
 
@@ -95,29 +114,59 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
     startCloseAnimation(onClose);
   };
 
-  const handleModelSelect = (model: Model) => {
+  const selectModel = (model: Model) => {
     setSelectedModel(model);
     saveTextModel(model);
-
-    // Update model order (move selected model to the top of history)
     updateTextModelUsageOrder(model);
-
-    // Send model changed event
     sendEvent('modelChanged');
 
-    // Pre-initialize LiteRT engine in background when model is selected
     if (model.modelTag === ModelTag.LiteRT) {
       liteRTService.initialize();
     }
 
-    // Get updated merged model list
     const mergedModels = getMergedModelOrder();
     setModels(mergedModels);
 
-    // Close modal and notify parent
     startCloseAnimation(() => {
       onClose();
     });
+  };
+
+  const startDownload = (model: Model) => {
+    setDownloading(true);
+    setDownloadProgress(0);
+    setDownloadSpeed('');
+
+    liteRTService.setDownloadCallbacks(
+      (progress, speed) => {
+        setDownloadProgress(progress);
+        setDownloadSpeed(speed);
+      },
+      () => {
+        setDownloading(false);
+        selectModel(model);
+      },
+      () => {
+        setDownloading(false);
+      }
+    );
+
+    liteRTService.startDownload();
+  };
+
+  const cancelDownload = () => {
+    liteRTService.cancelDownload();
+    setDownloading(false);
+    setDownloadProgress(0);
+    setDownloadSpeed('');
+  };
+
+  const handleModelSelect = (model: Model) => {
+    if (model.modelTag === ModelTag.LiteRT) {
+      startDownload(model);
+      return;
+    }
+    selectModel(model);
   };
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -194,12 +243,35 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
                   <Text style={styles.closeButtonText}>×</Text>
                 </TouchableOpacity>
               </View>
-              <FlatList
-                data={models}
-                renderItem={renderModelItem}
-                keyExtractor={item => item.modelId}
-                style={styles.modelList}
-              />
+              {downloading ? (
+                <View style={styles.downloadContainer}>
+                  <Text style={styles.downloadTitle}>Downloading Gemma 4 E2B</Text>
+                  <Text style={styles.downloadSize}>2.59 GB</Text>
+                  <View style={styles.progressBarBg}>
+                    <View
+                      style={[
+                        styles.progressBarFill,
+                        { width: `${Math.round(downloadProgress * 100)}%` },
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.downloadPercent}>
+                    {Math.round(downloadProgress * 100)}%{downloadSpeed ? `  •  ${downloadSpeed}` : ''}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={cancelDownload}>
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <FlatList
+                  data={models}
+                  renderItem={renderModelItem}
+                  keyExtractor={item => item.modelId}
+                  style={styles.modelList}
+                />
+              )}
             </Animated.View>
           </TouchableWithoutFeedback>
         </View>
@@ -278,5 +350,51 @@ const createStyles = (colors: ColorScheme) =>
     checkIcon: {
       width: 16,
       height: 16,
+    },
+    downloadContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+    },
+    downloadTitle: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    downloadSize: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginBottom: 16,
+    },
+    progressBarBg: {
+      width: '100%',
+      height: 6,
+      backgroundColor: colors.borderLight,
+      borderRadius: 3,
+      overflow: 'hidden',
+    },
+    progressBarFill: {
+      height: '100%',
+      backgroundColor: colors.primary,
+      borderRadius: 3,
+    },
+    downloadPercent: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 8,
+    },
+    cancelButton: {
+      marginTop: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 6,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: colors.borderLight,
+    },
+    cancelButtonText: {
+      fontSize: 13,
+      color: colors.textSecondary,
     },
   });

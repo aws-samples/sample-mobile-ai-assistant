@@ -10,6 +10,11 @@ final class LiteRTModule: RCTEventEmitter, @unchecked Sendable {
   private var isGenerating = false
   private var isInitializing = false
 
+  deinit {
+    conversation = nil
+    engine = nil
+  }
+
   override func supportedEvents() -> [String] {
     return ["onLiteRTToken", "onLiteRTComplete", "onLiteRTError"]
   }
