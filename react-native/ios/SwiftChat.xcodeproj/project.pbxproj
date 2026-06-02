@@ -26,6 +26,7 @@
 		3A932E722FC3366B0037D911 /* LiteRTLM in Frameworks */ = {isa = PBXBuildFile; productRef = 3A932E712FC3366B0037D911 /* LiteRTLM */; };
 		3A932E812FC338160037D911 /* LiteRTModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A932E7E2FC338160037D911 /* LiteRTModule.m */; };
 		3A932E822FC338160037D911 /* LiteRTModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A932E7F2FC338160037D911 /* LiteRTModule.swift */; };
+		3AB059D62FC88C270093B1AA /* InspectionTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB059D52FC88C270093B1AA /* InspectionTools.swift */; };
 		3AB093832FC3D53400BFC8DC /* LiteRTLM in Frameworks */ = {isa = PBXBuildFile; productRef = 3AB093822FC3D53400BFC8DC /* LiteRTLM */; };
 		3ADD2B4F2E26337F00171D1D /* RCTNetworkingPatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 3ADD2B4E2E26337F00171D1D /* RCTNetworkingPatch.m */; };
 		3AF67D4F2F52DCC3003CD99C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AF67D4E2F52DCC3003CD99C /* WidgetKit.framework */; };
@@ -103,6 +104,7 @@
 		3A932E7E2FC338160037D911 /* LiteRTModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LiteRTModule.m; sourceTree = "<group>"; };
 		3A932E7F2FC338160037D911 /* LiteRTModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiteRTModule.swift; sourceTree = "<group>"; };
 		3A93A5722C932FC600C9F56C /* SwiftChat.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = SwiftChat.entitlements; path = SwiftChat/SwiftChat.entitlements; sourceTree = "<group>"; };
+		3AB059D52FC88C270093B1AA /* InspectionTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspectionTools.swift; sourceTree = "<group>"; };
 		3ADD2B4D2E26337F00171D1D /* RCTNetworkingPatch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTNetworkingPatch.h; sourceTree = "<group>"; };
 		3ADD2B4E2E26337F00171D1D /* RCTNetworkingPatch.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RCTNetworkingPatch.m; sourceTree = "<group>"; };
 		3AF67D4D2F52DCC3003CD99C /* SwiftChatLiveActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SwiftChatLiveActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -267,6 +269,7 @@
 			isa = PBXGroup;
 			children = (
 				3A932E7E2FC338160037D911 /* LiteRTModule.m */,
+				3AB059D52FC88C270093B1AA /* InspectionTools.swift */,
 				3A932E7F2FC338160037D911 /* LiteRTModule.swift */,
 			);
 			path = LiteRT;
@@ -644,6 +647,7 @@
 				3ADD2B4F2E26337F00171D1D /* RCTNetworkingPatch.m in Sources */,
 				3A6846A82DA8FBBE003CFBEC /* NovaSonicService.swift in Sources */,
 				3A6846A92DA8FBBE003CFBEC /* VoiceChatModule.swift in Sources */,
+				3AB059D62FC88C270093B1AA /* InspectionTools.swift in Sources */,
 				3A1B98C72E3F955600B6AEDF /* SceneDelegate.swift in Sources */,
 				3A6846AA2DA8FBBE003CFBEC /* VoiceChatModule.m in Sources */,
 				3AFE00202E99999999999999 /* FilePasteModule.m in Sources */,

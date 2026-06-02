@@ -92,12 +92,11 @@ export const InputArea = forwardRef<InputAreaRef, InputAreaProps>(
     );
 
     const handleSend = useCallback(() => {
+      if (disabled) { return; }
       const trimmedText = text.trim();
-      if (trimmedText.length > 0 && !disabled) {
-        onSend(trimmedText);
-        setText('');
-        onHasTextChange?.(false);
-      }
+      onSend(trimmedText);
+      setText('');
+      onHasTextChange?.(false);
     }, [text, onSend, disabled, onHasTextChange]);
 
     const handleSubmitEditing = useCallback(() => {

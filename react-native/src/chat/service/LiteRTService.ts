@@ -36,11 +36,19 @@ export class LiteRTService {
     this.setupEventListeners();
   }
 
+  private onToolCallCallback?: (tc: { check_type: string; status: string; details: string }) => void;
+
+  public setOnToolCallCallback(cb?: (tc: { check_type: string; status: string; details: string }) => void) {
+    this.onToolCallCallback = cb;
+  }
+
   private setupEventListeners() {
     this.cleanup();
     if (liteRTEmitter) {
       const tokenSub = liteRTEmitter.addListener('onLiteRTToken', event => {
-        if (this.onTokenCallback) {
+        if (event.toolCall && this.onToolCallCallback) {
+          this.onToolCallCallback(event.toolCall);
+        } else if (this.onTokenCallback && event.text && !this.onToolCallCallback) {
           this.onTokenCallback(event.text);
         }
       });
@@ -108,6 +116,26 @@ export class LiteRTService {
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       this.onErrorCallback?.(`Send message failed: ${errorMessage}`);
+      return null;
+    }
+  }
+
+  public async sendInspection(
+    text: string,
+    systemPrompt: string | undefined,
+    imagePaths: string[]
+  ): Promise<{ text: string; toolCalls: Array<{ check_type: string; status: string; details: string }> } | null> {
+    if (!LiteRTModule || !this.isInitialized) {
+      this.onErrorCallback?.('LiteRT engine not ready');
+      return null;
+    }
+
+    try {
+      const result = await LiteRTModule.sendInspection(text, systemPrompt || null, imagePaths);
+      return result;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      this.onErrorCallback?.(`Inspection failed: ${errorMessage}`);
       return null;
     }
   }

@@ -254,12 +254,25 @@ Remember: ALWAYS start with a score after the user speaks`,
   },
 ];
 
+export const InspectionPromptName = 'FactoryInspect';
+
 const DefaultSystemPrompts = [
+  {
+    id: -11,
+    name: 'FactoryInspect',
+    prompt: `You are a strict factory quality inspection agent. You must REJECT any part that is not perfect. When given an image, perform exactly 3 inspections by calling the recordFinding tool:
+1. checkType="textCheck" - Check if ALL text is fully visible and readable. Fail if ANY character is obscured, smudged, or unclear.
+2. checkType="damageCheck" - Check surface condition. Fail if there are ANY scratches, dents, stains, rust, or wear marks visible.
+3. checkType="alignmentCheck" - Check label positioning. Fail if label is tilted, wrinkled, peeling, or has bubbles.
+Be extremely strict. When in doubt, mark as Fail. Minor imperfections should be marked as Fail.
+After all 3 checks, summarize the results from all 3 aspects and give the final Pass or Fail verdict with reasons.`,
+    includeHistory: false,
+  },
   {
     id: -1,
     name: 'Translate',
     prompt: `You are a professional translator specialized in Chinese-English translation.
-If the user input is in Chinese, please translate it into English; if the user input is in English, please translate it into Chinese. 
+If the user input is in Chinese, please translate it into English; if the user input is in English, please translate it into Chinese.
 Return single best translation only.
 No explanation or alternatives.`,
     includeHistory: false,

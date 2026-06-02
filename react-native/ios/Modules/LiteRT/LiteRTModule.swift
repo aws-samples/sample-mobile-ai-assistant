@@ -192,6 +192,111 @@ final class LiteRTModule: RCTEventEmitter, @unchecked Sendable {
     }
   }
 
+  @objc(sendInspection:withSystemPrompt:withImagePaths:withResolver:withRejecter:)
+  func sendInspection(_ text: String,
+                      systemPrompt: String?,
+                      imagePaths: [String],
+                      resolve: @escaping RCTPromiseResolveBlock,
+                      reject: @escaping RCTPromiseRejectBlock) {
+    let safeResolve = SendableResolve(block: resolve)
+    let safeReject = SendableReject(block: reject)
+
+    guard let engine = self.engine else {
+      reject("ENGINE_NOT_READY", "Engine is not initialized", nil)
+      return
+    }
+
+    isGenerating = true
+    print("[LiteRT-Inspect] systemPrompt: \(systemPrompt ?? "nil")")
+    print("[LiteRT-Inspect] text: \(text)")
+    print("[LiteRT-Inspect] imagePaths: \(imagePaths)")
+
+    Task {
+      do {
+        let samplerConfig = try SamplerConfig(topK: 40, topP: 0.95, temperature: 0.3)
+        let config: ConversationConfig
+        if let systemPrompt = systemPrompt, !systemPrompt.isEmpty {
+          config = ConversationConfig(
+            systemMessage: Message(systemPrompt),
+            tools: [RecordFindingTool()],
+            samplerConfig: samplerConfig
+          )
+        } else {
+          config = ConversationConfig(
+            tools: [RecordFindingTool()],
+            samplerConfig: samplerConfig
+          )
+        }
+
+        let inspectionConversation = try await engine.createConversation(with: config)
+
+        // Listen for tool call events
+        nonisolated(unsafe) var toolCallResults: [[String: String]] = []
+        let observer = NotificationCenter.default.addObserver(
+          forName: .liteRTToolCall, object: nil, queue: nil
+        ) { notification in
+          if let info = notification.userInfo as? [String: String] {
+            toolCallResults.append(info)
+            if self.hasListeners {
+              let snapshot = toolCallResults
+              DispatchQueue.main.async { [weak self] in
+                self?.sendEvent(withName: "onLiteRTToken", body: [
+                  "toolCall": info,
+                  "toolCalls": snapshot
+                ])
+              }
+            }
+          }
+        }
+
+        // Build message with images
+        var contents: [Content] = imagePaths.map { .imageFile($0) }
+        contents.append(.text(text.isEmpty ? "Inspect this image." : text))
+        let message = Message(contents: contents)
+
+        var fullResponse = ""
+        for try await chunk in inspectionConversation.sendMessageStream(message) {
+          guard self.isGenerating else { break }
+          let tokenText = chunk.toString
+          fullResponse += tokenText
+          if self.hasListeners {
+            let textSnapshot = fullResponse
+            let callsSnapshot = toolCallResults
+            DispatchQueue.main.async { [weak self] in
+              self?.sendEvent(withName: "onLiteRTToken", body: [
+                "text": textSnapshot,
+                "toolCalls": callsSnapshot
+              ])
+            }
+          }
+        }
+
+        NotificationCenter.default.removeObserver(observer)
+        self.isGenerating = false
+
+        let finalResponse = fullResponse
+        let finalToolCalls = toolCallResults
+        if self.hasListeners {
+          DispatchQueue.main.async { [weak self] in
+            self?.sendEvent(withName: "onLiteRTComplete", body: [
+              "text": finalResponse,
+              "toolCalls": finalToolCalls
+            ])
+          }
+        }
+
+        await MainActor.run {
+          safeResolve(["text": finalResponse, "toolCalls": finalToolCalls])
+        }
+      } catch {
+        self.isGenerating = false
+        await MainActor.run {
+          safeReject("INSPECTION_ERROR", "Inspection failed: \(error.localizedDescription)", error)
+        }
+      }
+    }
+  }
+
   @objc(stopGeneration:withRejecter:)
   func stopGeneration(_ resolve: @escaping RCTPromiseResolveBlock,
                       reject: @escaping RCTPromiseRejectBlock) {

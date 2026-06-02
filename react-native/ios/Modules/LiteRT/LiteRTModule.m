@@ -13,6 +13,12 @@ RCT_EXTERN_METHOD(sendMessage:(NSString *)text
                   withResolver:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(sendInspection:(NSString *)text
+                  withSystemPrompt:(NSString *)systemPrompt
+                  withImagePaths:(NSArray *)imagePaths
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(stopGeneration:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject)
 

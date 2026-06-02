@@ -3,6 +3,7 @@ import { storage } from './StorageUtils.ts';
 import {
   DefaultImageSystemPrompts,
   DefaultVoiceSystemPrompts,
+  InspectionPromptName,
   getDefaultSystemPrompts,
 } from './Constants.ts';
 
@@ -131,6 +132,19 @@ export function getSystemPrompts(type?: string): SystemPrompt[] {
         } else {
           currentSystemPrompts = [...currentSystemPrompts, defaultAppPrompt];
         }
+        saveAllSystemPrompts(currentSystemPrompts);
+      }
+    }
+    // Migration: Add FactoryInspect prompt if missing
+    const hasInspect = currentSystemPrompts.some(
+      p => p.name === InspectionPromptName
+    );
+    if (!hasInspect) {
+      const defaultInspect = getDefaultSystemPrompts().find(
+        p => p.name === InspectionPromptName
+      );
+      if (defaultInspect) {
+        currentSystemPrompts = [...currentSystemPrompts, defaultInspect];
         saveAllSystemPrompts(currentSystemPrompts);
       }
     }
