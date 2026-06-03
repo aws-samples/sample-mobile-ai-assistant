@@ -3,9 +3,10 @@ import { storage } from './StorageUtils.ts';
 import {
   DefaultImageSystemPrompts,
   DefaultVoiceSystemPrompts,
-  InspectionPromptName,
+  AgentPromptNames,
   getDefaultSystemPrompts,
 } from './Constants.ts';
+import { isLiteRTModelReady } from '../chat/service/LiteRTService.ts';
 
 const keyPrefix = 'bedrock/';
 const systemPromptsKey = keyPrefix + 'systemPromptsKey';
@@ -135,18 +136,16 @@ export function getSystemPrompts(type?: string): SystemPrompt[] {
         saveAllSystemPrompts(currentSystemPrompts);
       }
     }
-    // Migration: Add FactoryInspect prompt if missing
-    const hasInspect = currentSystemPrompts.some(
-      p => p.name === InspectionPromptName
+    // Migration: Add any built-in agent prompts that are missing
+    const existing = currentSystemPrompts ?? [];
+    const missingAgentPrompts = getDefaultSystemPrompts().filter(
+      dp =>
+        AgentPromptNames.includes(dp.name) &&
+        !existing.some(p => p.name === dp.name)
     );
-    if (!hasInspect) {
-      const defaultInspect = getDefaultSystemPrompts().find(
-        p => p.name === InspectionPromptName
-      );
-      if (defaultInspect) {
-        currentSystemPrompts = [...currentSystemPrompts, defaultInspect];
-        saveAllSystemPrompts(currentSystemPrompts);
-      }
+    if (missingAgentPrompts.length > 0) {
+      currentSystemPrompts = [...existing, ...missingAgentPrompts];
+      saveAllSystemPrompts(currentSystemPrompts);
     }
   } else {
     currentSystemPrompts = getDefaultSystemPrompts();
@@ -162,6 +161,12 @@ export function getSystemPrompts(type?: string): SystemPrompt[] {
       ? currentSystemPrompts.filter(p => p.promptType === type)
       : currentSystemPrompts.filter(p => p.promptType === undefined);
     saveAllSystemPrompts(getDefaultSystemPrompts());
+  }
+  // Hide on-device agent prompts until the model is downloaded
+  if (!isLiteRTModelReady()) {
+    currentSystemPrompts = currentSystemPrompts.filter(
+      p => !AgentPromptNames.includes(p.name)
+    );
   }
   return currentSystemPrompts;
 }

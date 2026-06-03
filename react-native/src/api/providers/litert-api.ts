@@ -4,13 +4,15 @@ import {
   TextContent,
   ImageContent,
 } from '../BedrockMessageConvertor.ts';
-import { liteRTService } from '../../chat/service/LiteRTService.ts';
+import {
+  liteRTService,
+  AgentToolCall,
+} from '../../chat/service/LiteRTService.ts';
 import { getTextModel } from '../../storage/StorageUtils.ts';
-import { InspectionPromptName } from '../../storage/Constants.ts';
 import type { ChatCallbackFunction } from '../types.ts';
 import RNFS from 'react-native-fs';
 
-export const INSPECTION_PREFIX = '<!--INSPECTION-->';
+export const AGENT_PREFIX = '<!--AGENT-->';
 
 export const invokeLiteRTWithCallBack = async (
   messages: BedrockMessage[],
@@ -30,11 +32,11 @@ export const invokeLiteRTWithCallBack = async (
     .map(c => (c as TextContent).text)
     .join('\n');
 
-  // Default prompt for inspection mode
-  if (prompt?.name === InspectionPromptName) {
-    if (!textContent || textContent === InspectionPromptName) {
-      textContent = 'Inspect this image.';
-    }
+  // Agent mode is triggered by any prompt flagged isAgent
+  const isAgentMode = prompt?.isAgent === true;
+
+  if (isAgentMode && (!textContent || textContent === prompt?.name)) {
+    textContent = 'Inspect this image.';
   }
 
   if (!textContent) {
@@ -45,7 +47,11 @@ export const invokeLiteRTWithCallBack = async (
   if (!liteRTService.getIsInitialized()) {
     const success = await liteRTService.initialize();
     if (!success) {
-      callback('Failed to initialize on-device model. Please check model status in Settings.', true, false);
+      callback(
+        'Failed to initialize on-device model. Please check model status in Settings.',
+        true,
+        false
+      );
       return;
     }
   }
@@ -54,33 +60,6 @@ export const invokeLiteRTWithCallBack = async (
   if (messages.length === 1) {
     await liteRTService.resetConversation();
   }
-
-  const startTime = Date.now();
-
-  liteRTService.setCallbacks(
-    (text: string) => {
-      if (shouldStop()) {
-        liteRTService.stopGeneration();
-        callback(text || '...', true, true);
-        return;
-      }
-      callback(text, false, false);
-    },
-    (text: string) => {
-      const elapsed = Date.now() - startTime;
-      const tokenCount = text.split(/\s+/).length;
-      const usage: Usage = {
-        modelName: getTextModel().modelName,
-        inputTokens: 0,
-        outputTokens: tokenCount,
-        totalTokens: tokenCount,
-      };
-      callback(text, true, false, usage);
-    },
-    (errorMsg: string) => {
-      callback(`Error: ${errorMsg}`, true, false);
-    }
-  );
 
   // Extract image paths from message content
   const imageContents = lastMessage.content.filter(
@@ -99,29 +78,35 @@ export const invokeLiteRTWithCallBack = async (
     }
   }
 
-  // Inspection mode: use tool calling with node-style streaming display
-  if (prompt?.name === InspectionPromptName && imagePaths && imagePaths.length > 0) {
-    const steps: Array<{ check_type: string; status: string; details: string }> = [];
+  // Agent mode: tool calling with node-style display
+  if (isAgentMode && imagePaths && imagePaths.length > 0) {
+    const systemPrompt = prompt?.prompt || '';
+    const steps: AgentToolCall[] = [];
     let streamingText = '';
 
-    const formatInspectionData = (isComplete: boolean) => {
-      return INSPECTION_PREFIX + JSON.stringify({
-        steps,
-        finalText: streamingText || undefined,
-        isStreaming: !isComplete,
-      });
+    const formatAgentData = (isComplete: boolean) => {
+      return (
+        AGENT_PREFIX +
+        JSON.stringify({
+          steps,
+          finalText: streamingText || undefined,
+          isStreaming: !isComplete,
+        })
+      );
     };
 
     liteRTService.setCallbacks(
       (text: string) => {
         if (shouldStop()) {
           liteRTService.stopGeneration();
-          callback(formatInspectionData(true), true, true);
+          callback(formatAgentData(true), true, true);
           return;
         }
-        if (steps.length >= 3 && text) {
+        // The final summary always comes after tool calls — stream it once
+        // at least one finding has been recorded (ignore any pre-tool thinking text).
+        if (steps.length >= 1 && text) {
           streamingText = text;
-          callback(formatInspectionData(false), false, false);
+          callback(formatAgentData(false), false, false);
         }
       },
       undefined,
@@ -130,16 +115,18 @@ export const invokeLiteRTWithCallBack = async (
       }
     );
 
-    liteRTService.setOnToolCallCallback((tc) => {
+    liteRTService.setOnToolCallCallback(tc => {
       steps.push(tc);
       streamingText = '';
-      callback(formatInspectionData(false), false, false);
-      if (steps.length >= 3) {
-        liteRTService.setOnToolCallCallback(undefined);
-      }
+      callback(formatAgentData(false), false, false);
     });
 
-    const result = await liteRTService.sendInspection(textContent, prompt?.prompt, imagePaths);
+    const result = await liteRTService.sendAgent(
+      textContent,
+      systemPrompt,
+      imagePaths
+    );
+
     liteRTService.setOnToolCallCallback(undefined);
 
     if (result) {
@@ -150,10 +137,35 @@ export const invokeLiteRTWithCallBack = async (
         outputTokens: result.text.split(/\s+/).length,
         totalTokens: result.text.split(/\s+/).length,
       };
-      callback(formatInspectionData(true), true, false, usage);
+      callback(formatAgentData(true), true, false, usage);
     }
     return;
   }
+
+  // Normal chat mode
+  liteRTService.setCallbacks(
+    (text: string) => {
+      if (shouldStop()) {
+        liteRTService.stopGeneration();
+        callback(text || '...', true, true);
+        return;
+      }
+      callback(text, false, false);
+    },
+    (text: string) => {
+      const tokenCount = text.split(/\s+/).length;
+      const usage: Usage = {
+        modelName: getTextModel().modelName,
+        inputTokens: 0,
+        outputTokens: tokenCount,
+        totalTokens: tokenCount,
+      };
+      callback(text, true, false, usage);
+    },
+    (errorMsg: string) => {
+      callback(`Error: ${errorMsg}`, true, false);
+    }
+  );
 
   const systemPromptText = prompt?.prompt || undefined;
   await liteRTService.sendMessage(textContent, systemPromptText, imagePaths);

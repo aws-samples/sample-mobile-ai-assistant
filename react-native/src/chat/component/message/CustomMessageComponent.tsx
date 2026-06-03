@@ -496,10 +496,10 @@ const CustomMessageComponent: React.FC<CustomMessageProps> = ({
     }
 
     if (!isUser.current) {
-      const inspectionPrefix = '<!--INSPECTION-->';
-      if (currentMessage.text.startsWith(inspectionPrefix)) {
+      const agentPrefix = '<!--AGENT-->';
+      if (currentMessage.text.startsWith(agentPrefix)) {
         try {
-          const data = JSON.parse(currentMessage.text.slice(inspectionPrefix.length));
+          const data = JSON.parse(currentMessage.text.slice(agentPrefix.length));
           return (
             <InspectionNodeView
               steps={data.steps}

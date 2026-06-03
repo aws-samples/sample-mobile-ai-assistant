@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { Model, ModelTag, SystemPrompt } from '../types/Chat.ts';
 import {
   getDeepSeekApiKey,
@@ -117,13 +118,17 @@ export const BedrockThinkingModels = [
 ];
 export const BedrockVoiceModels = ['Nova Sonic'];
 
-export const LiteRTModels: Model[] = [
-  {
-    modelName: 'Gemma 4 E2B',
-    modelId: 'gemma-4-E2B-it',
-    modelTag: ModelTag.LiteRT,
-  },
-];
+// LiteRT on-device models are iOS-only (the LiteRT-LM xcframework has no Android build here)
+export const LiteRTModels: Model[] =
+  Platform.OS === 'ios'
+    ? [
+        {
+          modelName: 'Gemma 4 E2B',
+          modelId: 'gemma-4-E2B-it',
+          modelTag: ModelTag.LiteRT,
+        },
+      ]
+    : [];
 
 export const DefaultTextModel = [
   {
@@ -254,20 +259,36 @@ Remember: ALWAYS start with a score after the user speaks`,
   },
 ];
 
-export const InspectionPromptName = 'FactoryInspect';
-
-const DefaultSystemPrompts = [
+// iOS-only on-device agent prompts. Each drives LiteRT tool calling via recordFinding.
+// To add a new scenario: add an entry here with isAgent: true and describe the steps.
+const AgentSystemPrompts: SystemPrompt[] = [
   {
     id: -11,
     name: 'FactoryInspect',
     prompt: `You are a strict factory quality inspection agent. You must REJECT any part that is not perfect. When given an image, perform exactly 3 inspections by calling the recordFinding tool:
-1. checkType="textCheck" - Check if ALL text is fully visible and readable. Fail if ANY character is obscured, smudged, or unclear.
-2. checkType="damageCheck" - Check surface condition. Fail if there are ANY scratches, dents, stains, rust, or wear marks visible.
-3. checkType="alignmentCheck" - Check label positioning. Fail if label is tilted, wrinkled, peeling, or has bubbles.
+1. stepName="textCheck" - Check if ALL text is fully visible and readable. Fail if ANY character is obscured, smudged, or unclear.
+2. stepName="damageCheck" - Check surface condition. Fail if there are ANY scratches, dents, stains, rust, or wear marks visible.
+3. stepName="alignmentCheck" - Check label positioning. Fail if label is tilted, wrinkled, peeling, or has bubbles.
 Be extremely strict. When in doubt, mark as Fail. Minor imperfections should be marked as Fail.
-After all 3 checks, summarize the results from all 3 aspects and give the final Pass or Fail verdict with reasons.`,
+After all checks, summarize the results and give the final Pass or Fail verdict with reasons.`,
     includeHistory: false,
+    isAgent: true,
   },
+  {
+    id: -12,
+    name: 'InvoiceCheck',
+    prompt: `You are an invoice auditing agent. When given an invoice image, perform exactly 3 checks by calling the recordFinding tool:
+1. stepName="amountCheck" - Verify the total amount is clearly printed and legible. Fail if blurry or missing.
+2. stepName="titleCheck" - Verify the company title/header is present and correct. Fail if missing or unclear.
+3. stepName="taxIdCheck" - Verify the tax ID number format is valid and readable. Fail if malformed or obscured.
+After all checks, summarize the results and give the final Pass or Fail verdict with reasons.`,
+    includeHistory: false,
+    isAgent: true,
+  },
+];
+
+const DefaultSystemPrompts = [
+  ...(Platform.OS === 'ios' ? AgentSystemPrompts : []),
   {
     id: -1,
     name: 'Translate',
@@ -286,6 +307,9 @@ No explanation or alternatives.`,
   ...DefaultVoiceSystemPrompts,
   ...DefaultImageSystemPrompts,
 ];
+
+// Names of all built-in agent prompts (used for migration / hiding before model download)
+export const AgentPromptNames = AgentSystemPrompts.map(p => p.name);
 
 export const DefaultVoicePrompt =
   'You are a friendly assistant. The user and you will engage in a spoken dialog exchanging the transcripts of a natural real-time conversation. Keep your responses short, generally within five sentences for chatty scenarios.';

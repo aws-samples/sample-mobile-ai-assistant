@@ -192,12 +192,12 @@ final class LiteRTModule: RCTEventEmitter, @unchecked Sendable {
     }
   }
 
-  @objc(sendInspection:withSystemPrompt:withImagePaths:withResolver:withRejecter:)
-  func sendInspection(_ text: String,
-                      systemPrompt: String?,
-                      imagePaths: [String],
-                      resolve: @escaping RCTPromiseResolveBlock,
-                      reject: @escaping RCTPromiseRejectBlock) {
+  @objc(sendAgent:withSystemPrompt:withImagePaths:withResolver:withRejecter:)
+  func sendAgent(_ text: String,
+                 systemPrompt: String,
+                 imagePaths: [String],
+                 resolve: @escaping RCTPromiseResolveBlock,
+                 reject: @escaping RCTPromiseRejectBlock) {
     let safeResolve = SendableResolve(block: resolve)
     let safeReject = SendableReject(block: reject)
 
@@ -207,26 +207,15 @@ final class LiteRTModule: RCTEventEmitter, @unchecked Sendable {
     }
 
     isGenerating = true
-    print("[LiteRT-Inspect] systemPrompt: \(systemPrompt ?? "nil")")
-    print("[LiteRT-Inspect] text: \(text)")
-    print("[LiteRT-Inspect] imagePaths: \(imagePaths)")
 
     Task {
       do {
         let samplerConfig = try SamplerConfig(topK: 40, topP: 0.95, temperature: 0.3)
-        let config: ConversationConfig
-        if let systemPrompt = systemPrompt, !systemPrompt.isEmpty {
-          config = ConversationConfig(
-            systemMessage: Message(systemPrompt),
-            tools: [RecordFindingTool()],
-            samplerConfig: samplerConfig
-          )
-        } else {
-          config = ConversationConfig(
-            tools: [RecordFindingTool()],
-            samplerConfig: samplerConfig
-          )
-        }
+        let config = ConversationConfig(
+          systemMessage: Message(systemPrompt),
+          tools: [RecordFindingTool()],
+          samplerConfig: samplerConfig
+        )
 
         let inspectionConversation = try await engine.createConversation(with: config)
 

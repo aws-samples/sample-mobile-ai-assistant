@@ -179,6 +179,7 @@ export interface SystemPrompt {
   includeHistory: boolean;
   promptType?: string; // 'image' 'voice' or undefined
   allowInterruption?: boolean;
+  isAgent?: boolean; // true => runs as on-device LiteRT tool-calling agent
 }
 
 export interface BedrockChunk {

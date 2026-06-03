@@ -4,14 +4,14 @@ import { useTheme } from '../../../theme';
 import Markdown from '../../../core/markdown/Markdown';
 import { ChatStatus } from '../../../types/Chat';
 
-export interface InspectionStep {
-  check_type: string;
+export interface AgentStep {
+  stepName: string;
   status: string;
   details: string;
 }
 
 interface InspectionNodeViewProps {
-  steps: InspectionStep[];
+  steps: AgentStep[];
   finalText?: string;
   isStreaming?: boolean;
   renderer?: any;
@@ -59,22 +59,25 @@ export const InspectionNodeView: React.FC<InspectionNodeViewProps> = ({
           <View key={index} style={styles.nodeRow}>
             {/* Left timeline */}
             <View style={styles.timelineColumn}>
-              {/* Vertical line */}
               {!isLast && (
                 <View
-                  style={[
-                    styles.line,
-                    { backgroundColor: lineColor, top: 12 },
-                  ]}
+                  style={[styles.line, { backgroundColor: lineColor, top: 12 }]}
                 />
               )}
-              {/* Dot */}
               <View style={[styles.dot, { backgroundColor: dotColor }]} />
             </View>
             {/* Right content */}
             <View style={styles.contentColumn}>
               <Text style={[styles.stepTitle, { color: colors.textSecondary }]}>
-                Call tool: <Text style={{ color: colors.text, fontWeight: '600', fontSize: 14 }}>{step.check_type}</Text>
+                Call tool:{' '}
+                <Text
+                  style={{
+                    color: colors.text,
+                    fontWeight: '600',
+                    fontSize: 14,
+                  }}>
+                  {step.stepName}
+                </Text>
               </Text>
               <View
                 style={[
@@ -85,7 +88,13 @@ export const InspectionNodeView: React.FC<InspectionNodeViewProps> = ({
                   },
                 ]}>
                 <View style={styles.markdownWrap}>
-                  <Markdown value={`${step.status === 'Pass' ? '✅' : '❌'} ${step.status}: ${step.details}`} chatStatus={ChatStatus.Complete} styles={toolResultStyles} renderer={renderer} tokenizer={tokenizer} />
+                  <Markdown
+                    value={`${step.status === 'Pass' ? '✅' : '❌'} ${step.status}: ${step.details}`}
+                    chatStatus={ChatStatus.Complete}
+                    styles={toolResultStyles}
+                    renderer={renderer}
+                    tokenizer={tokenizer}
+                  />
                 </View>
               </View>
             </View>
@@ -93,19 +102,29 @@ export const InspectionNodeView: React.FC<InspectionNodeViewProps> = ({
         );
       })}
 
-      {/* Final verdict or streaming text */}
+      {/* Final verdict */}
       {finalText ? (
         <View style={styles.nodeRow}>
           <View style={styles.timelineColumn}>
-            <View style={[
-              styles.dot,
-              { backgroundColor: grayDot },
-              (finalText.startsWith('**') || finalText.startsWith('#')) && { marginTop: 10 },
-            ]} />
+            <View
+              style={[
+                styles.dot,
+                { backgroundColor: grayDot },
+                (finalText.startsWith('**') || finalText.startsWith('#')) && {
+                  marginTop: 10,
+                },
+              ]}
+            />
           </View>
           <View style={styles.contentColumn}>
             <View style={styles.markdownWrap}>
-              <Markdown value={finalText} chatStatus={ChatStatus.Complete} styles={finalTextStyles} renderer={renderer} tokenizer={tokenizer} />
+              <Markdown
+                value={finalText}
+                chatStatus={ChatStatus.Complete}
+                styles={finalTextStyles}
+                renderer={renderer}
+                tokenizer={tokenizer}
+              />
             </View>
           </View>
         </View>

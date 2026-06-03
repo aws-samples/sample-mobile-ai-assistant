@@ -5,6 +5,7 @@ import {
   Platform,
 } from 'react-native';
 import RNFS from 'react-native-fs';
+import { storage } from '../../storage/StorageUtils.ts';
 
 const { LiteRTModule } = NativeModules;
 const liteRTEmitter = LiteRTModule
@@ -17,6 +18,25 @@ const LITERT_MODEL_DIR = `${RNFS.LibraryDirectoryPath}/Application Support/LiteR
 const LITERT_MODEL_PATH = `${LITERT_MODEL_DIR}/gemma-4-E2B-it.litertlm`;
 
 export { LITERT_MODEL_PATH };
+
+const LITERT_MODEL_READY_KEY = 'bedrock/litertModelReadyKey';
+
+// Sync flag (cached in MMKV) indicating the on-device model has been downloaded.
+// Used to conditionally show on-device-only prompts without an async file check.
+export function isLiteRTModelReady(): boolean {
+  return storage.getBoolean(LITERT_MODEL_READY_KEY) ?? false;
+}
+
+export function setLiteRTModelReady(ready: boolean) {
+  storage.set(LITERT_MODEL_READY_KEY, ready);
+}
+
+// A recordFinding tool call event from the agent loop.
+export interface AgentToolCall {
+  stepName: string;
+  status: string;
+  details: string;
+}
 
 export class LiteRTService {
   private isInitialized = false;
@@ -36,9 +56,9 @@ export class LiteRTService {
     this.setupEventListeners();
   }
 
-  private onToolCallCallback?: (tc: { check_type: string; status: string; details: string }) => void;
+  private onToolCallCallback?: (tc: AgentToolCall) => void;
 
-  public setOnToolCallCallback(cb?: (tc: { check_type: string; status: string; details: string }) => void) {
+  public setOnToolCallCallback(cb?: (tc: AgentToolCall) => void) {
     this.onToolCallCallback = cb;
   }
 
@@ -48,7 +68,7 @@ export class LiteRTService {
       const tokenSub = liteRTEmitter.addListener('onLiteRTToken', event => {
         if (event.toolCall && this.onToolCallCallback) {
           this.onToolCallCallback(event.toolCall);
-        } else if (this.onTokenCallback && event.text && !this.onToolCallCallback) {
+        } else if (this.onTokenCallback && event.text) {
           this.onTokenCallback(event.text);
         }
       });
@@ -120,22 +140,26 @@ export class LiteRTService {
     }
   }
 
-  public async sendInspection(
+  public async sendAgent(
     text: string,
-    systemPrompt: string | undefined,
+    systemPrompt: string,
     imagePaths: string[]
-  ): Promise<{ text: string; toolCalls: Array<{ check_type: string; status: string; details: string }> } | null> {
+  ): Promise<{ text: string; toolCalls: AgentToolCall[] } | null> {
     if (!LiteRTModule || !this.isInitialized) {
       this.onErrorCallback?.('LiteRT engine not ready');
       return null;
     }
 
     try {
-      const result = await LiteRTModule.sendInspection(text, systemPrompt || null, imagePaths);
+      const result = await LiteRTModule.sendAgent(
+        text,
+        systemPrompt,
+        imagePaths
+      );
       return result;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      this.onErrorCallback?.(`Inspection failed: ${errorMessage}`);
+      this.onErrorCallback?.(`Agent failed: ${errorMessage}`);
       return null;
     }
   }
@@ -169,6 +193,25 @@ export class LiteRTService {
 
   public getIsInitialized(): boolean {
     return this.isInitialized;
+  }
+
+  // Sync the cached ready flag with the actual model file (handles models
+  // downloaded before the flag existed). Safe to call on app startup.
+  public async syncModelReadyFlag(): Promise<void> {
+    if (Platform.OS !== 'ios') {
+      return;
+    }
+    try {
+      const exists = await RNFS.exists(LITERT_MODEL_PATH);
+      if (exists) {
+        const stat = await RNFS.stat(LITERT_MODEL_PATH);
+        setLiteRTModelReady(Number(stat.size) > 2500000000);
+      } else {
+        setLiteRTModelReady(false);
+      }
+    } catch {
+      // ignore
+    }
   }
 
   public cleanup() {
@@ -213,6 +256,7 @@ export class LiteRTService {
     if (fileExists) {
       const stat = await RNFS.stat(LITERT_MODEL_PATH);
       if (Number(stat.size) > 2500000000) {
+        setLiteRTModelReady(true);
         this.onDownloadCompleteCallback?.();
         return;
       }
@@ -262,6 +306,7 @@ export class LiteRTService {
       const result = await promise;
       this._downloading = false;
       if (result.statusCode === 200) {
+        setLiteRTModelReady(true);
         this.onDownloadCompleteCallback?.();
       } else {
         await RNFS.unlink(LITERT_MODEL_PATH).catch(() => {});
@@ -281,6 +326,7 @@ export class LiteRTService {
     this._downloading = false;
     this._downloadProgress = 0;
     this._downloadSpeed = '';
+    setLiteRTModelReady(false);
     // Remove incomplete file
     RNFS.unlink(LITERT_MODEL_PATH).catch(() => {});
   }
