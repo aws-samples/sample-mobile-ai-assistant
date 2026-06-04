@@ -136,15 +136,22 @@ export function getSystemPrompts(type?: string): SystemPrompt[] {
         saveAllSystemPrompts(currentSystemPrompts);
       }
     }
-    // Migration: Add any built-in agent prompts that are missing
+    // Migration: agent prompts are built-in demos — always refresh to the
+    // latest code version (drop stale cached copies, re-add current ones).
     const existing = currentSystemPrompts ?? [];
-    const missingAgentPrompts = getDefaultSystemPrompts().filter(
-      dp =>
-        AgentPromptNames.includes(dp.name) &&
-        !existing.some(p => p.name === dp.name)
+    const latestAgentPrompts = getDefaultSystemPrompts().filter(dp =>
+      AgentPromptNames.includes(dp.name)
     );
-    if (missingAgentPrompts.length > 0) {
-      currentSystemPrompts = [...existing, ...missingAgentPrompts];
+    const nonAgent = existing.filter(p => !AgentPromptNames.includes(p.name));
+    const merged = [...nonAgent, ...latestAgentPrompts];
+    const changed =
+      merged.length !== existing.length ||
+      latestAgentPrompts.some(lp => {
+        const old = existing.find(p => p.name === lp.name);
+        return !old || old.prompt !== lp.prompt;
+      });
+    if (changed) {
+      currentSystemPrompts = merged;
       saveAllSystemPrompts(currentSystemPrompts);
     }
   } else {

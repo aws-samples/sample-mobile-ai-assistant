@@ -274,17 +274,6 @@ After all checks, summarize the results and give the final Pass or Fail verdict 
     includeHistory: false,
     isAgent: true,
   },
-  {
-    id: -12,
-    name: 'InvoiceCheck',
-    prompt: `You are an invoice auditing agent. When given an invoice image, perform exactly 3 checks by calling the recordFinding tool:
-1. stepName="amountCheck" - Verify the total amount is clearly printed and legible. Fail if blurry or missing.
-2. stepName="titleCheck" - Verify the company title/header is present and correct. Fail if missing or unclear.
-3. stepName="taxIdCheck" - Verify the tax ID number format is valid and readable. Fail if malformed or obscured.
-After all checks, summarize the results and give the final Pass or Fail verdict with reasons.`,
-    includeHistory: false,
-    isAgent: true,
-  },
 ];
 
 const DefaultSystemPrompts = [
