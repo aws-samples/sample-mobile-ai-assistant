@@ -169,10 +169,10 @@ export function getSystemPrompts(type?: string): SystemPrompt[] {
       : currentSystemPrompts.filter(p => p.promptType === undefined);
     saveAllSystemPrompts(getDefaultSystemPrompts());
   }
-  // Hide on-device agent prompts until the model is downloaded
+  // Hide on-device agent prompts (built-in or user-created) until the model is downloaded
   if (!isLiteRTModelReady()) {
     currentSystemPrompts = currentSystemPrompts.filter(
-      p => !AgentPromptNames.includes(p.name)
+      p => !p.isAgent && !AgentPromptNames.includes(p.name)
     );
   }
   return currentSystemPrompts;
