@@ -93,18 +93,18 @@ VifChat 是一款快速响应的 AI 助手，采用 [React Native](https://react
 curl -fsSL https://raw.githubusercontent.com/aws-samples/sample-vif-chat-app/main/server/install.sh | bash
 ```
 
-默认部署到**当前 AWS profile 的账户**，region 取 `$AWS_REGION` 或 `aws configure` 的默认值（都未设置则为 `us-east-1`），堆栈名为 `SwiftChat`。等待约 3-4 分钟，您会看到 **API URL**、**API Key** 获取链接，以及可用手机扫描自动配置的二维码。
+默认部署到**当前 AWS profile 的账户**，region 取 `$AWS_REGION` 或 `aws configure` 的默认值（都未设置则为 `us-east-1`），堆栈名为 `VifChat`。等待约 3-4 分钟，您会看到 **API URL**、**API Key** 获取链接，以及可用手机扫描自动配置的二维码。
 
 需要指定其他目标时：
 
 ```bash
-./install.sh --region us-west-2 --stack MySwiftChat --profile myprofile
+./install.sh --region us-west-2 --stack MyVifChat --profile myprofile
 ```
 
 | 参数 | 作用 | 默认值 |
 |---|---|---|
 | `--region` | 部署到的 AWS region | `$AWS_REGION` 或 `us-east-1` |
-| `--stack` | CloudFormation 堆栈名 | `SwiftChat` |
+| `--stack` | CloudFormation 堆栈名 | `VifChat` |
 | `--profile` | 使用的 AWS CLI profile | 当前默认 profile |
 
 ### 步骤 2：打开应用并使用 API URL 和 API Key 进行设置
@@ -395,7 +395,7 @@ npm run ios
 ### 构建 macOS
 
 1. 执行 `npm start`。
-2. 双击 `ios/SwiftChat.xcworkspace` 在 Xcode 中打开项目。
+2. 双击 `ios/VifChat.xcworkspace` 在 Xcode 中打开项目。
 3. 将构建目标更改为 `My Mac (Mac Catalyst)` 然后点击 ▶ 运行按钮。
 
 ## API 参考
