@@ -19,14 +19,6 @@ import type { ChatCallbackFunction } from '../types.ts';
 
 const MAX_TOKENS = 64000;
 
-// Temporary diagnostics — set false to silence. Logs are prefixed [mantle].
-const MANTLE_DEBUG = false;
-const dlog = (...args: unknown[]) => {
-  if (MANTLE_DEBUG) {
-    console.log('[mantle]', ...args);
-  }
-};
-
 const thinkingEnabledForModel = (): boolean =>
   BedrockThinkingModels.includes(getTextModel().modelName) &&
   getThinkingEnabled();
@@ -62,17 +54,12 @@ export const invokeBedrockMantle = async (
   const timeoutId = setTimeout(() => controller.abort(), 60000);
   let buffer = '';
 
-  const emit = (done: boolean, needStop: boolean, usage?: Usage) => {
-    dlog('emit', { len: completeMessage.length, done, needStop, hasUsage: !!usage });
+  const emit = (done: boolean, needStop: boolean, usage?: Usage) =>
     callback(completeMessage, done, needStop, usage, completeReasoning);
-  };
 
-  dlog('start', { apiMode, isServerMode, modelId, url });
-  const t0 = Date.now();
   try {
     const response = await fetch(url, options);
     clearTimeout(timeoutId);
-    dlog('response', { status: response.status, ms: Date.now() - t0 });
     const respBody = response.body;
     if (!respBody) {
       callback('Request error: empty response', true, true);
@@ -81,7 +68,6 @@ export const invokeBedrockMantle = async (
     const reader = respBody.getReader();
     const decoder = new TextDecoder();
     let appendTimes = 0;
-    let readCount = 0;
     let markedComplete = false;
     while (true) {
       if (shouldStop()) {
@@ -93,15 +79,7 @@ export const invokeBedrockMantle = async (
         return;
       }
       const { done, value } = await reader.read();
-      const chunk = decoder.decode(value, { stream: true });
-      readCount++;
-      dlog('read', {
-        n: readCount,
-        httpDone: done,
-        bytes: chunk.length,
-        ms: Date.now() - t0,
-      });
-      buffer += chunk;
+      buffer += decoder.decode(value, { stream: true });
       const events = buffer.split('\n\n');
       buffer = events.pop() ?? '';
       for (const event of events) {
@@ -109,13 +87,6 @@ export const invokeBedrockMantle = async (
         if (!parsed) {
           continue;
         }
-        dlog('event', {
-          text: parsed.text,
-          reasoningLen: parsed.reasoning?.length,
-          usage: !!parsed.usage,
-          done: parsed.done,
-          err: parsed.error,
-        });
         if (parsed.error) {
           callback(
             completeMessage + '\n\n' + parsed.error,
