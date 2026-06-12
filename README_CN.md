@@ -51,12 +51,6 @@ VifChat 是一款快速响应的 AI 助手，采用 [React Native](https://react
 
 > 注意：推荐使用 Tavily 以获得最佳效果。Google 搜索首次使用需要手动验证。百度和必应目前处于测试版本，搜索结果可能不准确。
 
-## 📱 快速下载
-
-- [下载 Android 版本](https://github.com/aws-samples/sample-vif-chat-app/releases/download/2.9.0/VifChat.apk)
-- [下载 macOS 版本](https://github.com/aws-samples/sample-vif-chat-app/releases/download/2.9.0/VifChat.dmg)
-- iOS 版本：目前可通过 Xcode 本地构建使用
-
 ## Amazon Bedrock 入门指南
 
 ### 配置

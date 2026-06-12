@@ -52,12 +52,6 @@ capabilities across Android, iOS, and macOS platforms.
 
 > Note: Tavily is recommended for best results. Google Search requires manual verification on first use. Baidu and Bing are currently in beta and may return inaccurate results.
 
-## 📱 Quick Download
-
-- [Download for Android](https://github.com/aws-samples/sample-vif-chat-app/releases/download/2.9.0/VifChat.apk)
-- [Download for macOS](https://github.com/aws-samples/sample-vif-chat-app/releases/download/2.9.0/VifChat.dmg)
-- For iOS: Currently available through local build with Xcode
-
 ## Getting Started with Amazon Bedrock
 
 ### Configuration
