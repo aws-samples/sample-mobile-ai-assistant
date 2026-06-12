@@ -25,7 +25,7 @@ const backgroundTask = async () => {
 
 const androidOptions = {
   taskName: 'AppGeneration',
-  taskTitle: 'SwiftChat',
+  taskTitle: 'VifChat',
   taskDesc: 'Generating app in background...',
   taskIcon: {
     name: 'ic_launcher',

@@ -1,4 +1,4 @@
-# SwiftChat React Native
+# VifChat React Native
 
 ## Tech Stack
 

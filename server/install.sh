@@ -1,8 +1,8 @@
 #!/bin/bash
-# SwiftChat Server — one-command deploy
+# VifChat Server — one-command deploy
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/aws-samples/swift-chat/main/server/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/aws-samples/sample-vif-chat-app/main/server/install.sh | bash
 #   curl ... | bash -s -- --region us-west-2
 #   ./install.sh                                 # from cloned repo
 #   ./install.sh --region us-west-2
@@ -24,7 +24,7 @@ LINE="=================================================================="
 trap 'rc=$?; echo ""; echo "${C_RED}ERROR: install.sh failed at line $LINENO (exit $rc): $BASH_COMMAND${C_RESET}" >&2; exit $rc' ERR
 
 # ===== Self-bootstrap: if not inside the repo, clone it first =====
-REPO_URL="https://github.com/aws-samples/swift-chat.git"
+REPO_URL="https://github.com/aws-samples/sample-vif-chat-app.git"
 SELF_MARKER="server/template/SwiftChatLambda.template"
 
 if [ ! -f "$(dirname "${BASH_SOURCE[0]:-$0}")/../$SELF_MARKER" ] 2>/dev/null; then
@@ -47,13 +47,13 @@ if [ ! -f "$(dirname "${BASH_SOURCE[0]:-$0}")/../$SELF_MARKER" ] 2>/dev/null; th
 
   CLONE_DIR=$(mktemp -d)
   trap 'rm -rf "$CLONE_DIR"' EXIT
-  echo "Cloning swift-chat..."
-  if ! git clone --depth 1 --quiet "$REPO_URL" "$CLONE_DIR/swift-chat"; then
+  echo "Cloning sample-vif-chat-app..."
+  if ! git clone --depth 1 --quiet "$REPO_URL" "$CLONE_DIR/sample-vif-chat-app"; then
     echo "${C_RED}ERROR: Failed to clone repository${C_RESET}"
     exit 1
   fi
   set +e
-  bash "$CLONE_DIR/swift-chat/server/install.sh" "$@"
+  bash "$CLONE_DIR/sample-vif-chat-app/server/install.sh" "$@"
   exit $?
 fi
 
@@ -123,7 +123,7 @@ STS_OUT=$(aws sts get-caller-identity --region "$REGION" --output text --query A
 }
 ACCOUNT_ID="$STS_OUT"
 
-echo "Deploying SwiftChat → region=$REGION, stack=$STACK_NAME, account=$ACCOUNT_ID"
+echo "Deploying VifChat → region=$REGION, stack=$STACK_NAME, account=$ACCOUNT_ID"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SRC_DIR="$SCRIPT_DIR/src"

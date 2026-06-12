@@ -134,7 +134,7 @@ export const invokeBedrockWithCallBack = async (
 };
 
 /**
- * Bedrock Server SSE streaming provider (via SwiftChat Server API Gateway).
+ * Bedrock Server SSE streaming provider (via VifChat Server API Gateway).
  * Used by ChatProviderRouter when Bedrock server mode is selected.
  */
 export const invokeBedrockServerWithCallBack = async (
@@ -297,13 +297,13 @@ export const requestAllModels = async (): Promise<AllModel> => {
     ];
     return allModel;
   } catch (error) {
-    console.log('SwiftChat Server Error fetching models:', error);
+    console.log('VifChat Server Error fetching models:', error);
     clearTimeout(timeoutId);
     return { imageModel: [], textModel: [] };
   }
 };
 
-// Lists mantle model ids via the SwiftChat Server proxy for the current region.
+// Lists mantle model ids via the VifChat Server proxy for the current region.
 // Best-effort: returns [] on failure so the legacy list still loads.
 const fetchMantleModelIds = async (): Promise<string[]> => {
   const controller = new AbortController();

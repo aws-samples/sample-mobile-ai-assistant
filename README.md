@@ -1,13 +1,13 @@
-# SwiftChat — A Cross-platform AI Assistant
+# Sample Vif Chat App — A Cross-platform AI Assistant
 
 > 🚀 Your Personal AI Workspace — Chat, Create Apps, and More
 
-[![GitHub Release](https://img.shields.io/github/v/release/aws-samples/swift-chat)](https://github.com/aws-samples/swift-chat/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/aws-samples/sample-vif-chat-app)](https://github.com/aws-samples/sample-vif-chat-app/releases)
 [![License](https://img.shields.io/badge/license-MIT--0-green)](LICENSE)
 
 [中文](/README_CN.md)
 
-SwiftChat is a fast and responsive AI assistant developed with [React Native](https://reactnative.dev/) and
+VifChat is a fast and responsive AI assistant developed with [React Native](https://reactnative.dev/) and
 powered by [Amazon Bedrock](https://aws.amazon.com/bedrock/), with compatibility extending to other model providers such
 as Ollama, DeepSeek, OpenAI and OpenAI Compatible. With its minimalist design philosophy and robust privacy protection,
 it delivers real-time streaming conversations, AI image generation, instant web app creation and voice conversation
@@ -20,7 +20,7 @@ capabilities across Android, iOS, and macOS platforms.
 - 🚀 Upgrade to React Native 0.83 with New Architecture enabled (From v2.8.0).
 - 🚀 Support create or edit instant web apps with one prompt (From v2.7.0).
 - 🚀 Support Web Search for real-time information retrieval (From v2.7.0).
-- 🚀 Update SwiftChat Server with API Gateway + Lambda deployment supporting 15-minute streaming output (From v2.7.0).
+- 🚀 Update VifChat Server with API Gateway + Lambda deployment supporting 15-minute streaming output (From v2.7.0).
 - 🚀 Support Image Gallery for browsing and managing generated images (From v2.7.0).
 
 **Create App**: Generate, Edit, Share and Preview Instant Web Apps
@@ -54,8 +54,8 @@ capabilities across Android, iOS, and macOS platforms.
 
 ## 📱 Quick Download
 
-- [Download for Android](https://github.com/aws-samples/swift-chat/releases/download/2.9.0/SwiftChat.apk)
-- [Download for macOS](https://github.com/aws-samples/swift-chat/releases/download/2.9.0/SwiftChat.dmg)
+- [Download for Android](https://github.com/aws-samples/sample-vif-chat-app/releases/download/2.9.0/VifChat.apk)
+- [Download for macOS](https://github.com/aws-samples/sample-vif-chat-app/releases/download/2.9.0/VifChat.dmg)
 - For iOS: Currently available through local build with Xcode
 
 ## Getting Started with Amazon Bedrock
@@ -71,7 +71,7 @@ You can choose one of the following two methods for configuration
    long-term API
    key.
 
-2. Copy and paste the API key to the (Amazon Bedrock -> Bedrock API Key) under SwiftChat Settings page.
+2. Copy and paste the API key to the (Amazon Bedrock -> Bedrock API Key) under VifChat Settings page.
 
 3. The App will automatically get the latest model list based on the region you currently selected. If multiple models
    appear in the list, it means the configuration is successful.
@@ -79,7 +79,7 @@ You can choose one of the following two methods for configuration
 </details>
 
 <details>
-<summary><b>🔧 Configure SwiftChat Server (Click to expand)</b></summary>
+<summary><b>🔧 Configure VifChat Server (Click to expand)</b></summary>
 
 ### Architecture
 
@@ -94,7 +94,7 @@ We use **API Gateway** combined with **AWS Lambda** to enable streaming response
 **Deploy with one command:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/aws-samples/swift-chat/main/server/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/aws-samples/sample-vif-chat-app/main/server/install.sh | bash
 ```
 
 By default this deploys to **the account of your current AWS profile**, in the region from `$AWS_REGION` or your `aws configure` default (fallback: `us-east-1`), with stack name `SwiftChat`. Wait about 3-4 minutes to see your **API URL**, **API Key** obtain link, and a scannable QR code for auto-configuring the app.
@@ -114,10 +114,10 @@ To target a different account, region, or stack:
 ### Step 2: Open the App and setup with API URL and API Key
 
 1. Launch the App, open the drawer menu, and tap **Settings**.
-2. Under Amazon Bedrock → SwiftChat Server, tap the scan icon next to **API URL** to scan the QR (iOS/Android) — or paste `API URL` and `API Key` manually.
+2. Under Amazon Bedrock → VifChat Server, tap the scan icon next to **API URL** to scan the QR (iOS/Android) — or paste `API URL` and `API Key` manually.
 3. Select your Region, then tap the top right ✓ to save.
 
-Congratulations 🎉 Your SwiftChat App is ready to use!
+Congratulations 🎉 Your VifChat App is ready to use!
 
 </details>
 
@@ -179,7 +179,7 @@ Congratulations 🎉 Your SwiftChat App is ready to use!
     - `GPT-4o`
     - `GPT-4o mini`
 
-Additionally, if you have deployed and configured the [SwiftChat Server](#getting-started-with-amazon-bedrock), you
+Additionally, if you have deployed and configured the [VifChat Server](#getting-started-with-amazon-bedrock), you
 can enable the **Use Proxy** option to forward your requests.
 
 </details>
@@ -287,7 +287,7 @@ https://github.com/user-attachments/assets/ebf21b12-9c93-4d2e-a109-1d6484019838
 
 https://github.com/user-attachments/assets/c70fc2b4-8960-4a5e-b4f8-420fcd5eafd4
 
-> Note: Amazon Nova Sonic currently only available with SwiftChat server.
+> Note: Amazon Nova Sonic currently only available with VifChat server.
 
 #### Other Features
 
@@ -347,13 +347,7 @@ landscape orientation.
 
 ![](assets/animations/landscape.avif)
 
-### YouTube Video
-
-[<img src="./assets/youtube.avif">](https://www.youtube.com/watch?v=rey05WzfEbM)
-> The content in the video is an early version. For UI, architecture, and inconsistencies, please refer to the current
-> documentation.
-
-## What Makes SwiftChat Really "Swift"?
+## What Makes VifChat Really "Vif"?
 
 🚀 **Fast Launch Speed**
 
@@ -428,11 +422,11 @@ Please refer [API Reference](server/README.md)
 
 - **Android** and **macOS**: Navigate to **Settings** Page, if there is a new version, you will find it at the bottom
   of this page, then click the app version to download and install it.
-- **iOS**: If a new version is released in the [Release page](https://github.com/aws-samples/swift-chat/releases),
+- **iOS**: If a new version is released in the [Release page](https://github.com/aws-samples/sample-vif-chat-app/releases),
   update your local code, rebuild and install your app by Xcode.
 
 **Note**: After downloading a new version, please check
-the [release notes](https://github.com/aws-samples/swift-chat/releases) to see if an API version update is required.
+the [release notes](https://github.com/aws-samples/sample-vif-chat-app/releases) to see if an API version update is required.
 
 ### Upgrade API
 

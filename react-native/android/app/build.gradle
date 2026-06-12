@@ -110,7 +110,7 @@ android {
                 variant.outputs.each { output ->
                     def outputFile = output.outputFile
                     if (outputFile != null && outputFile.name.endsWith('.apk')) {
-                        def fileName = "SwiftChat.apk"
+                        def fileName = "VifChat.apk"
                         output.outputFileName = fileName
                     }
                 }
