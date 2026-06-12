@@ -13,6 +13,11 @@ import {
 } from '../../storage/StorageUtils.ts';
 import { BedrockMessage } from '../BedrockMessageConvertor.ts';
 import { isEnableThinking } from '../bedrock-api.ts';
+import {
+  buildMantleOnlyModels,
+  getMantleBaseUrl,
+  tagModelsWithApiMode,
+} from './mantle-utils.ts';
 
 type CallbackFunction = (
   result: string,
@@ -298,7 +303,17 @@ export const requestAllModelsByBedrockAPI = async (): Promise<AllModel> => {
         }
       }
 
-      return { textModel, imageModel };
+      // Merge mantle-served models (GPT-5.x only-on-mantle + apiMode tags).
+      const mantleModelIds = await fetchMantleModelIdsDirect();
+      const { models: mantleOnly, openAiIdSet } = buildMantleOnlyModels(
+        mantleModelIds,
+        ModelTag.Bedrock
+      );
+      const taggedTextModel = tagModelsWithApiMode(textModel, openAiIdSet);
+      return {
+        textModel: [...mantleOnly, ...taggedTextModel],
+        imageModel,
+      };
     }
 
     return { imageModel: [], textModel: [] };
@@ -306,6 +321,36 @@ export const requestAllModelsByBedrockAPI = async (): Promise<AllModel> => {
     console.log('Bedrock API Error fetching models:', error);
     clearTimeout(timeoutId);
     return { imageModel: [], textModel: [] };
+  }
+};
+
+// Lists model ids available on the mantle engine for the current region (used
+// to discover GPT-5.x and to tag Chat-Completions models). Best-effort: returns
+// [] on any failure so the legacy model list still loads.
+const fetchMantleModelIdsDirect = async (): Promise<string[]> => {
+  const controller = new AbortController();
+  const url = getMantleBaseUrl(getRegion()) + '/v1/models';
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'content-type': 'application/json',
+        Authorization: 'Bearer ' + getBedrockApiKey(),
+      },
+      signal: controller.signal,
+      reactNative: { textStreaming: true },
+    });
+    clearTimeout(timeoutId);
+    if (!response.ok) {
+      return [];
+    }
+    const json = await response.json();
+    return (json.data ?? []).map((m: { id: string }) => m.id);
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.log('Mantle models fetch error:', error);
+    return [];
   }
 };
 

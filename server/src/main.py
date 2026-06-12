@@ -12,6 +12,7 @@ from pydantic import BaseModel
 import time
 from image_nl_processor import get_native_request_with_ref_image, get_analyse_result, get_native_request_with_virtual_try_on
 import httpx
+from mantle import get_mantle_base_url, sign_mantle_request
 
 app = FastAPI()
 
@@ -52,6 +53,14 @@ class GPTRequest(BaseModel):
 
 class ModelsRequest(BaseModel):
     region: str
+
+
+# bedrock-mantle requests are proxied verbatim: the client builds the OpenAI
+# Responses / Anthropic Messages body, we sign it with the server IAM role and
+# stream the response straight back.
+class MantleRequest(BaseModel):
+    region: str
+    body: dict
 
 
 class TokenRequest(BaseModel):
@@ -263,6 +272,62 @@ async def get_models(request: ModelsRequest):
     except Exception as e:
         print(f"bedrock error: {e}")
         return {"error": str(e)}
+
+
+@app.post("/api/mantle/models")
+async def mantle_models(request: ModelsRequest):
+    region = request.region
+    url = get_mantle_base_url(region) + "/v1/models"
+    headers = sign_mantle_request("GET", url, region)
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, headers=headers, timeout=8)
+            return response.json()
+    except Exception as e:
+        print(f"mantle models error: {e}")
+        return {"error": str(e)}
+
+
+@app.post("/api/mantle/responses")
+async def mantle_responses(request: MantleRequest):
+    return await _mantle_stream(request, "/openai/v1/responses")
+
+
+@app.post("/api/mantle/chat")
+async def mantle_chat(request: MantleRequest):
+    return await _mantle_stream(request, "/openai/v1/chat/completions")
+
+
+@app.post("/api/mantle/messages")
+async def mantle_messages(request: MantleRequest):
+    return await _mantle_stream(
+        request,
+        "/anthropic/v1/messages",
+        extra_headers={"anthropic-version": "2023-06-01"},
+    )
+
+
+async def _mantle_stream(request: MantleRequest, path: str, extra_headers: dict | None = None):
+    region = request.region
+    url = get_mantle_base_url(region) + path
+    body = json.dumps(request.body)
+    headers = sign_mantle_request("POST", url, region, body=body, extra_headers=extra_headers)
+    headers["Accept"] = "text/event-stream"
+
+    async def event_generator():
+        async with httpx.AsyncClient() as client:
+            try:
+                async with client.stream(
+                    "POST", url, content=body, headers=headers, timeout=None
+                ) as response:
+                    async for chunk in response.aiter_bytes():
+                        if chunk:
+                            yield chunk
+            except Exception as err:
+                print("mantle stream error:", err)
+                yield f"Error: {str(err)}".encode("utf-8")
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 @app.post("/api/upgrade")

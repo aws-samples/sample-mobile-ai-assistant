@@ -41,6 +41,7 @@ export type Model = {
   uniqueId?: string;
   apiKey?: string;
   apiUrl?: string;
+  apiMode?: ApiMode;
 };
 
 export enum ModelTag {
@@ -50,6 +51,16 @@ export enum ModelTag {
   DeepSeek = 'DeepSeek',
   Ollama = 'Ollama',
   LiteRT = 'LiteRT',
+}
+
+// Which Bedrock API a model is invoked through. Models served on the
+// bedrock-mantle engine use the OpenAI Responses / Anthropic Messages APIs;
+// everything else uses the legacy bedrock-runtime Converse API.
+export enum ApiMode {
+  Converse = 'Converse',
+  MantleResponses = 'MantleResponses',
+  MantleChatCompletions = 'MantleChatCompletions',
+  MantleMessages = 'MantleMessages',
 }
 
 export type OllamaModel = {

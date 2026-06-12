@@ -31,6 +31,10 @@ import {
 } from './BedrockMessageConvertor.ts';
 import { BedrockThinkingModels } from '../storage/Constants.ts';
 import { genImageWithAPIKey } from './providers/bedrock-api-key-image.ts';
+import {
+  buildMantleOnlyModels,
+  tagModelsWithApiMode,
+} from './providers/mantle-utils.ts';
 import type { ChatCallbackFunction } from './types.ts';
 import { invokeChatProvider } from './ChatProviderRouter.ts';
 
@@ -276,16 +280,53 @@ export const requestAllModels = async (): Promise<AllModel> => {
       modelName: item.modelName,
       modelTag: ModelTag.Bedrock,
     }));
-    allModel.textModel = allModel.textModel.map((item: Model) => ({
+    const textModel = allModel.textModel.map((item: Model) => ({
       modelId: item.modelId,
       modelName: item.modelName,
       modelTag: ModelTag.Bedrock,
     }));
+    // Merge mantle-served models (GPT-5.x only-on-mantle + apiMode tags).
+    const mantleModelIds = await fetchMantleModelIds();
+    const { models: mantleOnly, openAiIdSet } = buildMantleOnlyModels(
+      mantleModelIds,
+      ModelTag.Bedrock
+    );
+    allModel.textModel = [
+      ...mantleOnly,
+      ...tagModelsWithApiMode(textModel, openAiIdSet),
+    ];
     return allModel;
   } catch (error) {
     console.log('SwiftChat Server Error fetching models:', error);
     clearTimeout(timeoutId);
     return { imageModel: [], textModel: [] };
+  }
+};
+
+// Lists mantle model ids via the SwiftChat Server proxy for the current region.
+// Best-effort: returns [] on failure so the legacy list still loads.
+const fetchMantleModelIds = async (): Promise<string[]> => {
+  const controller = new AbortController();
+  const url = getApiPrefix() + '/mantle/models';
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ region: getRegion() }),
+      signal: controller.signal,
+      reactNative: { textStreaming: true },
+    });
+    clearTimeout(timeoutId);
+    if (!response.ok) {
+      return [];
+    }
+    const json = await response.json();
+    return (json.data ?? []).map((m: { id: string }) => m.id);
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.log('Mantle models (server) fetch error:', error);
+    return [];
   }
 };
 
@@ -472,7 +513,7 @@ function extractChunkContent(bedrockChunk: BedrockChunk, rawChunk: string) {
   return { reasoning, text, usage };
 }
 
-function getApiPrefix(): string {
+export function getApiPrefix(): string {
   if (isDev) {
     return 'http://localhost:8080/api';
   } else {
@@ -480,7 +521,7 @@ function getApiPrefix(): string {
   }
 }
 
-function getAuthHeaders(
+export function getAuthHeaders(
   contentType: string = 'application/json'
 ): Record<string, string> {
   const apiUrl = getApiUrl();

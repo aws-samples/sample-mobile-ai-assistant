@@ -29,7 +29,6 @@ import {
   getModelUsage,
   getOllamaApiUrl,
   getOllamaApiKey,
-  getOpenAIApiKey,
   getOpenAIProxyEnabled,
   getRegion,
   getTextModel,
@@ -43,7 +42,6 @@ import {
   saveKeys,
   saveOllamaApiURL,
   saveOllamaApiKey,
-  saveOpenAIApiKey,
   saveOpenAIProxyEnabled,
   saveRegion,
   saveTextModel,
@@ -114,7 +112,6 @@ function SettingsScreen(): React.JSX.Element {
   const [ollamaApiUrl, setOllamaApiUrl] = useState(getOllamaApiUrl);
   const [ollamaApiKey, setOllamaApiKey] = useState(getOllamaApiKey);
   const [deepSeekApiKey, setDeepSeekApiKey] = useState(getDeepSeekApiKey);
-  const [openAIApiKey, setOpenAIApiKey] = useState(getOpenAIApiKey);
   const [openAIProxyEnabled, setOpenAIProxyEnabled] = useState(
     getOpenAIProxyEnabled
   );
@@ -328,14 +325,6 @@ function SettingsScreen(): React.JSX.Element {
     saveDeepSeekApiKey(deepSeekApiKey.trim());
     fetchAndSetModelNamesRef.current(false, false).then();
   }, [deepSeekApiKey]);
-
-  useEffect(() => {
-    if (openAIApiKey === getOpenAIApiKey()) {
-      return;
-    }
-    saveOpenAIApiKey(openAIApiKey.trim());
-    fetchAndSetModelNamesRef.current(false, false).then();
-  }, [openAIApiKey]);
 
   useEffect(() => {
     const currentConfigs = openAICompatConfigsRef.current;
@@ -624,13 +613,6 @@ function SettingsScreen(): React.JSX.Element {
       case 'openai':
         return (
           <>
-            <CustomTextInput
-              label="OpenAI API Key"
-              value={openAIApiKey}
-              onChangeText={setOpenAIApiKey}
-              placeholder="Enter OpenAI API Key"
-              secureTextEntry={true}
-            />
             <OpenAICompatConfigsSection
               isDark={isDark}
               onConfigsChange={handleOpenAICompatConfigsChange}

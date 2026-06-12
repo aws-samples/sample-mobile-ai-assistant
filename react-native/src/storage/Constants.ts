@@ -1,10 +1,6 @@
 import { Platform } from 'react-native';
 import { Model, ModelTag, SystemPrompt } from '../types/Chat.ts';
-import {
-  getDeepSeekApiKey,
-  getOpenAIApiKey,
-  getTavilyApiKey,
-} from './StorageUtils.ts';
+import { getDeepSeekApiKey, getTavilyApiKey } from './StorageUtils.ts';
 import { isMac } from '../App.tsx';
 
 // AWS credentials - empty by default, to be filled by user
@@ -33,62 +29,6 @@ const RegionList = [
 
 export const DefaultRegion = 'us-west-2';
 
-export const GPTModels = [
-  { modelName: 'GPT-5.4', modelId: 'gpt-5.4', modelTag: ModelTag.OpenAI },
-  {
-    modelName: 'GPT-5.4 Pro',
-    modelId: 'gpt-5.4-pro',
-    modelTag: ModelTag.OpenAI,
-  },
-  {
-    modelName: 'GPT-5.4 mini',
-    modelId: 'gpt-5.4-mini',
-    modelTag: ModelTag.OpenAI,
-  },
-  {
-    modelName: 'GPT-5.4 nano',
-    modelId: 'gpt-5.4-nano',
-    modelTag: ModelTag.OpenAI,
-  },
-  {
-    modelName: 'GPT-5.3 Chat',
-    modelId: 'gpt-5.3-chat-latest',
-    modelTag: ModelTag.OpenAI,
-  },
-  { modelName: 'GPT-5.2', modelId: 'gpt-5.2', modelTag: ModelTag.OpenAI },
-  {
-    modelName: 'GPT-5.2 Pro',
-    modelId: 'gpt-5.2-pro',
-    modelTag: ModelTag.OpenAI,
-  },
-  { modelName: 'GPT-5.1', modelId: 'gpt-5.1', modelTag: ModelTag.OpenAI },
-  { modelName: 'GPT-5', modelId: 'gpt-5', modelTag: ModelTag.OpenAI },
-  {
-    modelName: 'GPT-5 Pro',
-    modelId: 'gpt-5-pro',
-    modelTag: ModelTag.OpenAI,
-  },
-  { modelName: 'GPT-5 mini', modelId: 'gpt-5-mini', modelTag: ModelTag.OpenAI },
-  { modelName: 'GPT-5 nano', modelId: 'gpt-5-nano', modelTag: ModelTag.OpenAI },
-  { modelName: 'GPT-4.1', modelId: 'gpt-4.1', modelTag: ModelTag.OpenAI },
-  {
-    modelName: 'GPT-4.1 mini',
-    modelId: 'gpt-4.1-mini',
-    modelTag: ModelTag.OpenAI,
-  },
-  {
-    modelName: 'GPT-4.1 nano',
-    modelId: 'gpt-4.1-nano',
-    modelTag: ModelTag.OpenAI,
-  },
-  { modelName: 'GPT-4o', modelId: 'gpt-4o', modelTag: ModelTag.OpenAI },
-  {
-    modelName: 'GPT-4o mini',
-    modelId: 'gpt-4o-mini',
-    modelTag: ModelTag.OpenAI,
-  },
-];
-
 export const DeepSeekModels = [
   {
     modelName: 'DeepSeek-V4-Flash',
@@ -114,9 +54,32 @@ export const BedrockThinkingModels = [
   'Claude Opus 4.5',
   'Claude Opus 4.6',
   'Claude Opus 4.7',
+  'Claude Opus 4.8',
   'Claude Haiku 4.5',
+  'Claude Fable 5',
+  'Claude Mythos 5',
 ];
 export const BedrockVoiceModels = ['Nova Sonic'];
+
+// Anthropic models served on the bedrock-mantle engine via the Anthropic
+// Messages API. The mantle GET /v1/models list does NOT return Anthropic
+// models, so this is matched by modelId substring. Models here route through
+// the Messages API; other Claude models fall back to the legacy Converse API.
+export const MantleMessagesModelIds = [
+  'claude-fable-5',
+  'claude-mythos-5',
+  'claude-opus-4-7',
+  'claude-opus-4-8',
+  'claude-haiku-4-5',
+];
+
+// On mantle, GPT-5.x are served through the OpenAI Responses API ONLY (they do
+// not support chat/completions). Other OpenAI-compatible mantle models
+// (gpt-oss, qwen, gemma, deepseek, …) use the Chat Completions API.
+export const MantleResponsesModelIdPrefixes = ['openai.gpt-5'];
+
+// Models on mantle that require provider data sharing to be enabled before use.
+export const MantleProviderDataShareModelIds = ['claude-fable-5', 'claude-mythos-5'];
 
 // LiteRT on-device models are iOS-only (the LiteRT-LM xcframework has no Android build here)
 export const LiteRTModels: Model[] =
@@ -312,9 +275,11 @@ export function getDefaultTextModels() {
 }
 
 export function getDefaultApiKeyModels() {
+  // Official OpenAI (api.openai.com) models are no longer supported as a
+  // standalone provider — OpenAI models are now served on Amazon Bedrock via
+  // the bedrock-mantle engine. OpenAI-Compatible custom endpoints remain.
   return [
     ...(getDeepSeekApiKey().length > 0 ? DeepSeekModels : []),
-    ...(getOpenAIApiKey().length > 0 ? GPTModels : []),
   ] as Model[];
 }
 
