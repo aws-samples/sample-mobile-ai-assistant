@@ -6,7 +6,7 @@
 #   curl ... | bash -s -- --region us-west-2
 #   ./install.sh                                 # from cloned repo
 #   ./install.sh --region us-west-2
-#   ./install.sh --region us-west-2 --stack MySwiftChat
+#   ./install.sh --region us-west-2 --stack MyVifChat
 #   ./install.sh --profile myprofile --region us-west-2
 
 main() {
@@ -75,7 +75,7 @@ wait_stack() {
 
 # ===== Parse args =====
 REGION=""
-STACK_NAME="SwiftChat"
+STACK_NAME="VifChat"
 REPO_NAME="swift-chat-api"
 TAG="latest"
 PROFILE=""

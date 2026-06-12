@@ -97,18 +97,18 @@ We use **API Gateway** combined with **AWS Lambda** to enable streaming response
 curl -fsSL https://raw.githubusercontent.com/aws-samples/sample-vif-chat-app/main/server/install.sh | bash
 ```
 
-By default this deploys to **the account of your current AWS profile**, in the region from `$AWS_REGION` or your `aws configure` default (fallback: `us-east-1`), with stack name `SwiftChat`. Wait about 3-4 minutes to see your **API URL**, **API Key** obtain link, and a scannable QR code for auto-configuring the app.
+By default this deploys to **the account of your current AWS profile**, in the region from `$AWS_REGION` or your `aws configure` default (fallback: `us-east-1`), with stack name `VifChat`. Wait about 3-4 minutes to see your **API URL**, **API Key** obtain link, and a scannable QR code for auto-configuring the app.
 
 To target a different account, region, or stack:
 
 ```bash
-./install.sh --region us-west-2 --stack MySwiftChat --profile myprofile
+./install.sh --region us-west-2 --stack MyVifChat --profile myprofile
 ```
 
 | Flag | Purpose | Default |
 |---|---|---|
 | `--region` | AWS region to deploy into | `$AWS_REGION` or `us-east-1` |
-| `--stack` | CloudFormation stack name | `SwiftChat` |
+| `--stack` | CloudFormation stack name | `VifChat` |
 | `--profile` | AWS CLI profile to use | current default profile |
 
 ### Step 2: Open the App and setup with API URL and API Key
@@ -409,7 +409,7 @@ npm run ios
 ### Build for macOS
 
 1. Execute `npm start`.
-2. Double click `ios/SwiftChat.xcworkspace` to open the project in your Xcode.
+2. Double click `ios/VifChat.xcworkspace` to open the project in your Xcode.
 3. Change the build destination to `My Mac (Mac Catalyst)` then click the ▶ Run button.
 
 ## API Reference
