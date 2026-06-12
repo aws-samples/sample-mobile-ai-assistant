@@ -14,10 +14,18 @@ import {
   TextContent,
 } from '../BedrockMessageConvertor.ts';
 import { getApiPrefix, getAuthHeaders, isDev } from '../bedrock-api.ts';
-import { getMantleBaseUrl } from './mantle-utils.ts';
+import { getMantleBaseUrl, stripRegionPrefix } from './mantle-utils.ts';
 import type { ChatCallbackFunction } from '../types.ts';
 
 const MAX_TOKENS = 64000;
+
+// Temporary diagnostics — set false to silence. Logs are prefixed [mantle].
+const MANTLE_DEBUG = false;
+const dlog = (...args: unknown[]) => {
+  if (MANTLE_DEBUG) {
+    console.log('[mantle]', ...args);
+  }
+};
 
 const thinkingEnabledForModel = (): boolean =>
   BedrockThinkingModels.includes(getTextModel().modelName) &&
@@ -54,12 +62,17 @@ export const invokeBedrockMantle = async (
   const timeoutId = setTimeout(() => controller.abort(), 60000);
   let buffer = '';
 
-  const emit = (done: boolean, needStop: boolean, usage?: Usage) =>
+  const emit = (done: boolean, needStop: boolean, usage?: Usage) => {
+    dlog('emit', { len: completeMessage.length, done, needStop, hasUsage: !!usage });
     callback(completeMessage, done, needStop, usage, completeReasoning);
+  };
 
+  dlog('start', { apiMode, isServerMode, modelId, url });
+  const t0 = Date.now();
   try {
     const response = await fetch(url, options);
     clearTimeout(timeoutId);
+    dlog('response', { status: response.status, ms: Date.now() - t0 });
     const respBody = response.body;
     if (!respBody) {
       callback('Request error: empty response', true, true);
@@ -68,6 +81,8 @@ export const invokeBedrockMantle = async (
     const reader = respBody.getReader();
     const decoder = new TextDecoder();
     let appendTimes = 0;
+    let readCount = 0;
+    let markedComplete = false;
     while (true) {
       if (shouldStop()) {
         await reader.cancel();
@@ -78,7 +93,15 @@ export const invokeBedrockMantle = async (
         return;
       }
       const { done, value } = await reader.read();
-      buffer += decoder.decode(value, { stream: true });
+      const chunk = decoder.decode(value, { stream: true });
+      readCount++;
+      dlog('read', {
+        n: readCount,
+        httpDone: done,
+        bytes: chunk.length,
+        ms: Date.now() - t0,
+      });
+      buffer += chunk;
       const events = buffer.split('\n\n');
       buffer = events.pop() ?? '';
       for (const event of events) {
@@ -86,6 +109,13 @@ export const invokeBedrockMantle = async (
         if (!parsed) {
           continue;
         }
+        dlog('event', {
+          text: parsed.text,
+          reasoningLen: parsed.reasoning?.length,
+          usage: !!parsed.usage,
+          done: parsed.done,
+          err: parsed.error,
+        });
         if (parsed.error) {
           callback(
             completeMessage + '\n\n' + parsed.error,
@@ -103,17 +133,55 @@ export const invokeBedrockMantle = async (
         if (parsed.text) {
           completeMessage += parsed.text;
           appendTimes++;
-          if (appendTimes > 500 && appendTimes % 2 === 0) {
-            continue;
+          // Throttle UI updates on very long outputs (every other emit past 500).
+          if (!(appendTimes > 500 && appendTimes % 2 === 0)) {
+            emit(false, false);
           }
-          emit(false, false);
         }
-        if (parsed.usage) {
+        // Output finished — unblock the UI now. mantle may delay the terminal
+        // response.completed event by tens of seconds while finalizing usage;
+        // we keep reading so usage still lands, but the message shows complete.
+        if (parsed.complete) {
+          markedComplete = true;
+          if (parsed.usage) {
+            parsed.usage.modelName = getTextModel().modelName;
+          }
+          emit(true, false, parsed.usage);
+        } else if (parsed.usage && !parsed.done) {
           parsed.usage.modelName = getTextModel().modelName;
-          emit(false, false, parsed.usage);
+          emit(markedComplete, false, parsed.usage);
+        }
+        // Terminal protocol event (response.completed / message_stop): stop
+        // reading instead of waiting for the HTTP connection to close, which can
+        // lag several seconds on these keep-alive streams.
+        if (parsed.done) {
+          if (parsed.usage) {
+            parsed.usage.modelName = getTextModel().modelName;
+          }
+          await reader.cancel();
+          emit(true, false, parsed.usage);
+          return;
         }
       }
       if (done) {
+        // Flush any trailing buffer (e.g. a non-SSE error envelope that has no
+        // \n\n terminator and never got split out above).
+        if (buffer.trim().length > 0) {
+          const tail = parseEvent(apiMode, buffer);
+          if (tail?.error) {
+            callback(
+              completeMessage + '\n\n' + tail.error,
+              true,
+              true,
+              undefined,
+              completeReasoning
+            );
+            return;
+          }
+          if (tail?.text) {
+            completeMessage += tail.text;
+          }
+        }
         emit(true, false);
         return;
       }
@@ -151,7 +219,9 @@ const buildRequestBody = (
 ): Record<string, unknown> => {
   if (apiMode === ApiMode.MantleMessages) {
     const body: Record<string, unknown> = {
-      model: modelId,
+      // The mantle Messages route only accepts the bare foundation-model id;
+      // the model list carries the cross-region profile id (us./eu./global.).
+      model: stripRegionPrefix(modelId),
       max_tokens: MAX_TOKENS,
       stream: true,
       messages: getAnthropicMessages(messages),
@@ -262,16 +332,26 @@ type ParsedEvent = {
   reasoning?: string;
   usage?: Usage;
   error?: string;
+  // Output finished — mark the message complete in the UI (stop the loading
+  // spinner) but keep reading, since usage may still arrive afterwards.
+  complete?: boolean;
+  // Terminal event — stop reading the stream immediately.
+  done?: boolean;
 };
 
 const parseEvent = (apiMode: ApiMode, event: string): ParsedEvent | null => {
   const dataLine = event
     .split('\n')
     .find(line => line.startsWith('data:'));
-  if (!dataLine) {
-    return null;
+  // SSE events arrive as `data: {...}`. A bare JSON body with no `data:` line
+  // is a non-streamed error envelope (e.g. model-not-found) — surface it.
+  let payload: string;
+  if (dataLine) {
+    payload = dataLine.slice(5).trim();
+  } else {
+    const trimmed = event.trim();
+    payload = trimmed.startsWith('{') ? trimmed : '';
   }
-  const payload = dataLine.slice(5).trim();
   if (!payload || payload === '[DONE]') {
     return null;
   }
@@ -280,6 +360,12 @@ const parseEvent = (apiMode: ApiMode, event: string): ParsedEvent | null => {
     json = JSON.parse(payload);
   } catch {
     return null;
+  }
+  // Top-level error envelope shared across protocols.
+  if (json.type === 'error' || (json.error && !json.choices)) {
+    return {
+      error: '**Error:** ' + (json.error?.message ?? json.message ?? ''),
+    };
   }
   if (apiMode === ApiMode.MantleResponses) {
     return parseResponsesEvent(json);
@@ -330,18 +416,25 @@ const parseResponsesEvent = (json: MantleStreamEvent): ParsedEvent | null => {
   if (type === 'response.reasoning_summary_text.delta') {
     return { reasoning: delta };
   }
+  // Output text finished. Mark the message complete now — mantle may delay the
+  // final response.completed event by tens of seconds while it finalizes the
+  // response object, but the user-visible text is already done.
+  if (type === 'response.output_text.done') {
+    return { complete: true };
+  }
   if (type === 'response.completed' || type === 'response.incomplete') {
     const u = json.response?.usage;
-    if (u) {
-      return {
-        usage: {
-          modelName: '',
-          inputTokens: u.input_tokens ?? 0,
-          outputTokens: u.output_tokens ?? 0,
-          totalTokens: u.total_tokens ?? 0,
-        },
-      };
-    }
+    return {
+      done: true,
+      usage: u
+        ? {
+            modelName: '',
+            inputTokens: u.input_tokens ?? 0,
+            outputTokens: u.output_tokens ?? 0,
+            totalTokens: u.total_tokens ?? 0,
+          }
+        : undefined,
+    };
   }
   if (type === 'error' || json.error) {
     return { error: '**Error:** ' + (json.message ?? json.error?.message ?? '') };
@@ -364,6 +457,7 @@ const parseMessagesEvent = (json: MantleStreamEvent): ParsedEvent | null => {
   }
   if (type === 'message_delta' && json.usage) {
     return {
+      complete: true,
       usage: {
         modelName: '',
         inputTokens: json.usage.input_tokens ?? 0,
@@ -372,6 +466,9 @@ const parseMessagesEvent = (json: MantleStreamEvent): ParsedEvent | null => {
           (json.usage.input_tokens ?? 0) + (json.usage.output_tokens ?? 0),
       },
     };
+  }
+  if (type === 'message_stop') {
+    return { done: true };
   }
   if (type === 'error') {
     return { error: '**Error:** ' + (json.error?.message ?? '') };

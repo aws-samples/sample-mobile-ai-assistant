@@ -42,6 +42,15 @@
                     "bedrock:InvokeModelWithResponseStream"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "bedrock-mantle:CreateInference",
+                    "bedrock-mantle:Get*",
+                    "bedrock-mantle:List*"
+                  ],
+                  "Resource": "*"
                 }
               ]
             }
@@ -93,6 +102,15 @@
                 "bedrock:InvokeModel",
                 "bedrock:InvokeModelWithResponseStream",
                 "bedrock:ListFoundationModels"
+              ],
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {
+              "Action": [
+                "bedrock-mantle:CreateInference",
+                "bedrock-mantle:Get*",
+                "bedrock-mantle:List*"
               ],
               "Effect": "Allow",
               "Resource": "*"

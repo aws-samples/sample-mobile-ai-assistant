@@ -4,6 +4,7 @@ COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.1 /lambda-adapter /opt
 WORKDIR /app
 COPY requirements.txt .
 COPY main.py .
+COPY mantle.py .
 COPY image_nl_processor.py .
 RUN pip install --no-cache-dir -r requirements.txt
 

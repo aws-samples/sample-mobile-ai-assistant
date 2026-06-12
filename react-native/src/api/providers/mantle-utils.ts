@@ -6,8 +6,9 @@ import {
 
 // Strips the cross-region inference profile prefix (us./eu./apac./global.) so
 // a profile id like "us.anthropic.claude-fable-5" matches the same rules as the
-// bare foundation-model id "anthropic.claude-fable-5".
-const stripRegionPrefix = (modelId: string): string =>
+// bare foundation-model id "anthropic.claude-fable-5". The mantle Messages route
+// only accepts the bare id (unlike Converse, which requires the profile prefix).
+export const stripRegionPrefix = (modelId: string): string =>
   modelId.replace(/^(us|eu|apac|global)\./, '');
 
 /**
