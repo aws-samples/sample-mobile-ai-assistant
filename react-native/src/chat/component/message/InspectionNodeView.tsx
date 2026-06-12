@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { MarkdownProps } from 'react-native-marked';
 import { useTheme } from '../../../theme';
 import Markdown from '../../../core/markdown/Markdown';
 import { ChatStatus } from '../../../types/Chat';
@@ -14,14 +15,13 @@ interface InspectionNodeViewProps {
   steps: AgentStep[];
   finalText?: string;
   isStreaming?: boolean;
-  renderer?: any;
-  tokenizer?: any;
+  renderer?: MarkdownProps['renderer'];
+  tokenizer?: MarkdownProps['tokenizer'];
 }
 
 export const InspectionNodeView: React.FC<InspectionNodeViewProps> = ({
   steps,
   finalText,
-  isStreaming,
   renderer,
   tokenizer,
 }) => {
@@ -60,9 +60,7 @@ export const InspectionNodeView: React.FC<InspectionNodeViewProps> = ({
             {/* Left timeline */}
             <View style={styles.timelineColumn}>
               {!isLast && (
-                <View
-                  style={[styles.line, { backgroundColor: lineColor, top: 12 }]}
-                />
+                <View style={[styles.line, { backgroundColor: lineColor }]} />
               )}
               <View style={[styles.dot, { backgroundColor: dotColor }]} />
             </View>
@@ -70,22 +68,14 @@ export const InspectionNodeView: React.FC<InspectionNodeViewProps> = ({
             <View style={styles.contentColumn}>
               <Text style={[styles.stepTitle, { color: colors.textSecondary }]}>
                 Call tool:{' '}
-                <Text
-                  style={{
-                    color: colors.text,
-                    fontWeight: '600',
-                    fontSize: 14,
-                  }}>
+                <Text style={[styles.stepName, { color: colors.text }]}>
                   {step.stepName}
                 </Text>
               </Text>
               <View
                 style={[
                   styles.resultBox,
-                  {
-                    borderColor: isDark ? '#3d444d' : '#d0d7de',
-                    backgroundColor: isDark ? '#161b22' : '#ffffff',
-                  },
+                  isDark ? styles.resultBoxDark : styles.resultBoxLight,
                 ]}>
                 <View style={styles.markdownWrap}>
                   <Markdown
@@ -110,9 +100,8 @@ export const InspectionNodeView: React.FC<InspectionNodeViewProps> = ({
               style={[
                 styles.dot,
                 { backgroundColor: grayDot },
-                (finalText.startsWith('**') || finalText.startsWith('#')) && {
-                  marginTop: 10,
-                },
+                (finalText.startsWith('**') || finalText.startsWith('#')) &&
+                  styles.dotMarkdownOffset,
               ]}
             />
           </View>
@@ -172,6 +161,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 4,
   },
+  stepName: {
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  dotMarkdownOffset: {
+    marginTop: 10,
+  },
   markdownWrap: {
     marginTop: -4,
     marginBottom: -8,
@@ -180,5 +176,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 6,
     padding: 8,
+  },
+  resultBoxDark: {
+    borderColor: '#3d444d',
+    backgroundColor: '#161b22',
+  },
+  resultBoxLight: {
+    borderColor: '#d0d7de',
+    backgroundColor: '#ffffff',
   },
 });
