@@ -11,6 +11,7 @@ import {
   DefaultRegion,
   getDefaultImageModels,
   getDefaultTextModels,
+  LiteRTModels,
   VoiceIDList,
 } from './Constants.ts';
 
@@ -330,7 +331,14 @@ export function saveAllModels(allModels: AllModel) {
 export function getAllModels() {
   const modelString = storage.getString(allModelKey) ?? '';
   if (modelString.length > 0) {
-    return JSON.parse(modelString) as AllModel;
+    const cached = JSON.parse(modelString) as AllModel;
+    const hasLiteRT = cached.textModel.some(
+      m => m.modelTag === ModelTag.LiteRT
+    );
+    if (!hasLiteRT) {
+      cached.textModel = [...cached.textModel, ...LiteRTModels];
+    }
+    return cached;
   }
   return {
     imageModel: getDefaultImageModels(),

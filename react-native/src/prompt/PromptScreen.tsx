@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
+  Platform,
   ScrollView,
   StyleSheet,
   Switch,
@@ -16,6 +17,7 @@ import { SystemPrompt } from '../types/Chat.ts';
 import { showInfo } from '../core/ToastUtils';
 import { useAppContext } from '../history/AppProvider.tsx';
 import { getPromptId, getTextModel } from '../storage/StorageUtils.ts';
+import { isLiteRTModelReady } from '../chat/service/LiteRTService.ts';
 import { HeaderLeftView } from './HeaderLeftView.tsx';
 import { isMac } from '../App.tsx';
 import { useTheme, ColorScheme } from '../theme';
@@ -30,6 +32,12 @@ function PromptScreen(): React.JSX.Element {
   const isNovaSonic = getTextModel().modelId.includes('sonic');
   const isAddMode = route.params.prompt === undefined;
   const promptType = route.params.promptType;
+  // On-device agent option: iOS only, model downloaded, text mode only
+  const canBeAgent =
+    Platform.OS === 'ios' &&
+    isLiteRTModelReady() &&
+    !isNovaSonic &&
+    promptType !== 'image';
   const { colors, isDark } = useTheme();
   const styles = createStyles(colors);
   const [currentPrompt, setCurrentPrompt] = useState<SystemPrompt>(
@@ -126,6 +134,28 @@ function PromptScreen(): React.JSX.Element {
           </View>
         )}
 
+        {canBeAgent && (
+          <>
+            <View style={styles.switchContainer}>
+              <Text style={styles.label}>On-Device Agent</Text>
+              <Switch
+                style={[isMac ? styles.switch : {}]}
+                value={currentPrompt.isAgent ?? false}
+                onValueChange={value => {
+                  setCurrentPrompt({ ...currentPrompt, isAgent: value });
+                }}
+              />
+            </View>
+            {currentPrompt.isAgent && (
+              <Text style={styles.agentHint}>
+                When enabled, send an image with this prompt to run an on-device
+                agent. Instruct the model to call the recordFinding tool for each
+                step (stepName, status, details).
+              </Text>
+            )}
+          </>
+        )}
+
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.saveButtonText}>
             {isAddMode ? 'Create' : 'Update'}
@@ -187,6 +217,13 @@ const createStyles = (colors: ColorScheme) =>
       fontSize: 16,
       fontWeight: '500',
       color: colors.text,
+    },
+    agentHint: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginTop: -8,
+      marginBottom: 20,
+      lineHeight: 18,
     },
     saveButton: {
       backgroundColor: colors.promptScreenSaveButton,

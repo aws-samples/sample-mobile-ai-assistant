@@ -1,10 +1,14 @@
 import { Model, ModelTag } from '../types/Chat.ts';
-import { DeepSeekModels } from '../storage/Constants.ts';
+import { DeepSeekModels, LiteRTModels } from '../storage/Constants.ts';
 import { getTextModel } from '../storage/StorageUtils.ts';
 
 export function getModelTag(model: Model): string {
   if (model.modelTag) {
     return model?.modelTag;
+  }
+  const isLiteRT = LiteRTModels.some(m => m.modelId === model.modelId);
+  if (isLiteRT) {
+    return ModelTag.LiteRT;
   }
   const isDeepSeek = DeepSeekModels.some(
     deepseekModel => deepseekModel.modelId === model.modelId
@@ -30,12 +34,17 @@ export const getModelIcon = (
   if (modelId) {
     isDeepSeek = DeepSeekModels.some(m => m.modelId === modelId);
   }
+  const isLiteRT = modelTag === ModelTag.LiteRT;
   const isOpenAICompatible = modelTag === ModelTag.OpenAICompatible;
   const isOpenAI = modelTag === ModelTag.OpenAI || modelTag.includes('gpt');
   const isOllama =
     modelTag === ModelTag.Ollama || modelTag.startsWith('ollama-');
 
-  return isDeepSeek
+  return isLiteRT
+    ? isDark
+      ? require('../assets/google_dark.png')
+      : require('../assets/google.png')
+    : isDeepSeek
     ? isDark
       ? require('../assets/deepseek_dark.png')
       : require('../assets/deepseek.png')
@@ -58,6 +67,9 @@ export function getModelTagByUserName(
 ): string {
   if (modelTag) {
     return modelTag;
+  }
+  if (userName.includes('Gemma 4 E2B')) {
+    return ModelTag.LiteRT;
   }
   const isDeepSeek = DeepSeekModels.some(
     deepseekModel => deepseekModel.modelId === userName

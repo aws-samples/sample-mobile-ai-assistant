@@ -45,6 +45,7 @@ import {
   saveReasoningExpanded,
 } from '../../../storage/StorageUtils.ts';
 import CitationList from '../../../websearch/components/citation/CitationList';
+import { InspectionNodeView } from './InspectionNodeView';
 
 export interface CustomMessageProps {
   currentMessage: SwiftChatMessage;
@@ -495,6 +496,23 @@ const CustomMessageComponent: React.FC<CustomMessageProps> = ({
     }
 
     if (!isUser.current) {
+      const agentPrefix = '<!--AGENT-->';
+      if (currentMessage.text.startsWith(agentPrefix)) {
+        try {
+          const data = JSON.parse(currentMessage.text.slice(agentPrefix.length));
+          return (
+            <InspectionNodeView
+              steps={data.steps}
+              finalText={data.finalText}
+              isStreaming={data.isStreaming}
+              renderer={customMarkdownRenderer}
+              tokenizer={customTokenizer}
+            />
+          );
+        } catch {
+          // fallback to markdown
+        }
+      }
       return (
         <Markdown
           key={citationRenderKey}

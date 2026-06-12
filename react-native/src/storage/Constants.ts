@@ -1,9 +1,6 @@
+import { Platform } from 'react-native';
 import { Model, ModelTag, SystemPrompt } from '../types/Chat.ts';
-import {
-  getDeepSeekApiKey,
-  getOpenAIApiKey,
-  getTavilyApiKey,
-} from './StorageUtils.ts';
+import { getDeepSeekApiKey, getTavilyApiKey } from './StorageUtils.ts';
 import { isMac } from '../App.tsx';
 
 // AWS credentials - empty by default, to be filled by user
@@ -32,62 +29,6 @@ const RegionList = [
 
 export const DefaultRegion = 'us-west-2';
 
-export const GPTModels = [
-  { modelName: 'GPT-5.4', modelId: 'gpt-5.4', modelTag: ModelTag.OpenAI },
-  {
-    modelName: 'GPT-5.4 Pro',
-    modelId: 'gpt-5.4-pro',
-    modelTag: ModelTag.OpenAI,
-  },
-  {
-    modelName: 'GPT-5.4 mini',
-    modelId: 'gpt-5.4-mini',
-    modelTag: ModelTag.OpenAI,
-  },
-  {
-    modelName: 'GPT-5.4 nano',
-    modelId: 'gpt-5.4-nano',
-    modelTag: ModelTag.OpenAI,
-  },
-  {
-    modelName: 'GPT-5.3 Chat',
-    modelId: 'gpt-5.3-chat-latest',
-    modelTag: ModelTag.OpenAI,
-  },
-  { modelName: 'GPT-5.2', modelId: 'gpt-5.2', modelTag: ModelTag.OpenAI },
-  {
-    modelName: 'GPT-5.2 Pro',
-    modelId: 'gpt-5.2-pro',
-    modelTag: ModelTag.OpenAI,
-  },
-  { modelName: 'GPT-5.1', modelId: 'gpt-5.1', modelTag: ModelTag.OpenAI },
-  { modelName: 'GPT-5', modelId: 'gpt-5', modelTag: ModelTag.OpenAI },
-  {
-    modelName: 'GPT-5 Pro',
-    modelId: 'gpt-5-pro',
-    modelTag: ModelTag.OpenAI,
-  },
-  { modelName: 'GPT-5 mini', modelId: 'gpt-5-mini', modelTag: ModelTag.OpenAI },
-  { modelName: 'GPT-5 nano', modelId: 'gpt-5-nano', modelTag: ModelTag.OpenAI },
-  { modelName: 'GPT-4.1', modelId: 'gpt-4.1', modelTag: ModelTag.OpenAI },
-  {
-    modelName: 'GPT-4.1 mini',
-    modelId: 'gpt-4.1-mini',
-    modelTag: ModelTag.OpenAI,
-  },
-  {
-    modelName: 'GPT-4.1 nano',
-    modelId: 'gpt-4.1-nano',
-    modelTag: ModelTag.OpenAI,
-  },
-  { modelName: 'GPT-4o', modelId: 'gpt-4o', modelTag: ModelTag.OpenAI },
-  {
-    modelName: 'GPT-4o mini',
-    modelId: 'gpt-4o-mini',
-    modelTag: ModelTag.OpenAI,
-  },
-];
-
 export const DeepSeekModels = [
   {
     modelName: 'DeepSeek-V4-Flash',
@@ -113,9 +54,44 @@ export const BedrockThinkingModels = [
   'Claude Opus 4.5',
   'Claude Opus 4.6',
   'Claude Opus 4.7',
+  'Claude Opus 4.8',
   'Claude Haiku 4.5',
+  'Claude Fable 5',
+  'Claude Mythos 5',
 ];
 export const BedrockVoiceModels = ['Nova Sonic'];
+
+// Anthropic models served on the bedrock-mantle engine via the Anthropic
+// Messages API. The mantle GET /v1/models list does NOT return Anthropic
+// models, so this is matched by modelId substring. Models here route through
+// the Messages API; other Claude models fall back to the legacy Converse API.
+export const MantleMessagesModelIds = [
+  'claude-fable-5',
+  'claude-mythos-5',
+  'claude-opus-4-7',
+  'claude-opus-4-8',
+  'claude-haiku-4-5',
+];
+
+// On mantle, GPT-5.x are served through the OpenAI Responses API ONLY (they do
+// not support chat/completions). Other OpenAI-compatible mantle models
+// (gpt-oss, qwen, gemma, deepseek, …) use the Chat Completions API.
+export const MantleResponsesModelIdPrefixes = ['openai.gpt-5'];
+
+// Models on mantle that require provider data sharing to be enabled before use.
+export const MantleProviderDataShareModelIds = ['claude-fable-5', 'claude-mythos-5'];
+
+// LiteRT on-device models are iOS-only (the LiteRT-LM xcframework has no Android build here)
+export const LiteRTModels: Model[] =
+  Platform.OS === 'ios'
+    ? [
+        {
+          modelName: 'Gemma 4 E2B',
+          modelId: 'gemma-4-E2B-it',
+          modelTag: ModelTag.LiteRT,
+        },
+      ]
+    : [];
 
 export const DefaultTextModel = [
   {
@@ -246,12 +222,30 @@ Remember: ALWAYS start with a score after the user speaks`,
   },
 ];
 
+// iOS-only on-device agent prompts. Each drives LiteRT tool calling via recordFinding.
+// To add a new scenario: add an entry here with isAgent: true and describe the steps.
+const AgentSystemPrompts: SystemPrompt[] = [
+  {
+    id: -11,
+    name: 'FactoryInspect',
+    prompt: `You are a strict factory quality inspection agent. You must REJECT any part that is not perfect. When given an image, perform exactly 3 inspections by calling the recordFinding tool:
+1. stepName="textCheck" - Check if ALL text is fully visible and readable. Fail if ANY character is obscured, smudged, or unclear.
+2. stepName="damageCheck" - Check surface condition. Fail if there are ANY scratches, dents, stains, rust, or wear marks visible.
+3. stepName="alignmentCheck" - Check label positioning. Fail if label is tilted, wrinkled, peeling, or has bubbles.
+Be extremely strict. When in doubt, mark as Fail. Minor imperfections should be marked as Fail.
+After all checks, summarize the results and give the final Pass or Fail verdict with reasons.`,
+    includeHistory: false,
+    isAgent: true,
+  },
+];
+
 const DefaultSystemPrompts = [
+  ...(Platform.OS === 'ios' ? AgentSystemPrompts : []),
   {
     id: -1,
     name: 'Translate',
     prompt: `You are a professional translator specialized in Chinese-English translation.
-If the user input is in Chinese, please translate it into English; if the user input is in English, please translate it into Chinese. 
+If the user input is in Chinese, please translate it into English; if the user input is in English, please translate it into Chinese.
 Return single best translation only.
 No explanation or alternatives.`,
     includeHistory: false,
@@ -266,6 +260,9 @@ No explanation or alternatives.`,
   ...DefaultImageSystemPrompts,
 ];
 
+// Names of all built-in agent prompts (used for migration / hiding before model download)
+export const AgentPromptNames = AgentSystemPrompts.map(p => p.name);
+
 export const DefaultVoicePrompt =
   'You are a friendly assistant. The user and you will engage in a spoken dialog exchanging the transcripts of a natural real-time conversation. Keep your responses short, generally within five sentences for chatty scenarios.';
 
@@ -274,13 +271,15 @@ export function getAllRegions() {
 }
 
 export function getDefaultTextModels() {
-  return [...DefaultTextModel, ...getDefaultApiKeyModels()] as Model[];
+  return [...DefaultTextModel, ...getDefaultApiKeyModels(), ...LiteRTModels] as Model[];
 }
 
 export function getDefaultApiKeyModels() {
+  // Official OpenAI (api.openai.com) models are no longer supported as a
+  // standalone provider — OpenAI models are now served on Amazon Bedrock via
+  // the bedrock-mantle engine. OpenAI-Compatible custom endpoints remain.
   return [
     ...(getDeepSeekApiKey().length > 0 ? DeepSeekModels : []),
-    ...(getOpenAIApiKey().length > 0 ? GPTModels : []),
   ] as Model[];
 }
 

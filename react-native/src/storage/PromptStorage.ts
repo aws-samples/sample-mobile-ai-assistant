@@ -3,8 +3,10 @@ import { storage } from './StorageUtils.ts';
 import {
   DefaultImageSystemPrompts,
   DefaultVoiceSystemPrompts,
+  AgentPromptNames,
   getDefaultSystemPrompts,
 } from './Constants.ts';
+import { isLiteRTModelReady } from '../chat/service/LiteRTService.ts';
 
 const keyPrefix = 'bedrock/';
 const systemPromptsKey = keyPrefix + 'systemPromptsKey';
@@ -134,6 +136,24 @@ export function getSystemPrompts(type?: string): SystemPrompt[] {
         saveAllSystemPrompts(currentSystemPrompts);
       }
     }
+    // Migration: agent prompts are built-in demos — always refresh to the
+    // latest code version (drop stale cached copies, re-add current ones).
+    const existing = currentSystemPrompts ?? [];
+    const latestAgentPrompts = getDefaultSystemPrompts().filter(dp =>
+      AgentPromptNames.includes(dp.name)
+    );
+    const nonAgent = existing.filter(p => !AgentPromptNames.includes(p.name));
+    const merged = [...nonAgent, ...latestAgentPrompts];
+    const changed =
+      merged.length !== existing.length ||
+      latestAgentPrompts.some(lp => {
+        const old = existing.find(p => p.name === lp.name);
+        return !old || old.prompt !== lp.prompt;
+      });
+    if (changed) {
+      currentSystemPrompts = merged;
+      saveAllSystemPrompts(currentSystemPrompts);
+    }
   } else {
     currentSystemPrompts = getDefaultSystemPrompts();
     saveAllSystemPrompts(currentSystemPrompts);
@@ -148,6 +168,12 @@ export function getSystemPrompts(type?: string): SystemPrompt[] {
       ? currentSystemPrompts.filter(p => p.promptType === type)
       : currentSystemPrompts.filter(p => p.promptType === undefined);
     saveAllSystemPrompts(getDefaultSystemPrompts());
+  }
+  // Hide on-device agent prompts (built-in or user-created) until the model is downloaded
+  if (!isLiteRTModelReady()) {
+    currentSystemPrompts = currentSystemPrompts.filter(
+      p => !p.isAgent && !AgentPromptNames.includes(p.name)
+    );
   }
   return currentSystemPrompts;
 }

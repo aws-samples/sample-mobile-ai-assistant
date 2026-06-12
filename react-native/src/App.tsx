@@ -26,6 +26,7 @@ import { isAndroid, isMacCatalyst } from './utils/PlatformUtils';
 import { ThemeProvider, useTheme } from './theme';
 import { configureErrorHandling } from './utils/ErrorUtils';
 import { migrateOpenAICompatConfig } from './storage/StorageUtils.ts';
+import { liteRTService } from './chat/service/LiteRTService.ts';
 import { SearchWebView } from './websearch/components/SearchWebView';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { HeaderLeftView } from './prompt/HeaderLeftView.tsx';
@@ -171,6 +172,7 @@ const App = () => {
   React.useEffect(() => {
     configureErrorHandling();
     migrateOpenAICompatConfig();
+    liteRTService.syncModelReadyFlag();
   }, []);
 
   // On Mac, we don't need KeyboardProvider

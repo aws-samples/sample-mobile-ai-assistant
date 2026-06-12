@@ -1,4 +1,4 @@
-import { ModelTag } from '../types/Chat.ts';
+import { ApiMode, ModelTag } from '../types/Chat.ts';
 import {
   getBedrockApiKey,
   getBedrockConfigMode,
@@ -12,7 +12,10 @@ import type { BedrockMessage } from './BedrockMessageConvertor.ts';
 import type { SystemPrompt } from '../types/Chat.ts';
 import { invokeOpenAIWithCallBack } from './providers/open-api.ts';
 import { invokeOllamaWithCallBack } from './providers/ollama-api.ts';
+import { invokeLiteRTWithCallBack } from './providers/litert-api.ts';
 import { invokeBedrockWithAPIKey } from './providers/bedrock-api-key.ts';
+import { invokeBedrockMantle } from './providers/bedrock-mantle.ts';
+import { resolveApiMode, isMantleMode } from './providers/mantle-utils.ts';
 import {
   invokeBedrockServerWithCallBack,
   isConfigured,
@@ -30,6 +33,18 @@ export const invokeChatProvider = async (
   callback: ChatCallbackFunction
 ): Promise<void> => {
   const currentModelTag = getModelTag(getTextModel());
+
+  // On-device LiteRT provider
+  if (currentModelTag === ModelTag.LiteRT) {
+    await invokeLiteRTWithCallBack(
+      messages,
+      prompt,
+      shouldStop,
+      controller,
+      callback
+    );
+    return;
+  }
 
   // Non-Bedrock providers
   if (currentModelTag !== ModelTag.Bedrock) {
@@ -78,8 +93,22 @@ export const invokeChatProvider = async (
     callback('Please configure your Bedrock API Key', true, false);
     return;
   }
-  if (bedrockConfigMode === 'bedrock') {
-    await invokeBedrockWithAPIKey(
+  if (bedrockConfigMode !== 'bedrock' && !isConfigured()) {
+    callback(
+      'Please configure your SwiftChat Server API URL and API Key',
+      true,
+      false
+    );
+    return;
+  }
+
+  // Mantle-served models (GPT-5.x, Fable 5, open-weight models) take the
+  // preferred path; everything else uses the legacy Converse API.
+  const apiMode =
+    getTextModel().apiMode ?? resolveApiMode(getTextModel().modelId);
+  if (isMantleMode(apiMode)) {
+    await invokeBedrockMantle(
+      apiMode as ApiMode,
       messages,
       prompt,
       shouldStop,
@@ -88,11 +117,14 @@ export const invokeChatProvider = async (
     );
     return;
   }
-  if (!isConfigured()) {
-    callback(
-      'Please configure your SwiftChat Server API URL and API Key',
-      true,
-      false
+
+  if (bedrockConfigMode === 'bedrock') {
+    await invokeBedrockWithAPIKey(
+      messages,
+      prompt,
+      shouldStop,
+      controller,
+      callback
     );
     return;
   }
