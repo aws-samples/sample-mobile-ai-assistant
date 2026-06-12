@@ -30,7 +30,7 @@ body:
     validations:
       required: true
   - type: input
-    id: swiftchat-version
+    id: vifchat-version
     attributes:
       label: App Version
       placeholder: e.g. 1.0.0

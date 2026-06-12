@@ -1,6 +1,6 @@
 {
-  "name": "swift-chat",
-  "description": "Sample Bedrock Cross-platform App - SwiftChat",
+  "name": "vif-chat",
+  "description": "Sample Bedrock Cross-platform App - VifChat",
   "version": "2.9.0",
   "private": true,
   "scripts": {

@@ -25,7 +25,7 @@ struct SwiftChatLiveActivity: Widget {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
                         .font(.title2)
-                    Text("SwiftChat · All Completed")
+                    Text("VifChat · All Completed")
                         .font(.headline)
                         .foregroundColor(.green)
                 } else {
@@ -58,7 +58,7 @@ struct SwiftChatLiveActivity: Widget {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 20))
                                 .foregroundColor(.green)
-                            Text("SwiftChat · All Completed")
+                            Text("VifChat · All Completed")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.green)
                         }
