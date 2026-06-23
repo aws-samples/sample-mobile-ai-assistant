@@ -1,4 +1,4 @@
-# Sample Mobile AI Assistant — 跨平台 AI 助手 App
+# Sample Mobile AI Assistant — 跨平台 AI 对话与创作应用
 
 > 🚀 您的个人 AI 工作空间 — 聊天、创建应用等
 
@@ -7,7 +7,7 @@
 
 [English](/README.md)
 
-AI Assistant 是一款快速响应的 AI 助手，采用 [React Native](https://reactnative.dev/)
+AI Assistant 是一款快速响应的跨平台应用，采用 [React Native](https://reactnative.dev/)
 开发，并依托 [Amazon Bedrock](https://aws.amazon.com/bedrock/) 提供强大支持，同时兼容 Ollama、DeepSeek、OpenAI 和 OpenAI
 兼容的其他模型供应商。凭借其极简设计理念与坚实的隐私保护措施，该应用在 Android、iOS 和 macOS 平台上实现了实时流式对话、AI
 图像生成、极速 Web 应用创建和语音对话功能。

@@ -1,4 +1,4 @@
-# Sample Mobile AI Assistant — A Cross-platform AI Assistant App
+# Sample Mobile AI Assistant — A Cross-platform AI Chat & Creation App
 
 > 🚀 Your Personal AI Workspace — Chat, Create Apps, and More
 
@@ -7,7 +7,7 @@
 
 [中文](/README_CN.md)
 
-AI Assistant is a fast and responsive AI assistant developed with [React Native](https://reactnative.dev/) and
+AI Assistant is a fast and responsive cross-platform app developed with [React Native](https://reactnative.dev/) and
 powered by [Amazon Bedrock](https://aws.amazon.com/bedrock/), with compatibility extending to other model providers such
 as Ollama, DeepSeek, OpenAI and OpenAI Compatible. With its minimalist design philosophy and robust privacy protection,
 it delivers real-time streaming conversations, AI image generation, instant web app creation and voice conversation
