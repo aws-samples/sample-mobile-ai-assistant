@@ -29,7 +29,7 @@ const thinkingEnabledForModel = (): boolean =>
  * both deployment modes:
  *   - 'bedrock'   : client signs with the Bedrock API Key (Bearer) and calls
  *                   the mantle endpoint directly.
- *   - 'swiftchat' : request is proxied through the VifChat Server, which signs
+ *   - 'swiftchat' : request is proxied through the App Server, which signs
  *                   with its IAM role (SigV4) — no Bedrock key needed.
  */
 export const invokeBedrockMantle = async (

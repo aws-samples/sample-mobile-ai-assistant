@@ -2,3 +2,15 @@
 #
 .DS_Store
 .idea
+
+# Swift Package Manager build cache
+.build/
+react-native/ios/LocalPackages/LiteRT-LM/.build/
+assets/test_agent_imgs/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Claude Code
+.claude/

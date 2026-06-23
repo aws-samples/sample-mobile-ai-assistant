@@ -1,13 +1,13 @@
-# Sample Vif Chat App — A Cross-platform AI Assistant
+# Sample Mobile AI Assistant — A Cross-platform AI Assistant App
 
 > 🚀 Your Personal AI Workspace — Chat, Create Apps, and More
 
-[![GitHub Release](https://img.shields.io/github/v/release/aws-samples/sample-vif-chat-app)](https://github.com/aws-samples/sample-vif-chat-app/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/aws-samples/sample-mobile-ai-assistant)](https://github.com/aws-samples/sample-mobile-ai-assistant/releases)
 [![License](https://img.shields.io/badge/license-MIT--0-green)](LICENSE)
 
 [中文](/README_CN.md)
 
-VifChat is a fast and responsive AI assistant developed with [React Native](https://reactnative.dev/) and
+AI Assistant is a fast and responsive AI assistant developed with [React Native](https://reactnative.dev/) and
 powered by [Amazon Bedrock](https://aws.amazon.com/bedrock/), with compatibility extending to other model providers such
 as Ollama, DeepSeek, OpenAI and OpenAI Compatible. With its minimalist design philosophy and robust privacy protection,
 it delivers real-time streaming conversations, AI image generation, instant web app creation and voice conversation
@@ -20,7 +20,7 @@ capabilities across Android, iOS, and macOS platforms.
 - 🚀 Upgrade to React Native 0.83 with New Architecture enabled (From v2.8.0).
 - 🚀 Support create or edit instant web apps with one prompt (From v2.7.0).
 - 🚀 Support Web Search for real-time information retrieval (From v2.7.0).
-- 🚀 Update VifChat Server with API Gateway + Lambda deployment supporting 15-minute streaming output (From v2.7.0).
+- 🚀 Update App Server with API Gateway + Lambda deployment supporting 15-minute streaming output (From v2.7.0).
 - 🚀 Support Image Gallery for browsing and managing generated images (From v2.7.0).
 
 **Create App**: Generate, Edit, Share and Preview Instant Web Apps
@@ -65,7 +65,7 @@ You can choose one of the following two methods for configuration
    long-term API
    key.
 
-2. Copy and paste the API key to the (Amazon Bedrock -> Bedrock API Key) under VifChat Settings page.
+2. Copy and paste the API key to the (Amazon Bedrock -> Bedrock API Key) under AI Assistant Settings page.
 
 3. The App will automatically get the latest model list based on the region you currently selected. If multiple models
    appear in the list, it means the configuration is successful.
@@ -73,7 +73,7 @@ You can choose one of the following two methods for configuration
 </details>
 
 <details>
-<summary><b>🔧 Configure VifChat Server (Click to expand)</b></summary>
+<summary><b>🔧 Configure App Server (Click to expand)</b></summary>
 
 ### Architecture
 
@@ -88,30 +88,30 @@ We use **API Gateway** combined with **AWS Lambda** to enable streaming response
 **Deploy with one command:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/aws-samples/sample-vif-chat-app/main/server/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/aws-samples/sample-mobile-ai-assistant/main/server/install.sh | bash
 ```
 
-By default this deploys to **the account of your current AWS profile**, in the region from `$AWS_REGION` or your `aws configure` default (fallback: `us-east-1`), with stack name `VifChat`. Wait about 3-4 minutes to see your **API URL**, **API Key** obtain link, and a scannable QR code for auto-configuring the app.
+By default this deploys to **the account of your current AWS profile**, in the region from `$AWS_REGION` or your `aws configure` default (fallback: `us-east-1`), with stack name `AIAssistant`. Wait about 3-4 minutes to see your **API URL**, **API Key** obtain link, and a scannable QR code for auto-configuring the app.
 
 To target a different account, region, or stack:
 
 ```bash
-./install.sh --region us-west-2 --stack MyVifChat --profile myprofile
+./install.sh --region us-west-2 --stack MyAIAssistant --profile myprofile
 ```
 
 | Flag | Purpose | Default |
 |---|---|---|
 | `--region` | AWS region to deploy into | `$AWS_REGION` or `us-east-1` |
-| `--stack` | CloudFormation stack name | `VifChat` |
+| `--stack` | CloudFormation stack name | `AIAssistant` |
 | `--profile` | AWS CLI profile to use | current default profile |
 
 ### Step 2: Open the App and setup with API URL and API Key
 
 1. Launch the App, open the drawer menu, and tap **Settings**.
-2. Under Amazon Bedrock → VifChat Server, tap the scan icon next to **API URL** to scan the QR (iOS/Android) — or paste `API URL` and `API Key` manually.
+2. Under Amazon Bedrock → App Server, tap the scan icon next to **API URL** to scan the QR (iOS/Android) — or paste `API URL` and `API Key` manually.
 3. Select your Region, then tap the top right ✓ to save.
 
-Congratulations 🎉 Your VifChat App is ready to use!
+Congratulations 🎉 Your AI Assistant App is ready to use!
 
 </details>
 
@@ -173,7 +173,7 @@ Congratulations 🎉 Your VifChat App is ready to use!
     - `GPT-4o`
     - `GPT-4o mini`
 
-Additionally, if you have deployed and configured the [VifChat Server](#getting-started-with-amazon-bedrock), you
+Additionally, if you have deployed and configured the [App Server](#getting-started-with-amazon-bedrock), you
 can enable the **Use Proxy** option to forward your requests.
 
 </details>
@@ -281,7 +281,7 @@ https://github.com/user-attachments/assets/ebf21b12-9c93-4d2e-a109-1d6484019838
 
 https://github.com/user-attachments/assets/c70fc2b4-8960-4a5e-b4f8-420fcd5eafd4
 
-> Note: Amazon Nova Sonic currently only available with VifChat server.
+> Note: Amazon Nova Sonic currently only available with App Server.
 
 #### Other Features
 
@@ -341,7 +341,7 @@ landscape orientation.
 
 ![](assets/animations/landscape.avif)
 
-## What Makes VifChat Really "Vif"?
+## What Makes AI Assistant Really Fast?
 
 🚀 **Fast Launch Speed**
 
@@ -403,7 +403,7 @@ npm run ios
 ### Build for macOS
 
 1. Execute `npm start`.
-2. Double click `ios/VifChat.xcworkspace` to open the project in your Xcode.
+2. Double click `ios/AIAssistant.xcworkspace` to open the project in your Xcode.
 3. Change the build destination to `My Mac (Mac Catalyst)` then click the ▶ Run button.
 
 ## API Reference
@@ -416,11 +416,11 @@ Please refer [API Reference](server/README.md)
 
 - **Android** and **macOS**: Navigate to **Settings** Page, if there is a new version, you will find it at the bottom
   of this page, then click the app version to download and install it.
-- **iOS**: If a new version is released in the [Release page](https://github.com/aws-samples/sample-vif-chat-app/releases),
+- **iOS**: If a new version is released in the [Release page](https://github.com/aws-samples/sample-mobile-ai-assistant/releases),
   update your local code, rebuild and install your app by Xcode.
 
 **Note**: After downloading a new version, please check
-the [release notes](https://github.com/aws-samples/sample-vif-chat-app/releases) to see if an API version update is required.
+the [release notes](https://github.com/aws-samples/sample-mobile-ai-assistant/releases) to see if an API version update is required.
 
 ### Upgrade API
 

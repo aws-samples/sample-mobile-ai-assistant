@@ -339,11 +339,11 @@ async def upgrade(request: UpgradeRequest):
     if total_number > 0:
         need_upgrade = total_number < calculate_version_total(new_version)
         if need_upgrade:
-            download_prefix = "https://github.com/aws-samples/sample-vif-chat-app/releases/download/"
+            download_prefix = "https://github.com/aws-samples/sample-mobile-ai-assistant/releases/download/"
             if request.os == 'android':
-                url = download_prefix + new_version + "/VifChat.apk"
+                url = download_prefix + new_version + "/AIAssistant.apk"
             elif request.os == 'mac':
-                url = download_prefix + new_version + "/VifChat.dmg"
+                url = download_prefix + new_version + "/AIAssistant.dmg"
     return {"needUpgrade": need_upgrade, "version": new_version, "url": url}
 
 
@@ -399,7 +399,7 @@ def get_latest_version() -> str:
         return cache["latest_version"]
     try:
         response = httpx.get(
-            "https://api.github.com/repos/aws-samples/sample-vif-chat-app/tags",
+            "https://api.github.com/repos/aws-samples/sample-mobile-ai-assistant/tags",
             headers={'User-Agent': 'Mozilla/5.0'}
         )
         content = response.json()
