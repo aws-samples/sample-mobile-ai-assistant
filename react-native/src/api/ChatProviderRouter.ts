@@ -95,7 +95,7 @@ export const invokeChatProvider = async (
   }
   if (bedrockConfigMode !== 'bedrock' && !isConfigured()) {
     callback(
-      'Please configure your VifChat Server API URL and API Key',
+      'Please configure your App Server API URL and API Key',
       true,
       false
     );

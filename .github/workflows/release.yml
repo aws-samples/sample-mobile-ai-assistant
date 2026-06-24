@@ -40,7 +40,7 @@ jobs:
           git add .
           git config user.name '${{ vars.USER_NAME }}'
           git config user.email '${{ vars.USER_EMAIL }}'
-          git commit -m 'release: VifChat v${{ env.NEW_VERSION }}'
+          git commit -m 'release: AI Assistant v${{ env.NEW_VERSION }}'
           git push
           git tag ${{ env.NEW_VERSION }}
           git push origin ${{ env.NEW_VERSION }}
@@ -51,7 +51,7 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          name: "VifChat v${{ env.NEW_VERSION }}"
+          name: "AI Assistant v${{ env.NEW_VERSION }}"
           files: |
             react-native/android/app/build/outputs/apk/release/*.apk
           tag_name: "${{ env.NEW_VERSION }}"
