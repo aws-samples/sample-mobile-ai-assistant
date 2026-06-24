@@ -67,7 +67,7 @@ export const invokeOpenAIWithCallBack = async (
   if (isOpenRouter) {
     options.headers['HTTP-Referer' as keyof typeof options.headers] =
       GITHUB_LINK;
-    options.headers['X-Title' as keyof typeof options.headers] = 'VifChat';
+    options.headers['X-Title' as keyof typeof options.headers] = 'AI Assistant';
   }
   const url = getApiURL();
   let completeMessage = '';

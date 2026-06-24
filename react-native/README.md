@@ -1,4 +1,4 @@
-# VifChat React Native
+# AI Assistant React Native
 
 ## Tech Stack
 

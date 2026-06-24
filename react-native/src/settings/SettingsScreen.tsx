@@ -102,7 +102,8 @@ const initUpgradeInfo: UpgradeInfo = {
   url: '',
 };
 
-export const GITHUB_LINK = 'https://github.com/aws-samples/sample-vif-chat-app';
+export const GITHUB_LINK =
+  'https://github.com/aws-samples/sample-mobile-ai-assistant';
 
 function SettingsScreen(): React.JSX.Element {
   const { colors, isDark } = useTheme();
@@ -524,7 +525,7 @@ function SettingsScreen(): React.JSX.Element {
                     bedrockConfigMode === 'swiftchat' &&
                       styles.configSwitchTextActive,
                   ]}>
-                  VifChat Server
+                  App Server
                 </Text>
               </TouchableOpacity>
             </View>

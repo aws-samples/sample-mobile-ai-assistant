@@ -1,12 +1,12 @@
 {
-  "name": "vif-chat",
-  "description": "Sample Bedrock Cross-platform App - VifChat",
+  "name": "ai-assistant",
+  "description": "Sample Bedrock Cross-platform App - AI Assistant",
   "version": "2.9.0",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "build:ios": "cd ios && xcodebuild -workspace VifChat.xcworkspace -scheme SwiftChat -sdk iphonesimulator -configuration Release -destination generic/platform=iOS CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO clean archive | xcpretty",
+    "build:ios": "cd ios && xcodebuild -workspace AIAssistant.xcworkspace -scheme SwiftChat -sdk iphonesimulator -configuration Release -destination generic/platform=iOS CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO clean archive | xcpretty",
     "format": "npx prettier --check '*.{js,ts}'",
     "lint": "npx eslint .",
     "start": "react-native start",

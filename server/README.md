@@ -1,6 +1,6 @@
-## VifChat Backend API
+## AI Assistant Backend API
 
-The VifChat backend API is implemented using Python language and the FastAPI framework. It is packaged as a Docker
+The AI Assistant backend API is implemented using Python language and the FastAPI framework. It is packaged as a Docker
 image using [aws-lambda-adapter](https://github.com/awslabs/aws-lambda-web-adapter) and deployed to API Gateway with
 AWS Lambda for execution, supporting streaming responses for up to 15 minutes.
 
@@ -87,7 +87,7 @@ export API_KEY=<API Key>
    --header 'accept: application/json' \
    --header "Authorization: Bearer ${API_KEY}"
    ```
-   This API is used to get the new version of VifChat for Android and macOS App updates.
+   This API is used to get the new version of AI Assistant for Android and macOS App updates.
 
 ### API Code Reference
 

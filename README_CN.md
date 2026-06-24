@@ -1,13 +1,13 @@
-# Sample Vif Chat App — 跨平台 AI 助手
+# Sample Mobile AI Assistant — 跨平台 AI 对话与创作应用
 
 > 🚀 您的个人 AI 工作空间 — 聊天、创建应用等
 
-[![GitHub Release](https://img.shields.io/github/v/release/aws-samples/sample-vif-chat-app)](https://github.com/aws-samples/sample-vif-chat-app/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/aws-samples/sample-mobile-ai-assistant)](https://github.com/aws-samples/sample-mobile-ai-assistant/releases)
 [![License](https://img.shields.io/badge/license-MIT--0-green)](LICENSE)
 
 [English](/README.md)
 
-VifChat 是一款快速响应的 AI 助手，采用 [React Native](https://reactnative.dev/)
+AI Assistant 是一款快速响应的跨平台应用，采用 [React Native](https://reactnative.dev/)
 开发，并依托 [Amazon Bedrock](https://aws.amazon.com/bedrock/) 提供强大支持，同时兼容 Ollama、DeepSeek、OpenAI 和 OpenAI
 兼容的其他模型供应商。凭借其极简设计理念与坚实的隐私保护措施，该应用在 Android、iOS 和 macOS 平台上实现了实时流式对话、AI
 图像生成、极速 Web 应用创建和语音对话功能。
@@ -19,7 +19,7 @@ VifChat 是一款快速响应的 AI 助手，采用 [React Native](https://react
 - 🚀 升级至 React Native 0.83，启用 New Architecture（自 v2.8.0 起）。
 - 🚀 支持一句话创建或编辑极速 Web 应用（自 v2.7.0 起）。
 - 🚀 支持网络搜索，获取实时信息（自 v2.7.0 起）。
-- 🚀 更新 VifChat 服务器，支持 API Gateway + Lambda 部署，最长支持 15 分钟流式输出（自 v2.7.0 起）。
+- 🚀 更新 App 服务器，支持 API Gateway + Lambda 部署，最长支持 15 分钟流式输出（自 v2.7.0 起）。
 - 🚀 支持图片画廊，浏览和管理生成的图片（自 v2.7.0 起）。
 
 **创建应用**：生成、编辑、分享和预览极速 Web 应用
@@ -62,14 +62,14 @@ VifChat 是一款快速响应的 AI 助手，采用 [React Native](https://react
 
 1. 点击 [Amazon Bedrock 控制台](https://console.aws.amazon.com/bedrock/home#/api-keys/long-term/create) 创建长期 API 密钥。
 
-2. 复制并粘贴 API 密钥到 VifChat 设置页面的（Amazon Bedrock -> Bedrock API Key）中。
+2. 复制并粘贴 API 密钥到 AI Assistant 设置页面的（Amazon Bedrock -> Bedrock API Key）中。
 
 3. 应用程序将根据您当前选择的区域自动获取最新的模型列表。如果列表中出现多个模型，说明配置成功。
 
 </details>
 
 <details>
-<summary><b>🔧 配置 VifChat 服务器（点击展开）</b></summary>
+<summary><b>🔧 配置 App 服务器（点击展开）</b></summary>
 
 ### 架构
 
@@ -84,30 +84,30 @@ VifChat 是一款快速响应的 AI 助手，采用 [React Native](https://react
 **一行命令部署：**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/aws-samples/sample-vif-chat-app/main/server/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/aws-samples/sample-mobile-ai-assistant/main/server/install.sh | bash
 ```
 
-默认部署到**当前 AWS profile 的账户**，region 取 `$AWS_REGION` 或 `aws configure` 的默认值（都未设置则为 `us-east-1`），堆栈名为 `VifChat`。等待约 3-4 分钟，您会看到 **API URL**、**API Key** 获取链接，以及可用手机扫描自动配置的二维码。
+默认部署到**当前 AWS profile 的账户**，region 取 `$AWS_REGION` 或 `aws configure` 的默认值（都未设置则为 `us-east-1`），堆栈名为 `AIAssistant`。等待约 3-4 分钟，您会看到 **API URL**、**API Key** 获取链接，以及可用手机扫描自动配置的二维码。
 
 需要指定其他目标时：
 
 ```bash
-./install.sh --region us-west-2 --stack MyVifChat --profile myprofile
+./install.sh --region us-west-2 --stack MyAIAssistant --profile myprofile
 ```
 
 | 参数 | 作用 | 默认值 |
 |---|---|---|
 | `--region` | 部署到的 AWS region | `$AWS_REGION` 或 `us-east-1` |
-| `--stack` | CloudFormation 堆栈名 | `VifChat` |
+| `--stack` | CloudFormation 堆栈名 | `AIAssistant` |
 | `--profile` | 使用的 AWS CLI profile | 当前默认 profile |
 
 ### 步骤 2：打开应用并使用 API URL 和 API Key 进行设置
 
 1. 启动应用，打开抽屉菜单，点击 **设置**。
-2. 在 Amazon Bedrock → VifChat Server 下，点击 **API URL** 右侧的扫码图标扫描二维码（iOS/Android），或手动粘贴 `API URL` 和 `API Key`。
+2. 在 Amazon Bedrock → App Server 下，点击 **API URL** 右侧的扫码图标扫描二维码（iOS/Android），或手动粘贴 `API URL` 和 `API Key`。
 3. 选择 Region，然后点击右上角 ✓ 保存。
 
-恭喜 🎉 您的 VifChat 应用已准备就绪！
+恭喜 🎉 您的 AI Assistant 应用已准备就绪！
 
 </details>
 
@@ -168,7 +168,7 @@ curl -fsSL https://raw.githubusercontent.com/aws-samples/sample-vif-chat-app/mai
     - `GPT-4o`
     - `GPT-4o mini`
 
-此外，如果您已部署并配置了 [VifChat 服务器](#amazon-bedrock-入门指南)，可以启用 **Use Proxy** 选项来转发您的请求。
+此外，如果您已部署并配置了 [App 服务器](#amazon-bedrock-入门指南)，可以启用 **Use Proxy** 选项来转发您的请求。
 
 </details>
 
@@ -271,7 +271,7 @@ https://github.com/user-attachments/assets/ebf21b12-9c93-4d2e-a109-1d6484019838
 
 https://github.com/user-attachments/assets/c70fc2b4-8960-4a5e-b4f8-420fcd5eafd4
 
-> 注意：Amazon Nova Sonic 目前仅在 VifChat 服务器中可用。
+> 注意：Amazon Nova Sonic 目前仅在 App 服务器中可用。
 
 #### 其他功能
 
@@ -329,7 +329,7 @@ https://github.com/user-attachments/assets/c70fc2b4-8960-4a5e-b4f8-420fcd5eafd4
 
 ![](assets/animations/landscape.avif)
 
-## 什么让 VifChat 真正"Vif"？
+## 什么让 AI Assistant 如此快速？
 
 🚀 **快速启动速度**
 
@@ -389,7 +389,7 @@ npm run ios
 ### 构建 macOS
 
 1. 执行 `npm start`。
-2. 双击 `ios/VifChat.xcworkspace` 在 Xcode 中打开项目。
+2. 双击 `ios/AIAssistant.xcworkspace` 在 Xcode 中打开项目。
 3. 将构建目标更改为 `My Mac (Mac Catalyst)` 然后点击 ▶ 运行按钮。
 
 ## API 参考
@@ -401,10 +401,10 @@ npm run ios
 ### 升级应用
 
 - **Android** 和 **macOS**：导航到 **设置** 页面，如果有新版本，您将在此页面底部找到它，然后点击应用版本下载并安装。
-- **iOS**：如果在 [发布页面](https://github.com/aws-samples/sample-vif-chat-app/releases) 发布了新版本，请更新您的本地代码，通过
+- **iOS**：如果在 [发布页面](https://github.com/aws-samples/sample-mobile-ai-assistant/releases) 发布了新版本，请更新您的本地代码，通过
   Xcode 重新构建并安装您的应用。
 
-**注意**：下载新版本后，请查看 [发布说明](https://github.com/aws-samples/sample-vif-chat-app/releases) 确认是否需要 API 版本更新。
+**注意**：下载新版本后，请查看 [发布说明](https://github.com/aws-samples/sample-mobile-ai-assistant/releases) 确认是否需要 API 版本更新。
 
 ### 升级 API
 

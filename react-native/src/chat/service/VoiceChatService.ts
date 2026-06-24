@@ -103,7 +103,7 @@ export class VoiceChatService {
               errorMsg.includes('This operation does not support API Keys')
             ) {
               errorMsg =
-                '\nThis operation does not support API Keys, Please switch to [VifChat Server](https://github.com/aws-samples/sample-vif-chat-app?tab=readme-ov-file#getting-started-with-amazon-bedrock) to use Nova Sonic';
+                '\nThis operation does not support API Keys, Please switch to [App Server](https://github.com/aws-samples/sample-mobile-ai-assistant?tab=readme-ov-file#getting-started-with-amazon-bedrock) to use Nova Sonic';
             }
             this.onErrorCallback(errorMsg);
           }
