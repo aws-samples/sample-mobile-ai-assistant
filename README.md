@@ -144,7 +144,7 @@ and Anthropic-compatible ones) on port 17434, so it works through the **Ollama**
 
 1. Install llmman and start the server:
     ```bash
-    curl -fsSL https://raw.githubusercontent.com/llmmanorg/llmman/main/install.sh | sh
+    curl -fsSL https://llmmanorg.github.io/install.sh | sh
     llmman pull gemma4
     llmman serve
     ```
