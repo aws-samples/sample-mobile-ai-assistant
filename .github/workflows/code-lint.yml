@@ -13,8 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Run package install
-        run: cd react-native && npm i
+        run: cd react-native && npm ci
+      - name: Run dependency security regression tests
+        run: cd react-native && npm run test:security
+      - name: Audit dependencies
+        run: cd react-native && npm audit --audit-level=low
       - name: Run code format
         run: cd react-native && npm run format
       - name: Run code lint
