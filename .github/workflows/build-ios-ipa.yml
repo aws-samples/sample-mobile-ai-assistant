@@ -1,0 +1,40 @@
+name: Build iOS IPA (unsigned)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "ci/ios-unsigned-ipa" ]
+permissions:
+  contents: read
+jobs:
+  build-ipa:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: |
+          cd react-native && npm ci
+          cd ios && pod install
+      - name: Archive for device (unsigned)
+        run: |
+          cd react-native/ios
+          xcodebuild -workspace AIAssistant.xcworkspace -scheme SwiftChat \
+            -sdk iphoneos -configuration Release -destination generic/platform=iOS \
+            -archivePath "$RUNNER_TEMP/SwiftChat.xcarchive" \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            clean archive | xcpretty
+      - name: Package IPA
+        run: |
+          cd "$RUNNER_TEMP"
+          mkdir -p Payload
+          cp -R SwiftChat.xcarchive/Products/Applications/*.app Payload/
+          zip -qry SwiftChat-unsigned.ipa Payload
+          ls -lh SwiftChat-unsigned.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SwiftChat-unsigned-ipa
+          path: ${{ runner.temp }}/SwiftChat-unsigned.ipa
+          retention-days: 14
