@@ -28,6 +28,10 @@ type CallbackFunction = (
   reasoning?: string
 ) => void;
 
+// Claude models that only accept adaptive thinking (no budget_tokens).
+const usesAdaptiveThinking = (modelId: string): boolean =>
+  /claude-(fable-5|mythos-5|opus-4-7|opus-4-8)/.test(modelId.toLowerCase());
+
 // Sonnet >= 4 and Opus >= 4.5 accept the 1M input-context beta.
 const supports1MContext = (modelId: string): boolean => {
   const id = modelId.toLowerCase();
@@ -51,6 +55,12 @@ export const invokeBedrockWithAPIKey = async (
     // GPT-5.6 on Converse takes OpenAI's reasoning effort, not reasoning_config
     // (same effort setting as the mantle Responses path).
     additionalModelRequestFields.reasoning = { effort: getReasoningEffort() };
+  } else if (isEnableThinking() && usesAdaptiveThinking(modelId)) {
+    // These Claude models reject budget-based thinking on Converse too.
+    additionalModelRequestFields.thinking = {
+      type: 'adaptive',
+      display: 'summarized',
+    };
   } else if (isEnableThinking()) {
     additionalModelRequestFields.reasoning_config = {
       type: 'enabled',
