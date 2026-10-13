@@ -21,7 +21,13 @@ export const resolveApiMode = (modelId: string): ApiMode => {
   if (MantleResponsesModelIdPrefixes.some(prefix => id.startsWith(prefix))) {
     return ApiMode.MantleResponses;
   }
-  if (MantleMessagesModelIds.some(name => id.includes(name))) {
+  // Match the whole model name (optionally followed by a date/version suffix)
+  // so e.g. "claude-fable-5" does not also catch "claude-fable-5-1".
+  if (
+    MantleMessagesModelIds.some(name =>
+      new RegExp(`${name}(-\\d{8}|-v\\d|:|$)`).test(id)
+    )
+  ) {
     return ApiMode.MantleMessages;
   }
   // Remaining OpenAI-compatible mantle models (gpt-oss, qwen, gemma, deepseek,
@@ -45,11 +51,27 @@ export const tagModelsWithApiMode = (
     if (apiMode === ApiMode.Converse && mantleOpenAiModelIds.has(baseId)) {
       apiMode = ApiMode.MantleChatCompletions;
     }
+    // GPT-5.x not served by mantle in this region (e.g. GPT-5.6 Sol) still
+    // works through Converse.
+    if (
+      apiMode === ApiMode.MantleResponses &&
+      mantleOpenAiModelIds.size > 0 &&
+      !mantleOpenAiModelIds.has(baseId)
+    ) {
+      apiMode = ApiMode.Converse;
+    }
     return { ...model, apiMode };
   });
 
 export const getMantleBaseUrl = (region: string): string =>
   `https://bedrock-mantle.${region}.api.aws`;
+
+// Mantle serves Chat Completions for OpenAI models under /openai/v1 and for
+// every other provider (kimi, glm, qwen, …) under /v1 only.
+export const getMantleChatPath = (modelId: string): string =>
+  stripRegionPrefix(modelId).startsWith('openai.')
+    ? '/openai/v1/chat/completions'
+    : '/v1/chat/completions';
 
 export const isMantleMode = (apiMode?: ApiMode): boolean =>
   apiMode === ApiMode.MantleResponses ||
