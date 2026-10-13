@@ -36,6 +36,7 @@ class ConverseRequest(BaseModel):
     messages: List[dict] = []
     modelId: str
     enableThinking: bool | None = None
+    reasoningEffort: str | None = None
     region: str
     system: List[dict] | None = None
 
@@ -136,7 +137,10 @@ async def create_bedrock_command(request: ConverseRequest) -> tuple[boto3.client
         command["inferenceConfig"] = {"maxTokens": max_tokens}
 
     extra: dict = {}
-    if request.enableThinking:
+    if "gpt-5.6" in model_id:
+        # GPT-5.6 takes OpenAI's reasoning effort; reasoning_config is rejected.
+        extra["reasoning"] = {"effort": request.reasoningEffort or "medium"}
+    elif request.enableThinking:
         extra["reasoning_config"] = {"type": "enabled", "budget_tokens": 16000}
     if _supports_1m_context(model_id):
         extra["anthropic_beta"] = ["context-1m-2025-08-07"]

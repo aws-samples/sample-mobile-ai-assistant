@@ -17,6 +17,7 @@ import {
   getBedrockConfigMode,
   getImageModel,
   getImageSize,
+  getReasoningEffort,
   getRegion,
   getTextModel,
   getThinkingEnabled,
@@ -149,6 +150,7 @@ export const invokeBedrockServerWithCallBack = async (
     modelId: getTextModel().modelId,
     region: getRegion(),
     enableThinking: isEnableThinking(),
+    reasoningEffort: getReasoningEffort(),
     system: prompt ? [{ text: prompt?.prompt }] : undefined,
   };
   if (prompt?.includeHistory === false) {
