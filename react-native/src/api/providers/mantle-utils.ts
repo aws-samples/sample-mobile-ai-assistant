@@ -39,7 +39,7 @@ export const resolveApiMode = (modelId: string): ApiMode => {
 /**
  * Tags each Bedrock model with its apiMode. OpenAI-compatible model ids come
  * from the live mantle GET /v1/models list (region-specific); Anthropic models
- * and GPT-5.x are matched by id since mantle does not list them under OpenAI.
+ * and GPT-5.x are matched by id and kept on mantle only if that list has them.
  */
 export const tagModelsWithApiMode = (
   models: Model[],
@@ -51,12 +51,15 @@ export const tagModelsWithApiMode = (
     if (apiMode === ApiMode.Converse && mantleOpenAiModelIds.has(baseId)) {
       apiMode = ApiMode.MantleChatCompletions;
     }
-    // GPT-5.x not served by mantle in this region (e.g. GPT-5.6 Sol) still
-    // works through Converse.
+    // Models mantle does not serve in this region (e.g. GPT-5.6 Sol, or Claude
+    // Fable 5 in us-west-2) still work through Converse.
     if (
-      apiMode === ApiMode.MantleResponses &&
+      (apiMode === ApiMode.MantleResponses ||
+        apiMode === ApiMode.MantleMessages) &&
       mantleOpenAiModelIds.size > 0 &&
-      !mantleOpenAiModelIds.has(baseId)
+      !mantleOpenAiModelIds.has(baseId) &&
+      // mantle lists e.g. "anthropic.claude-haiku-4-5" without the date suffix
+      !mantleOpenAiModelIds.has(baseId.replace(/-\d{8}-v\d+(:\d+)?$/, ''))
     ) {
       apiMode = ApiMode.Converse;
     }
