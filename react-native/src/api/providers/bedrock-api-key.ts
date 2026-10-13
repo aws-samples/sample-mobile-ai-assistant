@@ -8,6 +8,7 @@ import {
 } from '../../types/Chat.ts';
 import {
   getBedrockApiKey,
+  getReasoningEffort,
   getRegion,
   getTextModel,
 } from '../../storage/StorageUtils.ts';
@@ -46,7 +47,11 @@ export const invokeBedrockWithAPIKey = async (
   const modelId = getTextModel().modelId;
 
   const additionalModelRequestFields: Record<string, unknown> = {};
-  if (isEnableThinking()) {
+  if (modelId.includes('gpt-5.6')) {
+    // GPT-5.6 on Converse takes OpenAI's reasoning effort, not reasoning_config
+    // (same effort setting as the mantle Responses path).
+    additionalModelRequestFields.reasoning = { effort: getReasoningEffort() };
+  } else if (isEnableThinking()) {
     additionalModelRequestFields.reasoning_config = {
       type: 'enabled',
       budget_tokens: 16000,
