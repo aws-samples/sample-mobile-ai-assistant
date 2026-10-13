@@ -149,6 +149,14 @@ async def create_bedrock_command(request: ConverseRequest) -> tuple[boto3.client
     return client, command
 
 
+def _json_default(value):
+    # Converse stream events can carry binary fields (e.g.
+    # reasoningContent.redactedContent); send them base64-encoded.
+    if isinstance(value, (bytes, bytearray)):
+        return base64.b64encode(value).decode("ascii")
+    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+
+
 @app.post("/api/converse/v3")
 async def converse_v3(request: ConverseRequest):
     try:
@@ -158,7 +166,7 @@ async def converse_v3(request: ConverseRequest):
             try:
                 response = client.converse_stream(**command)
                 for item in response['stream']:
-                    yield json.dumps(item) + '\n\n'
+                    yield json.dumps(item, default=_json_default) + '\n\n'
             except Exception as err:
                 yield f"Error: {str(err)}"
 
@@ -177,7 +185,7 @@ async def converse_v2(request: ConverseRequest):
             try:
                 response = client.converse_stream(**command)
                 for item in response['stream']:
-                    yield json.dumps(item)
+                    yield json.dumps(item, default=_json_default)
             except Exception as err:
                 yield f"Error: {str(err)}"
 
@@ -295,7 +303,10 @@ async def mantle_responses(request: MantleRequest):
 
 @app.post("/api/mantle/chat")
 async def mantle_chat(request: MantleRequest):
-    return await _mantle_stream(request, "/openai/v1/chat/completions")
+    # Mantle serves OpenAI models under /openai/v1 and other providers under /v1.
+    model = str(request.body.get("model", ""))
+    path = "/openai/v1/chat/completions" if model.startswith("openai.") else "/v1/chat/completions"
+    return await _mantle_stream(request, path)
 
 
 @app.post("/api/mantle/messages")

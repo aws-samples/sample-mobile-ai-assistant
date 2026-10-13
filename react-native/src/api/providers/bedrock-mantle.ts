@@ -16,7 +16,11 @@ import {
   TextContent,
 } from '../BedrockMessageConvertor.ts';
 import { getApiPrefix, getAuthHeaders, isDev } from '../bedrock-api.ts';
-import { getMantleBaseUrl, stripRegionPrefix } from './mantle-utils.ts';
+import {
+  getMantleBaseUrl,
+  getMantleChatPath,
+  stripRegionPrefix,
+} from './mantle-utils.ts';
 import type { ChatCallbackFunction } from '../types.ts';
 
 const MAX_TOKENS = 64000;
@@ -208,7 +212,7 @@ const buildRequestBody = (
   }
   if (apiMode === ApiMode.MantleResponses) {
     const body: Record<string, unknown> = {
-      model: modelId,
+      model: stripRegionPrefix(modelId),
       input: getResponsesInput(messages, prompt),
       stream: true,
     };
@@ -223,7 +227,7 @@ const buildRequestBody = (
   }
   // MantleChatCompletions
   return {
-    model: modelId,
+    model: stripRegionPrefix(modelId),
     messages: getOpenAIMessages(messages, prompt),
     stream: true,
     stream_options: { include_usage: true },
@@ -232,12 +236,12 @@ const buildRequestBody = (
 
 // ---- Transport builders ----------------------------------------------------
 
-const directPath = (apiMode: ApiMode): string => {
+const directPath = (apiMode: ApiMode, modelId: string): string => {
   switch (apiMode) {
     case ApiMode.MantleResponses:
       return '/openai/v1/responses';
     case ApiMode.MantleChatCompletions:
-      return '/openai/v1/chat/completions';
+      return getMantleChatPath(modelId);
     default:
       return '/anthropic/v1/messages';
   }
@@ -257,7 +261,7 @@ const serverPath = (apiMode: ApiMode): string => {
 const buildDirectRequest = (
   apiMode: ApiMode,
   region: string,
-  _modelId: string,
+  modelId: string,
   body: Record<string, unknown>,
   controller: AbortController
 ) => {
@@ -270,7 +274,7 @@ const buildDirectRequest = (
     headers['anthropic-version'] = '2023-06-01';
   }
   return {
-    url: getMantleBaseUrl(region) + directPath(apiMode),
+    url: getMantleBaseUrl(region) + directPath(apiMode, modelId),
     options: {
       method: 'POST',
       headers,
