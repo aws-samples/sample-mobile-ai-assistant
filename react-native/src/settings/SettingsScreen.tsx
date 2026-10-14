@@ -32,9 +32,8 @@ import {
   getOpenAIProxyEnabled,
   getRegion,
   getTextModel,
-  getThinkingEnabled,
-  getReasoningEffort,
-  saveReasoningEffort,
+  getFastModeEnabled,
+  saveFastModeEnabled,
   getVoiceId,
   isNewStabilityImageModel,
   saveAllModels,
@@ -47,7 +46,6 @@ import {
   saveOpenAIProxyEnabled,
   saveRegion,
   saveTextModel,
-  saveThinkingEnabled,
   saveVoiceId,
   updateTextModelUsageOrder,
   getBedrockConfigMode,
@@ -63,6 +61,13 @@ import {
 import { CustomHeaderRightButton } from '../chat/component/CustomHeaderRightButton.tsx';
 import { RouteParamList } from '../types/RouteTypes.ts';
 import { requestAllModels, requestUpgradeInfo } from '../api/bedrock-api.ts';
+import {
+  FAST_MODE_OPTIONS,
+  getThinkingOptions,
+  getThinkingValue,
+  saveThinkingValue,
+  supportsFastMode,
+} from '../api/ThinkingConfig.ts';
 import {
   DropdownItem,
   Model,
@@ -80,9 +85,7 @@ import {
   getTotalCost,
 } from './ModelPrice.ts';
 import {
-  BedrockThinkingModels,
   BedrockVoiceModels,
-  DeepSeekThinkingModels,
   DefaultTextModel,
   getAllRegions,
   getDefaultApiKeyModels,
@@ -136,8 +139,14 @@ function SettingsScreen(): React.JSX.Element {
   const [cost, setCost] = useState('0.00');
   const controllerRef = useRef<AbortController | null>(null);
   const [selectedTab, setSelectedTab] = useState('bedrock');
-  const [thinkingEnabled, setThinkingEnabled] = useState(getThinkingEnabled);
-  const [reasoningEffort, setReasoningEffort] = useState(getReasoningEffort);
+  const [thinkingValue, setThinkingValue] = useState(() =>
+    getThinkingValue(getTextModel())
+  );
+  const [fastModeEnabled, setFastModeEnabled] = useState(getFastModeEnabled);
+  // Each model family has its own options; re-read the value for the new model.
+  useEffect(() => {
+    setThinkingValue(getThinkingValue(selectedTextModel));
+  }, [selectedTextModel]);
   const [voiceId, setVoiceId] = useState(getVoiceId);
   const [bedrockConfigMode, setBedrockConfigMode] =
     useState(getBedrockConfigMode);
@@ -418,11 +427,6 @@ function SettingsScreen(): React.JSX.Element {
     saveOpenAIProxyEnabled(value);
   };
 
-  const toggleThinking = (value: boolean) => {
-    setThinkingEnabled(value);
-    saveThinkingEnabled(value);
-  };
-
   const handleOpenClearDialog = () => {
     setShowClearDialog(true);
     setClearCountdown(10);
@@ -692,41 +696,34 @@ function SettingsScreen(): React.JSX.Element {
           }}
           placeholder="Select a model"
         />
-        {selectedTextModel &&
-          !selectedTextModel.modelId.includes('gpt-5.6') &&
-          (BedrockThinkingModels.includes(selectedTextModel.modelName) ||
-            DeepSeekThinkingModels.includes(selectedTextModel.modelName)) && (
-            <View style={styles.thinkingSwitchContainer}>
-              <Text style={styles.proxyLabel}>Enable Thinking</Text>
-              <Switch
-                style={[isMac ? styles.switch : {}]}
-                value={thinkingEnabled}
-                onValueChange={toggleThinking}
-              />
-            </View>
-          )}
-        {selectedTextModel &&
-          selectedTextModel.modelId.includes('gpt-5.6') && (
-            <CustomDropdown
-              label="Reasoning Effort"
-              data={[
-                { label: 'None', value: 'none' },
-                { label: 'Low', value: 'low' },
-                { label: 'Medium', value: 'medium' },
-                { label: 'High', value: 'high' },
-                { label: 'X-High', value: 'xhigh' },
-                { label: 'Max', value: 'max' },
-              ]}
-              value={reasoningEffort}
-              onChange={(item: DropdownItem) => {
-                if (item.value !== '' && item.value !== reasoningEffort) {
-                  setReasoningEffort(item.value);
-                  saveReasoningEffort(item.value);
-                }
-              }}
-              placeholder="Select reasoning effort"
-            />
-          )}
+        {selectedTextModel && getThinkingOptions(selectedTextModel) && (
+          <CustomDropdown
+            label="Thinking"
+            data={getThinkingOptions(selectedTextModel)!}
+            value={thinkingValue}
+            onChange={(item: DropdownItem) => {
+              if (item.value !== '' && item.value !== thinkingValue) {
+                setThinkingValue(item.value);
+                saveThinkingValue(selectedTextModel, item.value);
+              }
+            }}
+            placeholder="Select thinking"
+          />
+        )}
+        {selectedTextModel && supportsFastMode(selectedTextModel, region) && (
+          <CustomDropdown
+            label="Speed"
+            data={FAST_MODE_OPTIONS}
+            value={fastModeEnabled ? 'fast' : 'standard'}
+            onChange={(item: DropdownItem) => {
+              if (item.value !== '') {
+                setFastModeEnabled(item.value === 'fast');
+                saveFastModeEnabled(item.value === 'fast');
+              }
+            }}
+            placeholder="Select speed"
+          />
+        )}
 
         {selectedTextModel &&
           BedrockVoiceModels.includes(selectedTextModel.modelName) && (
@@ -975,12 +972,6 @@ const createStyles = (colors: ColorScheme) =>
       marginVertical: 10,
     },
     proxySwitchContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: 12,
-    },
-    thinkingSwitchContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
