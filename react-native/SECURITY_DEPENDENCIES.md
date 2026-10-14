@@ -18,6 +18,22 @@ The following overrides need special care:
 
 Do not blindly replace the Metro override with `latest`. At the time of this update, `image-size` 2.0.2 was still vulnerable and newer Metro branches still depended on it.
 
+### October 2026 update
+
+`package-lock.json` records compatible fixes for `brace-expansion` (1.1.21 / 2.1.7), `compression` 1.8.2, `joi` 17.13.8 and `shell-quote` 1.12.0.
+
+| Override                                           | Reason                                                                                                                                                                                  |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@istanbuljs/load-nyc-config` → `js-yaml` `^4.3.2` | Removes `js-yaml` 3 → `argparse` 1 → `sprintf-js`, which has no patched release for GHSA-hp3w-g68c-fv3c. The package only calls `yaml.load()`, which js-yaml 4 keeps (safe by default). |
+
+### Unpatched advisories (`audit-allowlist.json`)
+
+CI runs `npm run audit:check` instead of `npm audit --audit-level=low`. It fails on every advisory of any severity, except entries in `audit-allowlist.json`. An entry is allowed only when no patched release exists. Each entry records the package and the reason, and has a `reviewBy` date. After that date the check fails again until the entry is re-assessed. Remove an entry as soon as a fix is published; the check prints a note when an entry is no longer reported.
+
+| Advisory            | Package         | Why it is allowlisted                                                                                                                                                                                                                                                        |
+| ------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GHSA-vfj7-8cjw-p6xm | `braces` ≤3.0.3 | No patched release; 3.0.3 is the latest. Reached only through `micromatch` 4.0.8 (latest) in Metro, Jest, React Native CLI and fast-glob, which expand developer-authored glob patterns. It is not in the app bundle; checked on 2026-10-14 against the iOS `main.jsbundle`. |
+
 ## Swift dependencies
 
 The Xcode project updates `aws-sdk-swift` to 1.5.79. The security fixes require at least:
@@ -45,7 +61,7 @@ From `react-native/`:
 
 ```sh
 npm ci
-npm audit --audit-level=low
+npm run audit:check
 npm run test:security
 npm run lint
 npx prettier --check package.json scripts/security-dependencies.test.cjs
