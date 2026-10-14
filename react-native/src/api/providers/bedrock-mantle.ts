@@ -5,7 +5,6 @@ import {
   getRegion,
   getTextModel,
   getThinkingEnabled,
-  getReasoningEffort,
 } from '../../storage/StorageUtils.ts';
 import { BedrockThinkingModels } from '../../storage/Constants.ts';
 import {
@@ -16,8 +15,17 @@ import {
   TextContent,
 } from '../BedrockMessageConvertor.ts';
 import { getApiPrefix, getAuthHeaders, isDev } from '../bedrock-api.ts';
-import { getMantleBaseUrl, stripRegionPrefix } from './mantle-utils.ts';
+import {
+  getMantleBaseUrl,
+  getMantleChatPath,
+  stripRegionPrefix,
+} from './mantle-utils.ts';
 import type { ChatCallbackFunction } from '../types.ts';
+import {
+  getEffectiveReasoningEffort,
+  isFastModeActive,
+  usesReasoningEffort,
+} from '../ThinkingConfig.ts';
 
 const MAX_TOKENS = 64000;
 
@@ -208,36 +216,49 @@ const buildRequestBody = (
   }
   if (apiMode === ApiMode.MantleResponses) {
     const body: Record<string, unknown> = {
-      model: modelId,
+      model: stripRegionPrefix(modelId),
       input: getResponsesInput(messages, prompt),
       stream: true,
     };
-    if (modelId.includes('gpt-5.6')) {
-      // GPT-5.6 has no thinking on/off toggle — the reasoning effort tier drives
-      // it directly (effort 'none' = no thinking). 'minimal' is unsupported.
-      body.reasoning = { effort: getReasoningEffort(), summary: 'auto' };
+    if (usesReasoningEffort(modelId)) {
+      // GPT-5.6 / GPT-6 have no thinking on/off toggle — the reasoning effort
+      // tier drives it directly (GPT-5.6 'none' = no thinking).
+      body.reasoning = {
+        effort: getEffectiveReasoningEffort(modelId),
+        summary: 'auto',
+      };
     } else if (thinkingEnabledForModel()) {
       body.reasoning = { effort: 'medium', summary: 'auto' };
+    }
+    if (isFastModeActive()) {
+      body.service_tier = 'ultrafast';
     }
     return body;
   }
   // MantleChatCompletions
-  return {
-    model: modelId,
+  const body: Record<string, unknown> = {
+    model: stripRegionPrefix(modelId),
     messages: getOpenAIMessages(messages, prompt),
     stream: true,
     stream_options: { include_usage: true },
   };
+  if (usesReasoningEffort(modelId)) {
+    body.reasoning_effort = getEffectiveReasoningEffort(modelId);
+  }
+  if (isFastModeActive()) {
+    body.service_tier = 'ultrafast';
+  }
+  return body;
 };
 
 // ---- Transport builders ----------------------------------------------------
 
-const directPath = (apiMode: ApiMode): string => {
+const directPath = (apiMode: ApiMode, modelId: string): string => {
   switch (apiMode) {
     case ApiMode.MantleResponses:
       return '/openai/v1/responses';
     case ApiMode.MantleChatCompletions:
-      return '/openai/v1/chat/completions';
+      return getMantleChatPath(modelId);
     default:
       return '/anthropic/v1/messages';
   }
@@ -257,7 +278,7 @@ const serverPath = (apiMode: ApiMode): string => {
 const buildDirectRequest = (
   apiMode: ApiMode,
   region: string,
-  _modelId: string,
+  modelId: string,
   body: Record<string, unknown>,
   controller: AbortController
 ) => {
@@ -270,7 +291,7 @@ const buildDirectRequest = (
     headers['anthropic-version'] = '2023-06-01';
   }
   return {
-    url: getMantleBaseUrl(region) + directPath(apiMode),
+    url: getMantleBaseUrl(region) + directPath(apiMode, modelId),
     options: {
       method: 'POST',
       headers,

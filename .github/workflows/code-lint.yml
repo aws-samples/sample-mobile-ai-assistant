@@ -21,7 +21,8 @@ jobs:
       - name: Run dependency security regression tests
         run: cd react-native && npm run test:security
       - name: Audit dependencies
-        run: cd react-native && npm audit --audit-level=low
+        # Any advisory fails, except unpatched ones reviewed in audit-allowlist.json.
+        run: cd react-native && npm run audit:check
       - name: Run code format
         run: cd react-native && npm run format
       - name: Run code lint
