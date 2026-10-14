@@ -112,6 +112,8 @@ export {
   getReasoningExpanded,
   saveReasoningEffort,
   getReasoningEffort,
+  saveFastModeEnabled,
+  getFastModeEnabled,
   saveLastVirtualTryOnImgFile,
   getLastVirtualTryOnImgFile,
 } from './PreferenceStorage.ts';

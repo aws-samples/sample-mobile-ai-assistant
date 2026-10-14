@@ -137,10 +137,12 @@ async def create_bedrock_command(request: ConverseRequest) -> tuple[boto3.client
         command["inferenceConfig"] = {"maxTokens": max_tokens}
 
     extra: dict = {}
-    if "gpt-5.6" in model_id:
-        # GPT-5.6 takes OpenAI's reasoning effort; reasoning_config is rejected.
+    if re.search(r"gpt-(5\.6|6(\.\d+)?-)", model_id):
+        # GPT-5.6 / GPT-6 take OpenAI's reasoning effort; reasoning_config is rejected.
         extra["reasoning"] = {"effort": request.reasoningEffort or "medium"}
-    elif request.enableThinking and re.search(r"claude-(fable-5|mythos-5|opus-4-7|opus-4-8)", model_id.lower()):
+    elif request.enableThinking and re.search(
+        r"claude-(fable-5|mythos-5|opus-4-7|opus-4-8|opus-5|sonnet-5|haiku-5)", model_id.lower()
+    ):
         # These Claude models only accept adaptive thinking (no budget_tokens).
         extra["thinking"] = {"type": "adaptive", "display": "summarized"}
     elif request.enableThinking:

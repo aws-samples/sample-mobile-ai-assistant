@@ -5,7 +5,6 @@ import {
   getRegion,
   getTextModel,
   getThinkingEnabled,
-  getReasoningEffort,
 } from '../../storage/StorageUtils.ts';
 import { BedrockThinkingModels } from '../../storage/Constants.ts';
 import {
@@ -22,6 +21,11 @@ import {
   stripRegionPrefix,
 } from './mantle-utils.ts';
 import type { ChatCallbackFunction } from '../types.ts';
+import {
+  getEffectiveReasoningEffort,
+  isFastModeActive,
+  usesReasoningEffort,
+} from '../ThinkingConfig.ts';
 
 const MAX_TOKENS = 64000;
 
@@ -216,22 +220,35 @@ const buildRequestBody = (
       input: getResponsesInput(messages, prompt),
       stream: true,
     };
-    if (modelId.includes('gpt-5.6')) {
-      // GPT-5.6 has no thinking on/off toggle — the reasoning effort tier drives
-      // it directly (effort 'none' = no thinking). 'minimal' is unsupported.
-      body.reasoning = { effort: getReasoningEffort(), summary: 'auto' };
+    if (usesReasoningEffort(modelId)) {
+      // GPT-5.6 / GPT-6 have no thinking on/off toggle — the reasoning effort
+      // tier drives it directly (GPT-5.6 'none' = no thinking).
+      body.reasoning = {
+        effort: getEffectiveReasoningEffort(modelId),
+        summary: 'auto',
+      };
     } else if (thinkingEnabledForModel()) {
       body.reasoning = { effort: 'medium', summary: 'auto' };
+    }
+    if (isFastModeActive()) {
+      body.service_tier = 'ultrafast';
     }
     return body;
   }
   // MantleChatCompletions
-  return {
+  const body: Record<string, unknown> = {
     model: stripRegionPrefix(modelId),
     messages: getOpenAIMessages(messages, prompt),
     stream: true,
     stream_options: { include_usage: true },
   };
+  if (usesReasoningEffort(modelId)) {
+    body.reasoning_effort = getEffectiveReasoningEffort(modelId);
+  }
+  if (isFastModeActive()) {
+    body.service_tier = 'ultrafast';
+  }
+  return body;
 };
 
 // ---- Transport builders ----------------------------------------------------

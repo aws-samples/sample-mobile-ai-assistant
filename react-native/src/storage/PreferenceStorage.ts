@@ -7,12 +7,14 @@ const openAIProxyEnabledKey = keyPrefix + 'openAIProxyEnabledKey';
 const thinkingEnabledKey = keyPrefix + 'thinkingEnabledKey';
 const reasoningExpandedKey = keyPrefix + 'reasoningExpandedKey';
 const reasoningEffortKey = keyPrefix + 'reasoningEffortKey';
+const fastModeEnabledKey = keyPrefix + 'fastModeEnabledKey';
 const lastVirtualTryOnImgFileTag = keyPrefix + 'lastVirtualTryOnImgFileTag';
 
 let currentOpenAIProxyEnabled: boolean | undefined;
 let currentThinkingEnabled: boolean | undefined;
 let currentReasoningExpanded: boolean | undefined;
 let currentReasoningEffort: string | undefined;
+let currentFastModeEnabled: boolean | undefined;
 let currentVirtualTryOnImgFile: FileInfo | undefined;
 
 export function saveHapticEnabled(enabled: boolean) {
@@ -66,7 +68,7 @@ export function getReasoningExpanded() {
   }
 }
 
-// Reasoning effort tier for GPT-5.6 (none/low/medium/high/xhigh/max).
+// Reasoning effort tier for GPT-5.6 / GPT-6 (none/low/medium/high/xhigh/max).
 export function saveReasoningEffort(effort: string) {
   currentReasoningEffort = effort;
   storage.set(reasoningEffortKey, effort);
@@ -78,6 +80,20 @@ export function getReasoningEffort(): string {
   }
   currentReasoningEffort = storage.getString(reasoningEffortKey) ?? 'medium';
   return currentReasoningEffort;
+}
+
+// Fast mode (mantle "ultrafast" service tier) for models/regions that support it.
+export function saveFastModeEnabled(enabled: boolean) {
+  currentFastModeEnabled = enabled;
+  storage.set(fastModeEnabledKey, enabled);
+}
+
+export function getFastModeEnabled(): boolean {
+  if (currentFastModeEnabled !== undefined) {
+    return currentFastModeEnabled;
+  }
+  currentFastModeEnabled = storage.getBoolean(fastModeEnabledKey) ?? false;
+  return currentFastModeEnabled;
 }
 
 // Virtual try-on last base image file

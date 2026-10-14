@@ -8,12 +8,15 @@ import {
 } from '../../types/Chat.ts';
 import {
   getBedrockApiKey,
-  getReasoningEffort,
   getRegion,
   getTextModel,
 } from '../../storage/StorageUtils.ts';
 import { BedrockMessage } from '../BedrockMessageConvertor.ts';
 import { isEnableThinking } from '../bedrock-api.ts';
+import {
+  getEffectiveReasoningEffort,
+  usesReasoningEffort,
+} from '../ThinkingConfig.ts';
 import {
   buildMantleOnlyModels,
   getMantleBaseUrl,
@@ -30,7 +33,9 @@ type CallbackFunction = (
 
 // Claude models that only accept adaptive thinking (no budget_tokens).
 const usesAdaptiveThinking = (modelId: string): boolean =>
-  /claude-(fable-5|mythos-5|opus-4-7|opus-4-8)/.test(modelId.toLowerCase());
+  /claude-(fable-5|mythos-5|opus-4-7|opus-4-8|opus-5|sonnet-5|haiku-5)/.test(
+    modelId.toLowerCase()
+  );
 
 // Sonnet >= 4 and Opus >= 4.5 accept the 1M input-context beta.
 const supports1MContext = (modelId: string): boolean => {
@@ -51,10 +56,12 @@ export const invokeBedrockWithAPIKey = async (
   const modelId = getTextModel().modelId;
 
   const additionalModelRequestFields: Record<string, unknown> = {};
-  if (modelId.includes('gpt-5.6')) {
-    // GPT-5.6 on Converse takes OpenAI's reasoning effort, not reasoning_config
-    // (same effort setting as the mantle Responses path).
-    additionalModelRequestFields.reasoning = { effort: getReasoningEffort() };
+  if (usesReasoningEffort(modelId)) {
+    // GPT-5.6 / GPT-6 on Converse take OpenAI's reasoning effort, not
+    // reasoning_config (same setting as the mantle Responses/Chat paths).
+    additionalModelRequestFields.reasoning = {
+      effort: getEffectiveReasoningEffort(modelId),
+    };
   } else if (isEnableThinking() && usesAdaptiveThinking(modelId)) {
     // These Claude models reject budget-based thinking on Converse too.
     additionalModelRequestFields.thinking = {
