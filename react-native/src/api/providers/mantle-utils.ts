@@ -21,7 +21,13 @@ export const resolveApiMode = (modelId: string): ApiMode => {
   if (MantleResponsesModelIdPrefixes.some(prefix => id.startsWith(prefix))) {
     return ApiMode.MantleResponses;
   }
-  if (MantleMessagesModelIds.some(name => id.includes(name))) {
+  // Match the whole model name (optionally followed by a date/version suffix)
+  // so e.g. "claude-fable-5" does not also catch "claude-fable-5-1".
+  if (
+    MantleMessagesModelIds.some(name =>
+      new RegExp(`${name}(-\\d{8}|-v\\d|:|$)`).test(id)
+    )
+  ) {
     return ApiMode.MantleMessages;
   }
   // Remaining OpenAI-compatible mantle models (gpt-oss, qwen, gemma, deepseek,
@@ -33,7 +39,7 @@ export const resolveApiMode = (modelId: string): ApiMode => {
 /**
  * Tags each Bedrock model with its apiMode. OpenAI-compatible model ids come
  * from the live mantle GET /v1/models list (region-specific); Anthropic models
- * and GPT-5.x are matched by id since mantle does not list them under OpenAI.
+ * and GPT-5.x are matched by id and kept on mantle only if that list has them.
  */
 export const tagModelsWithApiMode = (
   models: Model[],
@@ -45,11 +51,30 @@ export const tagModelsWithApiMode = (
     if (apiMode === ApiMode.Converse && mantleOpenAiModelIds.has(baseId)) {
       apiMode = ApiMode.MantleChatCompletions;
     }
+    // Models mantle does not serve in this region (e.g. GPT-5.6 Sol, or Claude
+    // Fable 5 in us-west-2) still work through Converse.
+    if (
+      (apiMode === ApiMode.MantleResponses ||
+        apiMode === ApiMode.MantleMessages) &&
+      mantleOpenAiModelIds.size > 0 &&
+      !mantleOpenAiModelIds.has(baseId) &&
+      // mantle lists e.g. "anthropic.claude-haiku-4-5" without the date suffix
+      !mantleOpenAiModelIds.has(baseId.replace(/-\d{8}-v\d+(:\d+)?$/, ''))
+    ) {
+      apiMode = ApiMode.Converse;
+    }
     return { ...model, apiMode };
   });
 
 export const getMantleBaseUrl = (region: string): string =>
   `https://bedrock-mantle.${region}.api.aws`;
+
+// Mantle serves Chat Completions for OpenAI models under /openai/v1 and for
+// every other provider (kimi, glm, qwen, …) under /v1 only.
+export const getMantleChatPath = (modelId: string): string =>
+  stripRegionPrefix(modelId).startsWith('openai.')
+    ? '/openai/v1/chat/completions'
+    : '/v1/chat/completions';
 
 export const isMantleMode = (apiMode?: ApiMode): boolean =>
   apiMode === ApiMode.MantleResponses ||

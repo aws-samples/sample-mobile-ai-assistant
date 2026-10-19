@@ -37,6 +37,7 @@ import {
 } from './providers/mantle-utils.ts';
 import type { ChatCallbackFunction } from './types.ts';
 import { invokeChatProvider } from './ChatProviderRouter.ts';
+import { getEffectiveReasoningEffort } from './ThinkingConfig.ts';
 
 type CallbackFunction = ChatCallbackFunction;
 export const isDev = false;
@@ -149,6 +150,7 @@ export const invokeBedrockServerWithCallBack = async (
     modelId: getTextModel().modelId,
     region: getRegion(),
     enableThinking: isEnableThinking(),
+    reasoningEffort: getEffectiveReasoningEffort(getTextModel().modelId),
     system: prompt ? [{ text: prompt?.prompt }] : undefined,
   };
   if (prompt?.includeHistory === false) {

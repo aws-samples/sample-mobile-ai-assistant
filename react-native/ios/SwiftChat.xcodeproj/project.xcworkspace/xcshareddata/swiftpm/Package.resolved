@@ -1,13 +1,13 @@
 {
-  "originHash" : "99435ed0efc4a2bf9855e4cf18d798a05703cf6d4b6e747f1f4156672739a71c",
+  "originHash" : "e61c2a71d663ad1232f0b34d589a58f354d827efc00bb2f582c23cb3955fef58",
   "pins" : [
     {
       "identity" : "aws-crt-swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/awslabs/aws-crt-swift",
       "state" : {
-        "revision" : "5be6550f81c760cceb0a43c30d4149ac55c5640c",
-        "version" : "0.52.1"
+        "revision" : "cfed01ffde3ae5b3674a723f8bbe4030c0b9d8ab",
+        "version" : "0.54.1"
       }
     },
     {
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/awslabs/aws-sdk-swift.git",
       "state" : {
-        "revision" : "a1922865c227131e0c910954c0361a0170561218",
-        "version" : "1.5.4"
+        "revision" : "93da9cceabdd774b24810a105e549faef5b404d9",
+        "version" : "1.5.79"
       }
     },
     {
@@ -38,21 +38,12 @@
       }
     },
     {
-      "identity" : "opentracing-objc",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/undefinedlabs/opentracing-objc",
-      "state" : {
-        "revision" : "18c1a35ca966236cee0c5a714a51a73ff33384c1",
-        "version" : "0.5.2"
-      }
-    },
-    {
       "identity" : "smithy-swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/smithy-lang/smithy-swift",
       "state" : {
-        "revision" : "8c2b682a15c9cc2efd0f0149c94f562007d538c5",
-        "version" : "0.149.0"
+        "revision" : "58b8969b71eb06d309c51c3f4436c5c6c6f1cabe",
+        "version" : "0.169.0"
       }
     },
     {
@@ -168,8 +159,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-nio.git",
       "state" : {
-        "revision" : "a1605a3303a28e14d822dec8aaa53da8a9490461",
-        "version" : "2.92.0"
+        "revision" : "57c0a08a331aaea9f5d7a932ad94ef43be942a95",
+        "version" : "2.100.0"
       }
     },
     {
@@ -177,8 +168,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-nio-extras.git",
       "state" : {
-        "revision" : "1c90641b02b6ab47c6d0db2063a12198b04e83e2",
-        "version" : "1.31.2"
+        "revision" : "d2eeec0339074034f11a040a74aa2a341a2c4506",
+        "version" : "1.34.1"
       }
     },
     {
@@ -186,8 +177,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-nio-http2.git",
       "state" : {
-        "revision" : "c2ba4cfbb83f307c66f5a6df6bb43e3c88dfbf80",
-        "version" : "1.39.0"
+        "revision" : "61d1b44f6e4e118792be1cff88ee2bc0267c6f9a",
+        "version" : "1.44.0"
       }
     },
     {
@@ -242,15 +233,6 @@
       "state" : {
         "revision" : "395a77f0aa927f0ff73941d7ac35f2b46d47c9db",
         "version" : "1.6.3"
-      }
-    },
-    {
-      "identity" : "thrift-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/undefinedlabs/Thrift-Swift",
-      "state" : {
-        "revision" : "18ff09e6b30e589ed38f90a1af23e193b8ecef8e",
-        "version" : "1.1.2"
       }
     }
   ],

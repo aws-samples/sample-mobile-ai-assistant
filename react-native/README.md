@@ -2,6 +2,8 @@
 
 ## Tech Stack
 
+For dependency security constraints and validation commands, see [Security dependency maintenance](SECURITY_DEPENDENCIES.md).
+
 - **Framework**: React Native 0.83 (New Architecture)
 - **Language**: TypeScript
 - **Navigation**: React Navigation (Drawer + Stack)
