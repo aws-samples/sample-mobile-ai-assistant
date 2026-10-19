@@ -1,0 +1,8 @@
+[
+  {
+    "id": "GHSA-vfj7-8cjw-p6xm",
+    "package": "braces",
+    "reason": "No patched release (all versions <= 3.0.3, latest is 3.0.3). Reached only through micromatch in build and test tooling (Metro, Jest, React Native CLI, fast-glob), which expand developer-authored glob patterns; braces is not part of the app bundle.",
+    "reviewBy": "2026-11-30"
+  }
+]

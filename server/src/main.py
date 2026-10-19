@@ -36,6 +36,7 @@ class ConverseRequest(BaseModel):
     messages: List[dict] = []
     modelId: str
     enableThinking: bool | None = None
+    reasoningEffort: str | None = None
     region: str
     system: List[dict] | None = None
 
@@ -136,7 +137,15 @@ async def create_bedrock_command(request: ConverseRequest) -> tuple[boto3.client
         command["inferenceConfig"] = {"maxTokens": max_tokens}
 
     extra: dict = {}
-    if request.enableThinking:
+    if re.search(r"gpt-(5\.6|6(\.\d+)?-)", model_id):
+        # GPT-5.6 / GPT-6 take OpenAI's reasoning effort; reasoning_config is rejected.
+        extra["reasoning"] = {"effort": request.reasoningEffort or "medium"}
+    elif request.enableThinking and re.search(
+        r"claude-(fable-5|mythos-5|opus-4-7|opus-4-8|opus-5|sonnet-5|haiku-5)", model_id.lower()
+    ):
+        # These Claude models only accept adaptive thinking (no budget_tokens).
+        extra["thinking"] = {"type": "adaptive", "display": "summarized"}
+    elif request.enableThinking:
         extra["reasoning_config"] = {"type": "enabled", "budget_tokens": 16000}
     if _supports_1m_context(model_id):
         extra["anthropic_beta"] = ["context-1m-2025-08-07"]
@@ -149,6 +158,14 @@ async def create_bedrock_command(request: ConverseRequest) -> tuple[boto3.client
     return client, command
 
 
+def _json_default(value):
+    # Converse stream events can carry binary fields (e.g.
+    # reasoningContent.redactedContent); send them base64-encoded.
+    if isinstance(value, (bytes, bytearray)):
+        return base64.b64encode(value).decode("ascii")
+    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+
+
 @app.post("/api/converse/v3")
 async def converse_v3(request: ConverseRequest):
     try:
@@ -158,7 +175,7 @@ async def converse_v3(request: ConverseRequest):
             try:
                 response = client.converse_stream(**command)
                 for item in response['stream']:
-                    yield json.dumps(item) + '\n\n'
+                    yield json.dumps(item, default=_json_default) + '\n\n'
             except Exception as err:
                 yield f"Error: {str(err)}"
 
@@ -177,7 +194,7 @@ async def converse_v2(request: ConverseRequest):
             try:
                 response = client.converse_stream(**command)
                 for item in response['stream']:
-                    yield json.dumps(item)
+                    yield json.dumps(item, default=_json_default)
             except Exception as err:
                 yield f"Error: {str(err)}"
 
@@ -295,7 +312,10 @@ async def mantle_responses(request: MantleRequest):
 
 @app.post("/api/mantle/chat")
 async def mantle_chat(request: MantleRequest):
-    return await _mantle_stream(request, "/openai/v1/chat/completions")
+    # Mantle serves OpenAI models under /openai/v1 and other providers under /v1.
+    model = str(request.body.get("model", ""))
+    path = "/openai/v1/chat/completions" if model.startswith("openai.") else "/v1/chat/completions"
+    return await _mantle_stream(request, path)
 
 
 @app.post("/api/mantle/messages")

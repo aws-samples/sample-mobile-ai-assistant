@@ -57,17 +57,23 @@ export const BedrockThinkingModels = [
   'Claude Opus 4.8',
   'Claude Haiku 4.5',
   'Claude Fable 5',
+  'Claude Fable 5.1',
   'Claude Mythos 5',
+  'Claude Opus 5',
+  'Claude Opus 5.5',
+  'Claude Sonnet 5',
+  'Claude Sonnet 5.5',
+  'Claude Haiku 5.5',
   'GPT-5.6 Sol',
   'GPT-5.6 Terra',
   'GPT-5.6 Luna',
 ];
 export const BedrockVoiceModels = ['Nova Sonic'];
 
-// Anthropic models served on the bedrock-mantle engine via the Anthropic
-// Messages API. The mantle GET /v1/models list does NOT return Anthropic
-// models, so this is matched by modelId substring. Models here route through
-// the Messages API; other Claude models fall back to the legacy Converse API.
+// Anthropic models that may be served on the bedrock-mantle engine via the
+// Anthropic Messages API, matched by model name. They use the Messages API
+// only where the region's mantle GET /v1/models list includes them; otherwise
+// (and for other Claude models) they fall back to the legacy Converse API.
 export const MantleMessagesModelIds = [
   'claude-fable-5',
   'claude-mythos-5',
