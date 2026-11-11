@@ -1,16 +1,16 @@
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
-const queryString = require('query-string');
 const { DOMParser, XMLSerializer } = require('@xmldom/xmldom');
 
-test('navigation query parsing supports Unicode, spaces and repeated keys', () => {
-  const parsed = queryString.parse(
-    'name=%E4%BD%A0%E5%A5%BD&message=hello+world&tag=one&tag=two'
+test('navigation query parsing supports Unicode, spaces and repeated keys', async () => {
+  const { getStateFromPath } = await import('@react-navigation/core');
+  const state = getStateFromPath(
+    '/Chat?name=%E4%BD%A0%E5%A5%BD&message=hello+world&tag=one&tag=two'
   );
 
   assert.deepEqual(
-    { ...parsed },
+    { ...state.routes[0].params },
     {
       message: 'hello world',
       name: '你好',
@@ -19,26 +19,32 @@ test('navigation query parsing supports Unicode, spaces and repeated keys', () =
   );
 });
 
-test('navigation query parameters survive a stringify/parse round trip', () => {
-  const params = { chat: '会话/1', prompt: 'a+b & c=d', empty: '' };
-
-  assert.deepEqual(
-    { ...queryString.parse(queryString.stringify(params)) },
-    params
+test('navigation query parameters survive a stringify/parse round trip', async () => {
+  const { getPathFromState, getStateFromPath } = await import(
+    '@react-navigation/core'
   );
+  const params = { chat: '会话/1', prompt: 'a+b & c=d', empty: '' };
+  const path = getPathFromState({ routes: [{ name: 'Chat', params }] });
+
+  assert.deepEqual({ ...getStateFromPath(path).routes[0].params }, params);
 });
 
-test('navigation query parsing tolerates malformed UTF-8', () => {
-  const parsed = queryString.parse('value=%E0%A4%A&valid=%E2%9C%93');
+test('navigation query parsing tolerates malformed UTF-8', async () => {
+  const { getStateFromPath } = await import('@react-navigation/core');
+  const { params } = getStateFromPath('/Chat?value=%E0%A4%A&valid=%E2%9C%93')
+    .routes[0];
 
-  assert.equal(parsed.valid, '✓');
-  assert.equal(typeof parsed.value, 'string');
+  assert.equal(params.valid, '✓');
+  assert.equal(typeof params.value, 'string');
 });
 
 test('malformed percent-encoded input completes within a bounded time', () => {
   const result = spawnSync(
     process.execPath,
-    ['-e', "require('query-string').parse('value=' + '%E0%A4'.repeat(10000))"],
+    [
+      '-e',
+      "import('@react-navigation/core').then(({ getStateFromPath }) => getStateFromPath('/Chat?value=' + '%E0%A4'.repeat(10000)))",
+    ],
     { cwd: __dirname, timeout: 5000, encoding: 'utf8' }
   );
 

@@ -1,8 +1,8 @@
 [
   {
-    "id": "GHSA-vfj7-8cjw-p6xm",
-    "package": "braces",
-    "reason": "No patched release (all versions <= 3.0.3, latest is 3.0.3). Reached only through micromatch in build and test tooling (Metro, Jest, React Native CLI, fast-glob), which expand developer-authored glob patterns; braces is not part of the app bundle.",
-    "reviewBy": "2026-11-30"
+    "id": "GHSA-gcqx-w48m-w2h4",
+    "package": "deepmerge",
+    "reason": "No patched release; 4.3.1 is still the latest as of 2026-11-11. Used by React Native CLI and Jest to merge developer-controlled project configuration, not shipped in the app bundle. Do not merge untrusted configuration. Recheck for an upstream fix instead of downgrading the CLI or Jest.",
+    "reviewBy": "2026-12-11"
   }
 ]

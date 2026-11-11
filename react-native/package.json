@@ -93,8 +93,10 @@
     "@istanbuljs/load-nyc-config": {
       "js-yaml": "^4.3.2"
     },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.8"
+    },
     "@xmldom/xmldom": "0.9.12",
-    "decode-uri-component": "0.5.0",
     "metro": "0.83.8",
     "metro-config": "0.83.8",
     "metro-runtime": "0.83.8",
