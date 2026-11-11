@@ -15,10 +15,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    CFPropertyList (3.0.7)
-      base64
-      nkf
-      rexml
+    CFPropertyList (3.0.8)
     activesupport (8.0.5.2)
       base64
       benchmark (>= 0.3)
@@ -87,12 +84,12 @@ GEM
     logger (1.7.0)
     minitest (5.27.0)
     molinillo (0.8.0)
-    nanaimo (0.3.0)
+    nanaimo (0.4.0)
     nap (1.1.0)
     netrc (0.11.0)
-    nkf (0.2.0)
+    nkf (0.3.0)
     public_suffix (4.0.7)
-    rexml (3.4.2)
+    rexml (3.4.4)
     ruby-macho (2.5.1)
     securerandom (0.4.1)
     typhoeus (1.4.1)
@@ -100,12 +97,14 @@ GEM
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     uri (1.1.2)
-    xcodeproj (1.25.1)
+    xcodeproj (1.28.1)
       CFPropertyList (>= 2.3.3, < 4.0)
       atomos (~> 0.1.3)
+      base64
       claide (>= 1.0.2, < 2.0)
       colored2 (~> 3.1)
-      nanaimo (~> 0.3.0)
+      nanaimo (~> 0.4.0)
+      nkf
       rexml (>= 3.3.6, < 4.0)
 
 PLATFORMS
@@ -116,6 +115,7 @@ DEPENDENCIES
   cocoapods (= 1.14.3)
   cocoapods-core (= 1.14.3)!
   minitest (~> 5.27)
+  xcodeproj (>= 1.28.1, < 2)
 
 RUBY VERSION
    ruby 3.2.2p53

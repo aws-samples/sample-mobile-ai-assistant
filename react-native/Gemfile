@@ -9,6 +9,8 @@ ruby ">= 3.2.0"
 gem 'cocoapods', '1.14.3'
 gem 'cocoapods-core', '1.14.3', path: 'vendor/cocoapods-core'
 gem 'activesupport', '>= 8.0.5.2', '< 8.1'
+# Read the synchronized groups used by this repository's Xcode project.
+gem 'xcodeproj', '>= 1.28.1', '< 2'
 
 group :test do
   gem 'minitest', '~> 5.27'

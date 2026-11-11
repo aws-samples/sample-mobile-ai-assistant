@@ -82,4 +82,10 @@ class ActiveSupportSecurityTest < Minitest::Test
       assert_equal '1.0.0', restored.version('SecurityFixture').to_s
     end
   end
+
+  def test_xcodeproj_reads_the_application_project
+    path = File.expand_path('../ios/SwiftChat.xcodeproj', __dir__)
+    project = Xcodeproj::Project.open(path)
+    assert_includes project.targets.map(&:name), 'SwiftChat'
+  end
 end
