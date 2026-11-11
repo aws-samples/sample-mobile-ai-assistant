@@ -16,8 +16,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler: '2.4.10'
+          bundler-cache: true
+          working-directory: react-native
+      - name: Test Ruby dependency security and compatibility
+        working-directory: react-native
+        run: bundle exec ruby scripts/ruby-security.test.rb
       - name: Run build ios
         run: |
           cd react-native && npm ci
-          cd ios && pod install && cd ..
+          cd ios && bundle exec pod install && cd ..
           npm run build:ios

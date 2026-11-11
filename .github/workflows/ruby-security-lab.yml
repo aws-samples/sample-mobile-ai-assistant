@@ -1,0 +1,33 @@
+name: Ruby security compatibility lab
+
+on:
+  push:
+    branches: ['debug/activesupport-8-compat']
+
+permissions:
+  contents: read
+
+jobs:
+  pod-install:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler: '2.4.10'
+          bundler-cache: true
+          working-directory: react-native
+      - name: Install JavaScript dependencies
+        run: cd react-native && npm ci
+      - name: Verify patched Ruby dependencies and install pods
+        run: bash debug-lab/ruby-security.sh "$RUNNER_TEMP/out"
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: ruby-security-macos
+          path: ${{ runner.temp }}/out
