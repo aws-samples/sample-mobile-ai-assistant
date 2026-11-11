@@ -11,10 +11,7 @@ The following overrides need special care:
 | Override                     | Reason                                                                                                                       |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `@xmldom/xmldom` 0.9.12      | Fixes XML injection and resource-exhaustion issues; `speech-rule-engine` otherwise pins 0.9.10.                              |
-| `decode-uri-component` 0.5.0 | Fixes excessive CPU usage on malformed percent-encoded input; `query-string` 7 otherwise requires the vulnerable 0.2 series. |
 | Metro 0.83.8 family          | Removes the vulnerable `image-size` dependency while staying on the React Native 0.83-compatible Metro branch.               |
-
-`decode-uri-component` 0.5.0 is an ES module. `patches/query-string+7.1.3.patch` adapts the CommonJS consumer to its default export. Do not remove this patch independently of the decoder override: installation and vulnerability scanning can pass while navigation query parsing fails at runtime.
 
 Do not blindly replace the Metro override with `latest`. At the time of this update, `image-size` 2.0.2 was still vulnerable and newer Metro branches still depended on it.
 
@@ -26,13 +23,31 @@ Do not blindly replace the Metro override with `latest`. At the time of this upd
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@istanbuljs/load-nyc-config` → `js-yaml` `^4.3.2` | Removes `js-yaml` 3 → `argparse` 1 → `sprintf-js`, which has no patched release for GHSA-hp3w-g68c-fv3c. The package only calls `yaml.load()`, which js-yaml 4 keeps (safe by default). |
 
+### November 2026 update
+
+`package-lock.json` records fixes for `body-parser` 2.4.0, `fast-xml-parser` 5.12.0, `joi` 17.13.9, `launch-editor` 2.14.2, `qs` 6.17.1 and `zod` 4.6.7. React Native stays on 0.83.9.
+
+React Navigation core 7.24.0 no longer depends on `query-string` or `decode-uri-component`, eliminating the vulnerable decoder from the dependency graph. The obsolete decoder override and `query-string` patch are removed together. Navigation regression tests now exercise `getStateFromPath` and `getPathFromState`, including malformed percent-encoded input.
+
+`@typescript-eslint/typescript-estree` uses a scoped override to `minimatch` `^11.0.8` to address [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249). Its caller uses the supported `minimatch()` API. The override leaves the unaffected minimatch 3 consumers on their existing major version and requires Node.js 20 or at least 22.
+
+The previous `braces` exception is removed because [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) was withdrawn on 2026-10-23.
+
 ### Unpatched advisories (`audit-allowlist.json`)
 
 CI runs `npm run audit:check` instead of `npm audit --audit-level=low`. It fails on every advisory of any severity, except entries in `audit-allowlist.json`. An entry is allowed only when no patched release exists. Each entry records the package and the reason, and has a `reviewBy` date. After that date the check fails again until the entry is re-assessed. Remove an entry as soon as a fix is published; the check prints a note when an entry is no longer reported.
 
 | Advisory            | Package         | Why it is allowlisted                                                                                                                                                                                                                                                        |
 | ------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GHSA-vfj7-8cjw-p6xm | `braces` ≤3.0.3 | No patched release; 3.0.3 is the latest. Reached only through `micromatch` 4.0.8 (latest) in Metro, Jest, React Native CLI and fast-glob, which expand developer-authored glob patterns. It is not in the app bundle; checked on 2026-10-14 against the iOS `main.jsbundle`. |
+| [GHSA-gcqx-w48m-w2h4](https://github.com/advisories/GHSA-gcqx-w48m-w2h4) | `deepmerge` 4.3.1 | No patched release as of 2026-11-11. React Native CLI and Jest use it to merge developer-controlled project configuration; it is not an application runtime dependency. Do not merge untrusted configuration. Review again by 2026-12-11. |
+
+## Ruby / CocoaPods: CVE-2026-126080
+
+[GHSA-8474-xrp6-wh69](https://github.com/advisories/GHSA-8474-xrp6-wh69) affects the locked `activesupport` 7.2.3.1. When `safe_constantize` handles a `LoadError`, an untrusted constant name can control a regular expression and potentially crash the Ruby process. Rails applications accepting untrusted Action Cable subscriptions are an exposed use case.
+
+As of 2026-11-11, the first fixed releases are 8.0.5.2 and 8.1.4.1; no fixed 7.2 release exists. Both the locked `cocoapods-core` 1.14.3 and the [latest published 1.17.0](https://rubygems.org/gems/cocoapods-core/versions/1.17.0) require `activesupport >= 5.0, < 8`. Raising the Gemfile's ActiveSupport requirement to a fixed release therefore fails dependency resolution even if CocoaPods is upgraded.
+
+This repository uses ActiveSupport through the iOS CocoaPods build tooling. The application and Python server do not use Rails, mount Action Cable, or pass user input to `safe_constantize`. Keep build configuration and podspec sources trusted. The dependency alert remains open: this assessment does not patch the gem or dismiss the alert. Recheck when CocoaPods supports a fixed ActiveSupport release or an official compatible backport becomes available; any move to ActiveSupport 8 also requires Ruby 3.2 or newer.
 
 ## Swift dependencies
 
@@ -45,6 +60,16 @@ The Xcode project updates `aws-sdk-swift` to 1.5.79. The security fixes require 
 These NIO releases require Swift 6.1 or newer. Use a compatible Xcode toolchain when resolving and building the iOS project. Keep both the application workspace and project workspace `Package.resolved` files synchronized with a validated dependency graph; do not edit version numbers without updating their Git revisions and transitive dependencies.
 
 ## Verification
+
+Validated on 2026-11-11 against baseline `2d6429d`:
+
+- `npm ci` applies all eight remaining patches.
+- `npm audit` reports no critical, high, or moderate vulnerabilities. The only remaining advisory is the low-severity `deepmerge` issue above (nine affected dependency nodes); `npm run audit:check` passes with its dated exception.
+- All 13 security and audit-check tests, ESLint, and formatting checks pass.
+- The TypeScript parser's project-service path matching works with the minimatch 11 override.
+- Production JavaScript bundles and assets build for Android and iOS.
+- Android `assembleDebug` succeeds with Java 17, SDK 36, and NDK 27.1.12297006. A native iOS build still requires macOS/Xcode.
+- `tsc --noEmit` reports the same `src/App.tsx:92` navigation type error on both the baseline and updated dependency graphs; the diagnostic output is identical.
 
 Validated on 2026-09-10 against baseline `a356f7a`:
 
