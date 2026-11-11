@@ -393,12 +393,17 @@ npm run android
 
 ### Build for iOS
 
-Also open a new terminal. For the first time you need to install the native dependencies
-by execute `cd ios && pod install && cd ..`, then execute the follow command:
+Open a new terminal in `react-native/`. Use Ruby 3.2 or newer and install the
+locked Ruby tools before installing the native dependencies:
 
 ```bash
+bundle install
+cd ios && bundle exec pod install && cd ..
 npm run ios
 ```
+
+Use `bundle exec` for CocoaPods commands to load the project's security-fixed
+dependency versions. See [Ruby dependency maintenance](react-native/SECURITY_DEPENDENCIES.md#ruby--cocoapods-cve-2026-126080).
 
 ### Build for macOS
 

@@ -43,11 +43,15 @@ CI runs `npm run audit:check` instead of `npm audit --audit-level=low`. It fails
 
 ## Ruby / CocoaPods: CVE-2026-126080
 
-[GHSA-8474-xrp6-wh69](https://github.com/advisories/GHSA-8474-xrp6-wh69) affects the locked `activesupport` 7.2.3.1. When `safe_constantize` handles a `LoadError`, an untrusted constant name can control a regular expression and potentially crash the Ruby process. Rails applications accepting untrusted Action Cable subscriptions are an exposed use case.
+[GHSA-8474-xrp6-wh69](https://github.com/advisories/GHSA-8474-xrp6-wh69) affected the previously locked `activesupport` 7.2.3.1. When `safe_constantize` handled a `LoadError`, an untrusted constant name could control a regular expression and potentially crash the Ruby process. The bundle now uses the official fixed release **8.0.5.2**, which compares the constant name as a literal string.
 
-As of 2026-11-11, the first fixed releases are 8.0.5.2 and 8.1.4.1; no fixed 7.2 release exists. Both the locked `cocoapods-core` 1.14.3 and the [latest published 1.17.0](https://rubygems.org/gems/cocoapods-core/versions/1.17.0) require `activesupport >= 5.0, < 8`. Raising the Gemfile's ActiveSupport requirement to a fixed release therefore fails dependency resolution even if CocoaPods is upgraded.
+As of 2026-11-11, upstream CocoaPods Core still requires ActiveSupport `< 8`, including the [latest published 1.17.0](https://rubygems.org/gems/cocoapods-core/versions/1.17.0). To resolve that dependency conflict, the project keeps CocoaPods 1.14.3 and uses a local copy of its Core gem. All runtime source files are unchanged; only its gemspec requirements permit the patched ActiveSupport 8.0 branch and require Ruby 3.2 or newer. The source checksum, license, verification procedure, and removal criteria are recorded in [vendor/cocoapods-core/PATCHES.md](vendor/cocoapods-core/PATCHES.md).
 
-This repository uses ActiveSupport through the iOS CocoaPods build tooling. The application and Python server do not use Rails, mount Action Cable, or pass user input to `safe_constantize`. Keep build configuration and podspec sources trusted. The dependency alert remains open: this assessment does not patch the gem or dismiss the alert. Recheck when CocoaPods supports a fixed ActiveSupport release or an official compatible backport becomes available; any move to ActiveSupport 8 also requires Ruby 3.2 or newer.
+Use Ruby 3.2 or newer, run `bundle install` from `react-native/`, and run CocoaPods through `bundle exec pod ...`. The iOS CI workflow enforces the locked bundle and runs the Ruby security and compatibility tests before installing pods. A globally installed `pod` command uses a separate gem environment and is not covered by this fix.
+
+`scripts/ruby-security.test.rb` checks literal `LoadError` matching, invalid regexp characters, normal constant resolution, the `String#safe_constantize` entry point, and CocoaPods podspec/lockfile round trips. No application monkey patch or advisory suppression is used. The existing Dependabot alert can close after the updated lockfile reaches the default branch and GitHub rescans it.
+
+The Ruby update also moves `addressable` from 2.9.0 to 2.9.2, fixing its seven URI/template advisories published in October 2026. Xcodeproj 1.28.1 is required to read the synchronized groups in the current Xcode project; the previously locked 1.25.1 cannot load them.
 
 ## Swift dependencies
 
@@ -70,6 +74,16 @@ Validated on 2026-11-11 against baseline `2d6429d`:
 - Production JavaScript bundles and assets build for Android and iOS.
 - Android `assembleDebug` succeeds with Java 17, SDK 36, and NDK 27.1.12297006. A native iOS build still requires macOS/Xcode.
 - `tsc --noEmit` reports the same `src/App.tsx:92` navigation type error on both the baseline and updated dependency graphs; the diagnostic output is identical.
+
+Ruby validation on 2026-11-11:
+
+- The locked bundle installs with Ruby 3.2.11 and loads CocoaPods 1.14.3 with ActiveSupport 8.0.5.2.
+- `bundler-audit` 0.9.3 reports zero vulnerabilities against ruby-advisory-db revision `38f94284b05c2052b13a4922a86cc7cffb2266e2`.
+- All eight Ruby security and compatibility tests pass (17 assertions), including opening the actual application Xcode project. On the original ActiveSupport 7.2.3.1, the unsafe-input tests reproduce a regexp error and an incorrect swallowed `LoadError`.
+- The 44 published CocoaPods Core files match the upstream gem byte-for-byte; its gemspec has only the two requirement changes documented above.
+- An external checkout of the upstream Core 1.14.3 suite runs 1,313 specifications with both ActiveSupport versions. Both runs have the same five failures and five errors from the legacy fixtures/development-tool environment; upgrading ActiveSupport introduces no additional failures.
+- On macOS 26.7.2 with Xcode 26.6 and Ruby 3.3.13, the [compatibility workflow](https://github.com/aws-samples/sample-mobile-ai-assistant/actions/runs/43037661641) passes all eight tests, installs all 100 pods, and successfully lists the application workspace with `xcodebuild`.
+- `ios/Podfile.lock` is regenerated by that verified installation. Pod versions and dependency relationships are unchanged; podspec checksums, the previously stale Podfile checksum, and the CocoaPods generator version are synchronized.
 
 Validated on 2026-09-10 against baseline `a356f7a`:
 

@@ -380,11 +380,15 @@ npm run android
 
 ### 构建 iOS
 
-同样打开新终端。首次运行需要执行 `cd ios && pod install && cd ..` 安装原生依赖，然后执行以下命令：
+在 `react-native/` 目录打开新终端，使用 Ruby 3.2 或更新版本，先安装项目锁定的 Ruby 工具及原生依赖：
 
 ```bash
+bundle install
+cd ios && bundle exec pod install && cd ..
 npm run ios
 ```
+
+CocoaPods 命令应通过 `bundle exec` 执行，以使用项目中修复了安全漏洞的依赖版本。详情见 [Ruby 依赖维护说明](react-native/SECURITY_DEPENDENCIES.md#ruby--cocoapods-cve-2026-126080)。
 
 ### 构建 macOS
 

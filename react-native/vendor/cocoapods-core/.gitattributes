@@ -1,0 +1,2 @@
+# Preserve upstream formatting so the vendored source stays byte-identical.
+lib/** -whitespace
