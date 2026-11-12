@@ -11,10 +11,7 @@ The following overrides need special care:
 | Override                     | Reason                                                                                                                       |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `@xmldom/xmldom` 0.9.12      | Fixes XML injection and resource-exhaustion issues; `speech-rule-engine` otherwise pins 0.9.10.                              |
-| `decode-uri-component` 0.5.0 | Fixes excessive CPU usage on malformed percent-encoded input; `query-string` 7 otherwise requires the vulnerable 0.2 series. |
 | Metro 0.83.8 family          | Removes the vulnerable `image-size` dependency while staying on the React Native 0.83-compatible Metro branch.               |
-
-`decode-uri-component` 0.5.0 is an ES module. `patches/query-string+7.1.3.patch` adapts the CommonJS consumer to its default export. Do not remove this patch independently of the decoder override: installation and vulnerability scanning can pass while navigation query parsing fails at runtime.
 
 Do not blindly replace the Metro override with `latest`. At the time of this update, `image-size` 2.0.2 was still vulnerable and newer Metro branches still depended on it.
 
@@ -26,13 +23,35 @@ Do not blindly replace the Metro override with `latest`. At the time of this upd
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@istanbuljs/load-nyc-config` → `js-yaml` `^4.3.2` | Removes `js-yaml` 3 → `argparse` 1 → `sprintf-js`, which has no patched release for GHSA-hp3w-g68c-fv3c. The package only calls `yaml.load()`, which js-yaml 4 keeps (safe by default). |
 
+### November 2026 update
+
+`package-lock.json` records fixes for `body-parser` 2.4.0, `fast-xml-parser` 5.12.0, `joi` 17.13.9, `launch-editor` 2.14.2, `qs` 6.17.1 and `zod` 4.6.7. React Native stays on 0.83.9.
+
+React Navigation core 7.24.0 no longer depends on `query-string` or `decode-uri-component`, eliminating the vulnerable decoder from the dependency graph. The obsolete decoder override and `query-string` patch are removed together. Navigation regression tests now exercise `getStateFromPath` and `getPathFromState`, including malformed percent-encoded input.
+
+`@typescript-eslint/typescript-estree` uses a scoped override to `minimatch` `^11.0.8` to address [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249). Its caller uses the supported `minimatch()` API. The override leaves the unaffected minimatch 3 consumers on their existing major version and requires Node.js 20 or at least 22.
+
+The previous `braces` exception is removed because [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) was withdrawn on 2026-10-23.
+
 ### Unpatched advisories (`audit-allowlist.json`)
 
 CI runs `npm run audit:check` instead of `npm audit --audit-level=low`. It fails on every advisory of any severity, except entries in `audit-allowlist.json`. An entry is allowed only when no patched release exists. Each entry records the package and the reason, and has a `reviewBy` date. After that date the check fails again until the entry is re-assessed. Remove an entry as soon as a fix is published; the check prints a note when an entry is no longer reported.
 
 | Advisory            | Package         | Why it is allowlisted                                                                                                                                                                                                                                                        |
 | ------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GHSA-vfj7-8cjw-p6xm | `braces` ≤3.0.3 | No patched release; 3.0.3 is the latest. Reached only through `micromatch` 4.0.8 (latest) in Metro, Jest, React Native CLI and fast-glob, which expand developer-authored glob patterns. It is not in the app bundle; checked on 2026-10-14 against the iOS `main.jsbundle`. |
+| [GHSA-gcqx-w48m-w2h4](https://github.com/advisories/GHSA-gcqx-w48m-w2h4) | `deepmerge` 4.3.1 | No patched release as of 2026-11-11. React Native CLI and Jest use it to merge developer-controlled project configuration; it is not an application runtime dependency. Do not merge untrusted configuration. Review again by 2026-12-11. |
+
+## Ruby / CocoaPods: CVE-2026-126080
+
+[GHSA-8474-xrp6-wh69](https://github.com/advisories/GHSA-8474-xrp6-wh69) affected the previously locked `activesupport` 7.2.3.1. When `safe_constantize` handled a `LoadError`, an untrusted constant name could control a regular expression and potentially crash the Ruby process. The bundle now uses the official fixed release **8.0.5.2**, which compares the constant name as a literal string.
+
+As of 2026-11-11, upstream CocoaPods Core still requires ActiveSupport `< 8`, including the [latest published 1.17.0](https://rubygems.org/gems/cocoapods-core/versions/1.17.0). To resolve that dependency conflict, the project keeps CocoaPods 1.14.3 and uses a local copy of its Core gem. All runtime source files are unchanged; only its gemspec requirements permit the patched ActiveSupport 8.0 branch and require Ruby 3.2 or newer. The source checksum, license, verification procedure, and removal criteria are recorded in [vendor/cocoapods-core/PATCHES.md](vendor/cocoapods-core/PATCHES.md).
+
+Use Ruby 3.2 or newer, run `bundle install` from `react-native/`, and run CocoaPods through `bundle exec pod ...`. The iOS CI workflow enforces the locked bundle and runs the Ruby security and compatibility tests before installing pods. A globally installed `pod` command uses a separate gem environment and is not covered by this fix.
+
+`scripts/ruby-security.test.rb` checks literal `LoadError` matching, invalid regexp characters, normal constant resolution, the `String#safe_constantize` entry point, and CocoaPods podspec/lockfile round trips. No application monkey patch or advisory suppression is used. The existing Dependabot alert can close after the updated lockfile reaches the default branch and GitHub rescans it.
+
+The Ruby update also moves `addressable` from 2.9.0 to 2.9.2, fixing its seven URI/template advisories published in October 2026. Xcodeproj 1.28.1 is required to read the synchronized groups in the current Xcode project; the previously locked 1.25.1 cannot load them.
 
 ## Swift dependencies
 
@@ -45,6 +64,26 @@ The Xcode project updates `aws-sdk-swift` to 1.5.79. The security fixes require 
 These NIO releases require Swift 6.1 or newer. Use a compatible Xcode toolchain when resolving and building the iOS project. Keep both the application workspace and project workspace `Package.resolved` files synchronized with a validated dependency graph; do not edit version numbers without updating their Git revisions and transitive dependencies.
 
 ## Verification
+
+Validated on 2026-11-11 against baseline `2d6429d`:
+
+- `npm ci` applies all eight remaining patches.
+- `npm audit` reports no critical, high, or moderate vulnerabilities. The only remaining advisory is the low-severity `deepmerge` issue above (nine affected dependency nodes); `npm run audit:check` passes with its dated exception.
+- All 13 security and audit-check tests, ESLint, and formatting checks pass.
+- The TypeScript parser's project-service path matching works with the minimatch 11 override.
+- Production JavaScript bundles and assets build for Android and iOS.
+- Android `assembleDebug` succeeds with Java 17, SDK 36, and NDK 27.1.12297006. A native iOS build still requires macOS/Xcode.
+- `tsc --noEmit` reports the same `src/App.tsx:92` navigation type error on both the baseline and updated dependency graphs; the diagnostic output is identical.
+
+Ruby validation on 2026-11-11:
+
+- The locked bundle installs with Ruby 3.2.11 and loads CocoaPods 1.14.3 with ActiveSupport 8.0.5.2.
+- `bundler-audit` 0.9.3 reports zero vulnerabilities against ruby-advisory-db revision `38f94284b05c2052b13a4922a86cc7cffb2266e2`.
+- All eight Ruby security and compatibility tests pass (17 assertions), including opening the actual application Xcode project. On the original ActiveSupport 7.2.3.1, the unsafe-input tests reproduce a regexp error and an incorrect swallowed `LoadError`.
+- The 44 published CocoaPods Core files match the upstream gem byte-for-byte; its gemspec has only the two requirement changes documented above.
+- An external checkout of the upstream Core 1.14.3 suite runs 1,313 specifications with both ActiveSupport versions. Both runs have the same five failures and five errors from the legacy fixtures/development-tool environment; upgrading ActiveSupport introduces no additional failures.
+- On macOS 26.7.2 with Xcode 26.6 and Ruby 3.3.13, the [compatibility workflow](https://github.com/aws-samples/sample-mobile-ai-assistant/actions/runs/43037661641) passes all eight tests, installs all 100 pods, and successfully lists the application workspace with `xcodebuild`.
+- `ios/Podfile.lock` is regenerated by that verified installation. Pod versions and dependency relationships are unchanged; podspec checksums, the previously stale Podfile checksum, and the CocoaPods generator version are synchronized.
 
 Validated on 2026-09-10 against baseline `a356f7a`:
 

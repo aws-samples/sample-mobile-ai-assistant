@@ -6,7 +6,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "build:ios": "cd ios && xcodebuild -workspace AIAssistant.xcworkspace -scheme SwiftChat -sdk iphonesimulator -configuration Release -destination generic/platform=iOS CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO clean archive | xcpretty",
+    "build:ios": "cd ios && xcodebuild -workspace AIAssistant.xcworkspace -scheme SwiftChat -sdk iphonesimulator -configuration Release -destination 'generic/platform=iOS Simulator' CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO clean archive",
     "format": "npx prettier --check '*.{js,ts}'",
     "lint": "npx eslint .",
     "start": "react-native start",
@@ -93,8 +93,10 @@
     "@istanbuljs/load-nyc-config": {
       "js-yaml": "^4.3.2"
     },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.8"
+    },
     "@xmldom/xmldom": "0.9.12",
-    "decode-uri-component": "0.5.0",
     "metro": "0.83.8",
     "metro-config": "0.83.8",
     "metro-runtime": "0.83.8",
