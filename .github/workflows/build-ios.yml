@@ -25,8 +25,12 @@ jobs:
       - name: Test Ruby dependency security and compatibility
         working-directory: react-native
         run: bundle exec ruby scripts/ruby-security.test.rb
-      - name: Run build ios
-        run: |
-          cd react-native && npm ci
-          cd ios && bundle exec pod install && cd ..
-          npm run build:ios
+      - name: Install JavaScript dependencies
+        working-directory: react-native
+        run: npm ci
+      - name: Install CocoaPods dependencies
+        working-directory: react-native/ios
+        run: bundle exec pod install
+      - name: Build iOS simulator archive
+        working-directory: react-native
+        run: npm run build:ios
