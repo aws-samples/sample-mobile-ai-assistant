@@ -23,6 +23,13 @@ jobs:
       - name: Audit dependencies
         # Any advisory fails, except unpatched ones reviewed in audit-allowlist.json.
         run: cd react-native && npm run audit:check
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test backend SSRF protection
+        run: |
+          python -m pip install -r server/src/requirements.txt
+          PYTHONPATH=server/src python -m unittest discover -s server/tests -v
       - name: Run code format
         run: cd react-native && npm run format
       - name: Run code lint

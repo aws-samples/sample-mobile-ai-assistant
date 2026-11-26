@@ -10,10 +10,24 @@ service using the server's IAM credentials, then stream the response back.
 import boto3
 from botocore.auth import SigV4Auth
 from botocore.awsrequest import AWSRequest
+from fastapi import HTTPException
+
+_MANTLE_ENDPOINTS = {  # Only these trusted, app-supported regions form URLs.
+    region: f"https://bedrock-mantle.{region}.api.aws"
+    for region in (
+        "us-west-2 us-east-1 us-east-2 ap-south-1 ap-south-2 "
+        "ap-southeast-1 ap-southeast-2 ap-northeast-1 ap-northeast-2 ap-northeast-3 "
+        "ca-central-1 eu-central-1 eu-central-2 eu-west-1 eu-west-2 "
+        "eu-west-3 eu-north-1 eu-south-1 eu-south-2 sa-east-1"
+    ).split()
+}
 
 
 def get_mantle_base_url(region: str) -> str:
-    return f"https://bedrock-mantle.{region}.api.aws"
+    endpoint = _MANTLE_ENDPOINTS.get(region)
+    if endpoint is None:
+        raise HTTPException(status_code=422, detail="Unsupported Mantle region")
+    return endpoint
 
 
 def sign_mantle_request(
